@@ -1,0 +1,9 @@
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+target_version = ['py37', 'py38']
+exclude = '''
+(
+    __pycache__
+)
+'''

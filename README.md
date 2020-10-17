@@ -1,2 +1,2 @@
 # ymybot-rw
-YMYBot Re Write Version
+YMYBot Rewrite Version

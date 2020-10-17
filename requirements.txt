@@ -1,0 +1,4 @@
+pip
+captcha
+jishaku
+git+https://github.com/Rapptz/discord.py@master
