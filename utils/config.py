@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from os import environ as env
+from discord import Status, ActivityType
 
 
 PREFIX = ["."]
 TOKEN = "" or env.get("TOKEN")
-EXTENSIONS = ["cogs.events"]
+STATUS_TYPE = Status.idle
+ACTIVITY_TYPE = ActivityType.watching
 
 # =============================================================================
 
