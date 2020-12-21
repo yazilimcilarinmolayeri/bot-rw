@@ -10,24 +10,27 @@ from discord.ext import commands
 intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+EXTENSIONS = [
+    "jishaku",
+    "cogs.api",
+    "cogs.events"
+]
+
 
 class YMYBot(commands.Bot):
     def __init__(self):
-        super().__init__(
-            command_prefix=config.PREFIX, intents=intents
-        )
+        super().__init__(command_prefix=config.PREFIX, intents=intents)
 
         self.uptime = ""
-        self.color = discord.Colour.dark_theme()
+        self.color = 0x2F3136
+        # self.color = discord.Colour.dark_theme()
         self.session = aiohttp.ClientSession(loop=self.loop)
 
-        for cog in config.EXTENSIONS:
+        for cog in EXTENSIONS:
             try:
                 self.load_extension(cog)
             except Exception as exc:
                 print(f"{cog} {exc.__class__.__name__}: {exc}")
-
-        self.load_extension("jishaku")
 
     async def on_resumed(self):
         print("Resumed...")
@@ -37,4 +40,4 @@ class YMYBot(commands.Bot):
         await self.session.close()
 
     def run(self):
-        super().run(config.TOKEN, reconnect=True)
+        super().run(cofig.TOKEN, reconnect=True)

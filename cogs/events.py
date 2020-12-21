@@ -16,14 +16,15 @@ class Events(commands.Cog):
 
     async def _change_presence(self):
         guild = self.bot.get_guild(config.DEFAULT_GUILD_ID)
-
-        # 1,234 üyeyi izliyor
+        bots = sum(m.bot for m in guild.members)
+        humans = guild.member_count - bots
+        
         await self.bot.change_presence(
             activity=discord.Activity(
-                type=discord.ActivityType.watching,
-                name=f"{guild.member_count:,d} üyeyi",
+                type=config.ACTIVITY_TYPE,
+                name=f"{humans:,d} + {bots} üyeyi",
             ),
-            status=discord.Status.idle,
+            status=config.STATUS_TYPE,
         )
 
     @commands.Cog.listener()
@@ -32,8 +33,8 @@ class Events(commands.Cog):
             self.bot.uptime = datetime.datetime.now()
 
         print(
-            f"discord.py version: {discord.__version__}\n"
-            f"{self.bot.user} (ID: {self.bot.user.id})"
+            f"{self.bot.user} (ID: {self.bot.user.id})\n"
+            f"discord.py version: {discord.__version__}"
         )
 
         await self._change_presence()
