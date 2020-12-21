@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import aiowiki
 import discord
 from utils import paginator
 from discord.ext import commands, menus
@@ -48,6 +49,9 @@ class API(commands.Cog):
 
     @commands.command()
     async def pypi(self, ctx, package):
+        """
+        """
+
         async with self.bot.session.get(
             f"https://pypi.org/pypi/{package}/json"
         ) as resp:
@@ -64,10 +68,33 @@ class API(commands.Cog):
             project_urls = "~"
 
         embed = discord.Embed(color=self.bot.color)
-        embed.url = data["package_url"]
         embed.title = data["name"] + " | " + data["version"]
+        embed.url = data["package_url"]
         embed.description = data["summary"] or "~"
         embed.add_field(name="Geliştirici", value=data["author"] or "~")
         embed.add_field(name="Lisans", value=data["license"] or "~")
         embed.add_field(name="Bağlantılar", value=project_urls)
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def wiki(self, ctx, *, search):
+        """
+        """
+
+        embeds = []
+
+        async with ctx.typing():
+            wiki = aiowiki.Wiki.wikipedia("tr")
+            for page in await wiki.opensearch(search):
+                embed = discord.Embed(colour=self.bot.color)
+                embed.title = page.title
+                embed.url = (await page.urls())[0].split("(")[0]
+                embed.description = (await page.summary())[:2000] + "..."
+                embeds.append(embed)
+
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
+        )
+        await menu.start(ctx)
