@@ -1,5 +1,6 @@
 pip
 captcha
 jishaku
+git+https://github.com/Gelbpunkt/aiowiki
 git+https://github.com/Rapptz/discord.py@master
 git+https://github.com/Rapptz/discord-ext-menus@master
