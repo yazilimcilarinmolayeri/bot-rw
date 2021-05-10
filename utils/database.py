@@ -67,12 +67,10 @@ class Database:
                 )
             )
 
-    def remove(self, table_name, where="1"):
-        self.where = where
+    def remove(self, table_name, where: tuple):
+        where = "{}={}".format(where[0], where[1])
 
-        self.db.execute(
-            "DELETE FROM {} WHERE {}".format(table_name, self.where)
-        )
+        self.db.execute("DELETE FROM {} WHERE {}".format(table_name, where))
         self.db.commit()
 
     def update(self, table_name, where: tuple, **columns):
