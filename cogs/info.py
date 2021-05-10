@@ -47,7 +47,7 @@ class Info(commands.Cog):
         )
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_image(
-            url=data[-1] if data[-1] != "None" else discord.Embed.Empty
+            url=data[-1] if data[-1] != "~" else discord.Embed.Empty
         )
         embed.set_footer(text="ID: {}".format(user.id))
 
@@ -62,7 +62,7 @@ class Info(commands.Cog):
         answers.append(author.id)
 
         if self.db.check_item("Profile", ("user_id", author.id)):
-            return await ctx.send("Zaten bir profile sahipsin!")
+            return await ctx.send("Var olan profilini düzenle...")
 
         def check(m):
             try:
@@ -79,35 +79,43 @@ class Info(commands.Cog):
         question_embed = await ctx.send(embed=embed)
 
         for i, question in enumerate(lists.profile_questions):
-            embed.description = question
+            embed.description = "{}, {}".format(author.mention, question)
             await question_embed.edit(embed=embed)
             answer = await self.bot.wait_for("message", check=check)
 
             if answer.content.lower() == "s":
-                answers.append("None")
+                answers.append("~")
             elif answer.content.lower() == "c":
                 return await question_embed.delete()
             else:
-                if len(lists.profile_questions) == i:
+                if len(lists.profile_questions) - 1 == i:
                     if not self.is_url_image(answer.content):
                         return await ctx.send(
                             "Geçersiz bağlantı! Çıkılıyor..."
                         )
-
                 answers.append(answer.content)
 
             await answer.delete()
         await question_embed.delete()
 
         self.db.insert("Profile", *answers)
+        await ctx.reply("Kurulum tamamlandı!")
 
         # command = self.bot.get_command("profile")
         # await command.__call__(ctx=ctx, user=author)
 
     @profile.group(name="delete")
     @commands.has_permissions(manage_messages=True)
-    async def profile_delete(self, ctx, user: discord.Member = None):
-        pass
+    async def profile_delete(self, ctx, user: discord.Member):
+        """"""
+
+        if not self.db.check_item("Profile", ("user_id", user.id)):
+            return await ctx.send("Profil bulunamadı!")
+
+        self.db.remove("Profile", ("user_id", user.id))
+        await ctx.send(
+            "{} adlı kullanıcının profili silindi!".format(user.mention)
+        )
 
     @profile.group(name="edit")
     async def profile_edit(self, ctx):
@@ -178,7 +186,7 @@ class Info(commands.Cog):
         self.db.update(
             "Profile",
             ("user_id", ctx.message.author.id),
-            terminal_software=new_item,
+            terminal_software=new_profile_item,
         )
 
         await ctx.message.add_reaction("\U00002705")
