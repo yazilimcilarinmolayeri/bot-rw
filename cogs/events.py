@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import discord
-import datetime
+import traceback
 from utils import config
+from datetime import datetime
 from discord.ext import commands
+from discord.ext.commands import errors
 
 
 def setup(bot):
@@ -30,7 +32,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if not hasattr(self, "uptime"):
-            self.bot.uptime = datetime.datetime.now()
+            self.bot.uptime = datetime.now()
 
         print(
             f"{self.bot.user} (ID: {self.bot.user.id})\n"
@@ -97,3 +99,42 @@ class Events(commands.Cog):
                 embed.set_image(url=attachment_url)
 
             await channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, err):
+        msa = errors.MissingRequiredArgument
+
+        if isinstance(err, commands.CommandInvokeError):
+            original = err.original
+
+            if not isinstance(original, discord.HTTPException):
+                # TODO: Add logger
+                print(
+                    "In {}:".format(ctx.command.qualified_name),
+                    file=sys.stderr,
+                )
+                traceback.print_tb(original.__traceback__)
+                print(
+                    "{}: {}".format(original.__class__.__name__, original),
+                    file=sys.stderr,
+                )
+
+        if isinstance(err, commands.CheckFailure):
+            await ctx.send(
+                "Bu komutu kullanabilmek için yeterli yetkiye sahip değilsin!"
+            )
+
+        if isinstance(err, msa) or isinstance(err, errors.BadArgument):
+            helper = (
+                str(ctx.invoked_subcommand)
+                if ctx.invoked_subcommand
+                else str(ctx.command)
+            )
+            await ctx.send_help(helper)
+
+        if isinstance(err, errors.CommandOnCooldown):
+            await ctx.send(
+                "Bu komut bekleme modunda! `{}`sn sonra tekrar dene.".format(
+                    round(err.retry_after)
+                )
+            )
