@@ -20,6 +20,12 @@ class Info(commands.Cog):
         mimetype, encoding = mimetypes.guess_type(url)
         return mimetype and mimetype.startswith("image")
 
+    async def send_profile_message(self, author):
+        channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
+        command = self.bot.get_command("profile")
+        
+        await command.__call__(ctx=channel, user=author)
+
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, user: discord.Member = None):
         """"""
@@ -47,7 +53,7 @@ class Info(commands.Cog):
         )
         embed.set_thumbnail(url=user.avatar_url)
         embed.set_image(
-            url=data[-1] if data[-1] != "~" else discord.Embed.Empty
+            url=data[-1] if data[-1] != "-" else discord.Embed.Empty
         )
         embed.set_footer(text="ID: {}".format(user.id))
 
@@ -84,7 +90,7 @@ class Info(commands.Cog):
             answer = await self.bot.wait_for("message", check=check)
 
             if answer.content.lower() == "s":
-                answers.append("~")
+                answers.append("-")
             elif answer.content.lower() == "c":
                 return await question_embed.delete()
             else:
@@ -99,10 +105,9 @@ class Info(commands.Cog):
         await question_embed.delete()
 
         self.db.insert("Profile", *answers)
-        await ctx.reply("Kurulum tamamlandı!")
-
-        # command = self.bot.get_command("profile")
-        # await command.__call__(ctx=ctx, user=author)
+        profile_channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
+        await ctx.reply("Kurulum tamamlandı! Profiller: {}".format(profile_channel.mention))
+        await self.send_profile_message(ctx.message.author)
 
     @profile.group(name="delete")
     @commands.has_permissions(manage_messages=True)
@@ -132,6 +137,7 @@ class Info(commands.Cog):
             await ctx.send(embed=embed)
 
     @profile_edit.command(aliases=["os"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def operation_system(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -140,8 +146,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["de"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def desktop_environment(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -150,8 +158,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["themes"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def desktop_themes(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -160,8 +170,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["browser"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def web_browser(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -170,8 +182,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["editors"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def code_editors(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -180,8 +194,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["terminal"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def terminal_software(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -190,8 +206,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["shell"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def shell_software(self, ctx, *, new_profile_item):
         self.db.update(
             "Profile",
@@ -200,8 +218,10 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
 
     @profile_edit.command(aliases=["ss"])
+    @commands.cooldown(1, 300, commands.BucketType.user)
     async def screenshot_url(self, ctx, new_profile_item):
         if not self.is_url_image(new_profile_item):
             return await ctx.message.add_reaction("\U0000203c")
@@ -213,3 +233,4 @@ class Info(commands.Cog):
         )
 
         await ctx.message.add_reaction("\U00002705")
+        await self.send_profile_message(ctx.message.author)
