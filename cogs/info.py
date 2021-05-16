@@ -23,7 +23,7 @@ class Info(commands.Cog):
     async def send_profile_message(self, author):
         channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
         command = self.bot.get_command("profile")
-        
+
         await command.__call__(ctx=channel, user=author)
 
     @commands.group(invoke_without_command=True)
@@ -51,7 +51,7 @@ class Info(commands.Cog):
                 for i, j in enumerate(data[1:-1])
             ]
         )
-        embed.set_thumbnail(url=user.avatar_url)
+        embed.set_thumbnail(url=user.avatar.url)
         embed.set_image(
             url=data[-1] if data[-1] != "-" else discord.Embed.Empty
         )
@@ -106,7 +106,9 @@ class Info(commands.Cog):
 
         self.db.insert("Profile", *answers)
         profile_channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
-        await ctx.reply("Kurulum tamamlandı! Profiller: {}".format(profile_channel.mention))
+        await ctx.reply(
+            "Kurulum tamamlandı! Profiller: {}".format(profile_channel.mention)
+        )
         await self.send_profile_message(ctx.message.author)
 
     @profile.group(name="delete")

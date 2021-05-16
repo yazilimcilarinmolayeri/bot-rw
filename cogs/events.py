@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import discord
 import traceback
 from utils import config
@@ -91,7 +92,7 @@ class Events(commands.Cog):
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
-            embed.set_author(name=author, icon_url=author.avatar_url)
+            embed.set_author(name=author, icon_url=author.avatar.url)
             embed.set_footer(text=f"ID: {author.id}")
 
             if message.attachments:
