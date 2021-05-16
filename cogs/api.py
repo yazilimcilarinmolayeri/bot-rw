@@ -16,8 +16,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["deprem"])
     async def quake(self, ctx, last=1):
-        """
-        """
+        """"""
 
         embeds = []
 
@@ -26,16 +25,28 @@ class API(commands.Cog):
             params={"last": last},
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("No data found :(")
+                return await ctx.send("API not found!")
             data = await resp.json()
 
         for d in data:
             embed = discord.Embed(color=self.bot.color)
+            date, time = d["Time"].split(" ")
             embed.description = (
-                f"**Bölge:** {d['Region']}\n"
-                f"**Büyüklük:** {d['Magnitude']}\n"
-                f"**Derinlik:** {d['Depth']} Km\n"
-                f"**Zaman:** {d['Time']}"
+                "Tarih: `{}`\n"
+                "Saat: `{}`\n"
+                "Enlem: `{}`\n"
+                "Boylam: `{}`\n"
+                "Bölge: `{}`\n"
+                "Büyüklük: `{}` "
+                "Derinlik: `{} Km`".format(
+                    date,
+                    time,
+                    d["Latitude"].split(";")[0],
+                    d["Longitude"].split(";")[0],
+                    d["Region"],
+                    d["Magnitude"],
+                    d["Depth"],
+                ).replace("&deg", "°")
             )
             embed.set_thumbnail(url=d["MapImage"])
             embeds.append(embed)
@@ -49,8 +60,7 @@ class API(commands.Cog):
 
     @commands.command()
     async def pypi(self, ctx, package):
-        """
-        """
+        """"""
 
         async with self.bot.session.get(
             f"https://pypi.org/pypi/{package}/json"
@@ -61,8 +71,11 @@ class API(commands.Cog):
             data = data["info"]
 
         try:
-            project_urls = "\n".join(
-                [f"[{t}]({u})" for t, u in data["project_urls"].items()]
+            project_urls = ", ".join(
+                [
+                    "[`{}`]({})".format(t, u)
+                    for t, u in data["project_urls"].items()
+                ]
             )
         except AttributeError:
             project_urls = "~"
@@ -70,16 +83,25 @@ class API(commands.Cog):
         embed = discord.Embed(color=self.bot.color)
         embed.title = data["name"] + " | " + data["version"]
         embed.url = data["package_url"]
-        embed.description = data["summary"] or "~"
-        embed.add_field(name="Geliştirici", value=data["author"] or "~")
-        embed.add_field(name="Lisans", value=data["license"] or "~")
-        embed.add_field(name="Bağlantılar", value=project_urls)
+        embed.description = (
+            "{}\n\n"
+            "Lisans: `{}`\n"
+            "Geliştirici: `{}` (`{}`)\n"
+            "Bağlantılar: {}"
+        ).format(
+            data["summary"] or " ",
+            data["license"] or " ",
+            data["author"] or " ",
+            data["author_email"] or " ",
+            project_urls,
+        )
+        embed.set_thumbnail(url="https://i.imgur.com/u6YG9jm.png")
+
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["viki"])
     async def wiki(self, ctx, *, search):
-        """
-        """
+        """"""
 
         embeds = []
 
