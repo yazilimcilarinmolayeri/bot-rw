@@ -21,7 +21,8 @@ class Events(commands.Cog):
 
         await self.bot.change_presence(
             activity=discord.Activity(
-                type=config.ACTIVITY_TYPE, name=f"{humans:,d} + {bots} üyeyi",
+                type=config.ACTIVITY_TYPE,
+                name=f"{humans:,d} + {bots} üyeyi",
             ),
             status=config.STATUS_TYPE,
         )
@@ -59,15 +60,24 @@ class Events(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar_url)
-            embed.set_footer(text=f"ID: {author.id}")
             embed.add_field(
                 name="Bahsetme Bilgisi",
-                value=f"Mesaja [zıpla!]({message.jump_url})\n"
-                f"{author.guild} ({author.guild.id})",
+                value="`#{}` (`{}`)\n"
+                "`{}` (`{}`)\n\n"
+                "[`Mesaja zıpla!`]({})".format(
+                    message.channel.name,
+                    message.channel.id,
+                    author.guild,
+                    author.guild.id,
+                    message.jump_url,
+                ),
             )
+            embed.set_footer(text=f"ID: {author.id}")
+
             if message.attachments:
                 attachment_url = message.attachments[0].url
                 embed.set_image(url=attachment_url)
+
             await channel.send(embed=embed)
 
     @commands.Cog.listener(name="on_message")
@@ -81,7 +91,9 @@ class Events(commands.Cog):
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar_url)
             embed.set_footer(text=f"ID: {author.id}")
+
             if message.attachments:
                 attachment_url = message.attachments[0].url
                 embed.set_image(url=attachment_url)
+
             await channel.send(embed=embed)
