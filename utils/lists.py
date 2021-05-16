@@ -15,7 +15,7 @@ profile_questions = [
     "Favori masaüstü ortamın nedir?",
     "Favori pencere/ikon/fare teman nedir?",
     "Favori web tarayıcının nedir?",
-    "Favori kod/metin editörlerin nedir?",
+    "Favori kod/metin editörün nedir?",
     "Favori terminal yazılımın nedir?",
     "Favori kabuk yazılımın nedir?",
     "Ekran görüntüsü? Bağlantı olarak ver.",
