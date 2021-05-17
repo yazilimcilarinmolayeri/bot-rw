@@ -102,13 +102,16 @@ class Info(commands.Cog):
                 answers.append(answer.content)
 
             await answer.delete()
-        await question_embed.delete()
 
         self.db.insert("Profile", *answers)
+
         profile_channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
-        await ctx.reply(
-            "Kurulum tamamlandı! Profiller: {}".format(profile_channel.mention)
+        embed.description = "{}, Kurulum tamamlandı! Gözat: {}".format(
+            author.mention, profile_channel.mention
         )
+        embed.set_footer(text=discord.Embed.Empty)
+
+        await question_embed.edit(embed=embed)
         await self.send_profile_message(ctx.message.author)
 
     @profile.group(name="delete")
