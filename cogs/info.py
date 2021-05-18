@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import random
 import discord
 import mimetypes
-from datetime import datetime
 from utils import config, lists
 from discord.ext import commands
+from datetime import datetime, timedelta
 
 
 def setup(bot):
@@ -25,6 +26,41 @@ class Info(commands.Cog):
         command = self.bot.get_command("profile")
 
         await command.__call__(ctx=channel, user=author)
+
+    @commands.command(aliases=["get"])
+    async def getir(self, ctx, channel: discord.TextChannel = None):
+        """"""
+
+        if channel == None:
+            channel = ctx
+
+        messages = await channel.history(
+            around=datetime.today() - timedelta(days=365)
+        ).flatten()
+
+        if not len(messages):
+            return await ctx.send("Mesaj bulunamadı!")
+
+        message = random.choice(messages)
+        author = message.author
+        day, month, year = (
+            message.created_at.day,
+            message.created_at.month,
+            message.created_at.year,
+        )
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=author, icon_url=author.avatar.url)
+        embed.description = "{}\n\n[`Mesaja zıpla!`]({})".format(
+            message.content, message.jump_url
+        )
+        embed.set_footer(
+            text="{}.{}.{} {}".format(
+                day, month, year, "- Bot" if author.bot else " "
+            )
+        )
+
+        await ctx.send(embed=embed)
 
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, user: discord.Member = None):
