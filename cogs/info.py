@@ -30,15 +30,30 @@ class Info(commands.Cog):
         await command.__call__(ctx=channel, user=author)
 
     @commands.command(aliases=["getir"])
-    async def get(self, ctx, channel: discord.TextChannel = None):
+    async def get(
+        self,
+        ctx,
+        channel: discord.TextChannel = None,
+        author: discord.Member = None,
+    ):
         """"""
 
         if channel == None:
             channel = ctx
+        else:
+            perms = channel.permissions_for(ctx.message.author)
+
+            if not perms.view_channel:
+                return await ctx.send(
+                    "Bu kanalı görme yetkisine sahip değilsin!"
+                )
 
         messages = await channel.history(
             around=datetime.today() - timedelta(days=365)
         ).flatten()
+
+        if author != None:
+            messages = [m for m in messages if author.id == m.author.id]
 
         if not len(messages):
             return await ctx.send("Mesaj bulunamadı!")
