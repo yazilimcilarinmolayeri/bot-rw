@@ -56,7 +56,7 @@ class Info(commands.Cog):
         partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
         sponsor_role = ctx.guild.get_role(config.SPONSOR_ROLE_ID)
 
-        is_role = lambda role: True if role is member.roles else False
+        is_role = lambda role: True if role in member.roles else False
 
         if perms.administrator:
             badges.append("<:administrator:844298864869769226>")
