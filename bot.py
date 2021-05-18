@@ -4,10 +4,10 @@ import aiohttp
 import discord
 import warnings
 from discord.ext import commands
-from utils import config, database
+from utils import config, database, context
 
 
-EXTENSIONS = ["jishaku", "cogs.info", "cogs.api", "cogs.events"]
+EXTENSIONS = ["jishaku", "cogs.api", "cogs.events", "cogs.info"]
 
 intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -30,10 +30,24 @@ class YMYBot(commands.Bot):
 
     @property
     def __version__(self):
-        return "0.6.2"
+        return "0.10.2"
 
     async def on_resumed(self):
         print("Resumed...")
+
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        await self.process_commands(message)
+
+    async def process_commands(self, message):
+        ctx = await self.get_context(message, cls=context.Context)
+
+        if ctx.command is None:
+            return
+        
+        await self.invoke(ctx)
 
     async def close(self):
         await super().close()
