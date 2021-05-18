@@ -4,10 +4,11 @@ import os
 import random
 import discord
 import inspect
+import humanize
 import mimetypes
 from utils import config, lists
 from discord.ext import commands
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 def setup(bot):
@@ -29,6 +30,66 @@ class Info(commands.Cog):
 
         await command.__call__(ctx=channel, user=author)
 
+    @commands.command(aliases=["u"])
+    async def user(self, ctx, member: discord.Member = None):
+        """"""
+
+        badges = []
+
+        if member == None:
+            member = ctx.author
+
+        perms = member.guild_permissions
+        created_at = member.created_at
+        joined_at = member.joined_at
+
+        _t = humanize.i18n.activate("tr_TR")
+        c_day, c_month, c_year = (
+            created_at.day,
+            created_at.month,
+            created_at.year,
+        )
+        j_day, j_month, j_year = (
+            joined_at.day,
+            joined_at.month,
+            joined_at.year,
+        )
+
+        if perms.administrator:
+            badges.append("<:administrator:844298864869769226>")
+        if perms.manage_messages:
+            badges.append("<:moderator:844298864857055252>")
+        if member in ctx.guild.premium_subscribers:
+            badges.append("<:supporter:844298864625319946>")
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=member)
+        embed.description = (
+            "{}\n\n"
+            "Profil: {}\n"
+            "Giriş tarihi: `{}`\n"
+            "Oluşturma tarihi: `{}`\n".format(
+                " ".join(badges),
+                member.mention,
+                "{}.{}.{} ({} gün önce)".format(
+                    j_day,
+                    j_month,
+                    j_year,
+                    (datetime.now(timezone.utc) - joined_at).days,
+                ),
+                "{}.{}.{} ({} gün önce)".format(
+                    c_day,
+                    c_month,
+                    c_year,
+                    (datetime.now(timezone.utc) - created_at).days,
+                ),
+            )
+        )
+        embed.set_thumbnail(url=member.avatar.url)
+        embed.set_footer(text="ID: {}".format(member.id))
+
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["getir"])
     async def get(
         self,
@@ -41,7 +102,7 @@ class Info(commands.Cog):
         if channel == None:
             channel = ctx
         else:
-            perms = channel.permissions_for(ctx.message.author)
+            perms = channel.permissions_for(ctx.author)
 
             if not perms.view_channel:
                 return await ctx.send(
