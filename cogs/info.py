@@ -4,7 +4,6 @@ import os
 import random
 import discord
 import inspect
-import humanize
 import mimetypes
 from utils import config, lists
 from discord.ext import commands
@@ -43,7 +42,6 @@ class Info(commands.Cog):
         created_at = member.created_at
         joined_at = member.joined_at
 
-        _t = humanize.i18n.activate("tr_TR")
         c_day, c_month, c_year = (
             created_at.day,
             created_at.month,
