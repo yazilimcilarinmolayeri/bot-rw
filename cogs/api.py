@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import random
 import aiowiki
 import discord
 from io import BytesIO
@@ -148,3 +149,36 @@ class API(commands.Cog):
             source=paginator.EmbedSource(data=embeds),
         )
         await menu.start(ctx)
+
+    @commands.command()
+    async def xkcd(self, ctx, num=None):
+        """"""
+
+        url = "https://xkcd.com"
+
+        async with self.bot.session.get("{}/info.0.json".format(url)) as resp:
+            if resp.status != 200:
+                return await ctx.send("Bağlantı hatası!")
+            data = await resp.json()
+
+        if num == None:
+            num = random.randint(1, data["num"])
+
+        async with self.bot.session.get(
+            "{}/{}/info.0.json".format(url, num)
+        ) as resp:
+            if resp.status != 200:
+                return await ctx.send("Geçersiz numara!")
+            data = await resp.json()
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.title = data["title"]
+        embed.description = data["alt"]
+        embed.set_image(url=data["img"])
+        embed.set_footer(
+            text="{} - {}.{}.{}".format(
+                data["num"], data["day"], data["month"], data["year"]
+            )
+        )
+
+        await ctx.send(embed=embed)
