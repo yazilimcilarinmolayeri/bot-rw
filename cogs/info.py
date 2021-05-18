@@ -53,11 +53,20 @@ class Info(commands.Cog):
             joined_at.year,
         )
 
+        partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
+        sponsor_role = ctx.guild.get_role(config.SPONSOR_ROLE_ID)
+
+        is_role = lambda role: True if role is member.roles else False
+
         if perms.administrator:
             badges.append("<:administrator:844298864869769226>")
         if perms.manage_messages:
             badges.append("<:moderator:844298864857055252>")
-        if member in ctx.guild.premium_subscribers:
+        if (
+            is_role(partner_role)
+            or is_role(sponsor_role)
+            or member in ctx.guild.premium_subscribers
+        ):
             badges.append("<:supporter:844298864625319946>")
 
         embed = discord.Embed(color=self.bot.color)
