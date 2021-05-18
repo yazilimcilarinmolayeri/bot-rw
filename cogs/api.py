@@ -2,6 +2,7 @@
 
 import aiowiki
 import discord
+from io import BytesIO
 from utils import paginator
 from discord.ext import commands, menus
 
@@ -14,6 +15,32 @@ class API(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(aliases=["ss"])
+    async def screenshot(self, ctx, *, website):
+        """"""
+
+        website = website.replace("<", "").replace(">", "")
+
+        if not website.startswith("http"):
+            return await ctx.send("Geçerli bir web sitesi değil!")
+
+        message = await ctx.send("Yükleniyor...")
+
+        async with self.bot.session.get(
+            "https://image.thum.io/get/width/1080/crop/720/png/{}".format(
+                website
+            )
+        ) as resp:
+            image = BytesIO(await resp.read())
+
+        await message.delete()
+        await ctx.send(
+            content="> <{}>".format(website),
+            file=discord.File(
+                image, filename="screenshot_{}.png".format(website)
+            ),
+        )
+
     @commands.command(aliases=["deprem"])
     async def quake(self, ctx, last=1):
         """"""
@@ -25,7 +52,7 @@ class API(commands.Cog):
             params={"last": last},
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("API not found!")
+                return await ctx.send("Bağlantı hatası!")
             data = await resp.json()
 
         for d in data:
@@ -63,10 +90,10 @@ class API(commands.Cog):
         """"""
 
         async with self.bot.session.get(
-            f"https://pypi.org/pypi/{package}/json"
+            "https://pypi.org/pypi/{}/json".format(package)
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("No package found :(")
+                return await ctx.send("Paket bulunamadı!")
             data = await resp.json()
             data = data["info"]
 
@@ -81,7 +108,7 @@ class API(commands.Cog):
             project_urls = "~"
 
         embed = discord.Embed(color=self.bot.color)
-        embed.title = data["name"] + " | " + data["version"]
+        embed.title = "{} | {}".format(data["name"], data["version"])
         embed.url = data["package_url"]
         embed.description = (
             "{}\n\n"
@@ -107,6 +134,7 @@ class API(commands.Cog):
 
         async with ctx.typing():
             wiki = aiowiki.Wiki.wikipedia("tr")
+
             for page in await wiki.opensearch(search):
                 embed = discord.Embed(colour=self.bot.color)
                 embed.title = page.title
