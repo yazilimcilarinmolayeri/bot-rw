@@ -38,10 +38,8 @@ class Info(commands.Cog):
         if member == None:
             member = ctx.author
 
-        perms = member.guild_permissions
         created_at = member.created_at
         joined_at = member.joined_at
-
         c_day, c_month, c_year = (
             created_at.day,
             created_at.month,
@@ -52,7 +50,10 @@ class Info(commands.Cog):
             joined_at.month,
             joined_at.year,
         )
+        j_days = (datetime.now(timezone.utc) - joined_at).days
+        c_days = (datetime.now(timezone.utc) - created_at).days
 
+        perms = member.guild_permissions
         partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
         sponsor_role = ctx.guild.get_role(config.SPONSOR_ROLE_ID)
 
@@ -62,6 +63,8 @@ class Info(commands.Cog):
             badges.append("<:administrator:844298864869769226>")
         if perms.manage_messages:
             badges.append("<:moderator:844298864857055252>")
+        if j_days > 365 * 2:
+            badges.append("<:oldmember:844377103000010752>")
         if (
             is_role(partner_role)
             or is_role(sponsor_role)
@@ -75,20 +78,20 @@ class Info(commands.Cog):
             "{}\n\n"
             "Profil: {}\n"
             "Giriş tarihi: `{}`\n"
-            "Oluşturma tarihi: `{}`\n".format(
+            "Oluşturma tarihi: `{}`".format(
                 " ".join(badges),
                 member.mention,
                 "{}.{}.{} ({} gün önce)".format(
                     j_day,
                     j_month,
                     j_year,
-                    (datetime.now(timezone.utc) - joined_at).days,
+                    j_days,
                 ),
                 "{}.{}.{} ({} gün önce)".format(
                     c_day,
                     c_month,
                     c_year,
-                    (datetime.now(timezone.utc) - created_at).days,
+                    c_days,
                 ),
             )
         )
