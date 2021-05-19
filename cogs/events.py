@@ -16,6 +16,7 @@ def setup(bot):
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.db = bot.db
 
     async def _change_presence(self):
         guild = self.bot.get_guild(config.DEFAULT_GUILD_ID)
@@ -65,14 +66,16 @@ class Events(commands.Cog):
             embed.set_author(name=author, icon_url=author.avatar_url)
             embed.add_field(
                 name="Bahsetme Bilgisi",
-                value="`#{}` (`{}`)\n"
-                "`{}` (`{}`)\n\n"
-                "[`Mesaja zıpla!`]({})".format(
-                    message.channel.name,
-                    message.channel.id,
-                    author.guild,
-                    author.guild.id,
-                    message.jump_url,
+                value=(
+                    "Kanal: `#{} ({})`\n"
+                    "Sunucu: `{} ({})`\n\n"
+                    "[`Mesaja zıpla!`]({})".format(
+                        message.channel.name,
+                        message.channel.id,
+                        author.guild,
+                        author.guild.id,
+                        message.jump_url,
+                    ),
                 ),
             )
             embed.set_footer(text=f"ID: {author.id}")
@@ -87,6 +90,9 @@ class Events(commands.Cog):
     async def on_dm_message(self, message):
         author = message.author
 
+        if author.bot:
+            return
+
         if message.guild is None:
             channel = self.bot.get_channel(config.DM_LOG_CHANNEL_ID)
 
@@ -100,6 +106,20 @@ class Events(commands.Cog):
                 embed.set_image(url=attachment_url)
 
             await channel.send(embed=embed)
+
+    @commands.Cog.listener(name="on_user_update")
+    async def on_update_avatar(self, before, after):
+        user = after
+        avatar_url = user.avatar.url[:user.avatar.url.find("?")]
+        channel = self.bot.get_channel(config.AVATAR_LOG_CHANNEL_ID)
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=user)
+        embed.set_image(url=avatar_url)
+        embed.set_footer(text="ID: {}".format(user.id))
+
+        await channel.send(embed=embed)
+        self.db.insert("AvatarHistory", *[user.id, avatar_url, datetime.now()])
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
