@@ -26,7 +26,7 @@ class Events(commands.Cog):
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=config.ACTIVITY_TYPE,
-                name=f"{humans:,d} + {bots} üyeyi",
+                name="{} + {} üyeyi".format(humans, bots),
             ),
             status=config.STATUS_TYPE,
         )
@@ -37,8 +37,9 @@ class Events(commands.Cog):
             self.bot.uptime = datetime.now()
 
         print(
-            f"{self.bot.user} (ID: {self.bot.user.id})\n"
-            f"discord.py version: {discord.__version__}"
+            "{} (ID: {})\ndiscord.py version: {}".format(
+                self.bot.user, self.bot.user.id, discord.__version__
+            )
         )
 
         await self._change_presence()
@@ -110,7 +111,13 @@ class Events(commands.Cog):
     @commands.Cog.listener(name="on_user_update")
     async def on_update_avatar(self, before, after):
         user = after
-        avatar_url = user.avatar.url[:user.avatar.url.find("?")]
+        b_avatar_key = before.avatar.key
+        a_avatar_key = after.avatar.key
+
+        if b_avatar_key == a_avatar_key:
+            return
+
+        avatar_url = user.avatar.url[: user.avatar.url.find("?")]
         channel = self.bot.get_channel(config.AVATAR_LOG_CHANNEL_ID)
 
         embed = discord.Embed(color=self.bot.color)
