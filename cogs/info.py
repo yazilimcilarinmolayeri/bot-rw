@@ -100,6 +100,59 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=["gi"])
+    async def guildinfo(self, ctx, guild: discord.Guild = None):
+        """"""
+
+        if guild == None:
+            guild = ctx.guild
+
+        created_at = guild.created_at
+        c_day, c_month, c_year = (
+            created_at.day,
+            created_at.month,
+            created_at.year,
+        )
+        c_days = (datetime.now(timezone.utc) - created_at).days
+        subs = guild.premium_subscribers
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=guild)
+        embed.description = (
+            "{}"
+            "Üye sayısı: `{}` "
+            "Rol sayısı: `{}`\n"
+            "Kanal sayısı: `{}` "
+            "Emoji sayısı: `{}`\n"
+            "Sahip: {}\n"
+            "Oluşturulma tarihi: `{}`\n\n"
+            "Seviye: `{}`\n"
+            "Toplam takviye: `{}`\n"
+            "Son takviye(ler): {}".format(
+                "{}\n\n".format(guild.description)
+                if guild.description != None
+                else " ",
+                guild.member_count,
+                len(guild.roles),
+                len(guild.text_channels) + len(guild.voice_channels),
+                len(guild.emojis),
+                guild.owner.mention,
+                "{}.{}.{} ({} gün önce)".format(
+                    c_day,
+                    c_month,
+                    c_year,
+                    c_days,
+                ),
+                guild.premium_tier,
+                guild.premium_subscription_count,
+                ", ".join(m.mention for m in subs) if len(subs) else "`Yok`",
+            )
+        )
+        embed.set_thumbnail(url=guild.icon.url)
+        embed.set_footer(text="ID: {}".format(guild.id))
+
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["getir"])
     async def get(
         self,
