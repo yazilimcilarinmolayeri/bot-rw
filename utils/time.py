@@ -18,11 +18,10 @@ def day_month_year(value):
     return (value.day, value.month, value.year)
 
 
-def days_ago(value, label=True):
+def days_ago(value):
     """
     Args:
         value (datetime.datetime): A datetime.
-        label (bool):
 
     Returns:
         int: Days information.
