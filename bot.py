@@ -7,7 +7,7 @@ from discord.ext import commands
 from utils import config, database, context
 
 
-EXTENSIONS = ["jishaku", "cogs.api", "cogs.events", "cogs.info"]
+EXTENSIONS = ["jishaku", "cogs.api", "cogs.events", "cogs.info", "cogs.misc"]
 
 intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -30,7 +30,7 @@ class YMYBot(commands.Bot):
 
     @property
     def __version__(self):
-        return "0.14.5"
+        return "0.17.6"
 
     async def on_resumed(self):
         print("Resumed...")
