@@ -125,7 +125,7 @@ class Info(commands.Cog):
             "Kanal sayısı: `{}` "
             "Emoji sayısı: `{}`\n"
             "Oluşturulma tarihi: `{}`\n\n"
-            "Seviye: `{}`\n"
+            "Seviye: `{}` "
             "Toplam takviye: `{}`\n"
             "Son takviyeci(ler): {}".format(
                 "{}\n\n".format(guild.description)
