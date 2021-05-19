@@ -104,6 +104,18 @@ class Database:
 
         return list(self.items)
 
+    def get_items(self, table_name, where=1):
+        if table_name != 1:
+            self.where = where
+            self.items = self.db.execute(
+                "SELECT * FROM {} WHERE {}".format(table_name, self.where)
+            )
+            self.db.commit()
+
+            return list(self.items)
+        else:
+            return {}
+
     def get_tables(self):
         self.tables = self.db.execute("SELECT name FROM sqlite_master")
         return list(self.tables)
