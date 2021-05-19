@@ -124,11 +124,10 @@ class Info(commands.Cog):
             "Rol sayısı: `{}`\n"
             "Kanal sayısı: `{}` "
             "Emoji sayısı: `{}`\n"
-            "Sahip: {}\n"
             "Oluşturulma tarihi: `{}`\n\n"
             "Seviye: `{}`\n"
             "Toplam takviye: `{}`\n"
-            "Son takviye(ler): {}".format(
+            "Son takviyeci(ler): {}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -136,7 +135,6 @@ class Info(commands.Cog):
                 len(guild.roles),
                 len(guild.text_channels) + len(guild.voice_channels),
                 len(guild.emojis),
-                guild.owner.mention,
                 "{}.{}.{} ({} gün önce)".format(
                     c_day,
                     c_month,
@@ -145,11 +143,21 @@ class Info(commands.Cog):
                 ),
                 guild.premium_tier,
                 guild.premium_subscription_count,
-                ", ".join(m.mention for m in subs) if len(subs) else "`Yok`",
+                ", ".join(
+                    "{} `({} gün önce)`".format(
+                        m.mention,
+                        (datetime.now(timezone.utc) - m.premium_since).days,
+                    )
+                    for m in subs
+                )
+                if len(subs)
+                else "`Yok`",
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(text="ID: {}".format(guild.id))
+        embed.set_footer(
+            text="Sahip: {} • ID: {}".format(guild.owner, guild.id)
+        )
 
         await ctx.send(embed=embed)
 
