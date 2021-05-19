@@ -30,6 +30,14 @@ class Database:
             screenshot_url="TEXT",
         )
 
+        # AvatarHistory Table
+        self.add_table(
+            table_name="AvatarHistory",
+            user_id="INTEGER",
+            avatar_url="TEXT",
+            datetime="TIMESTAMP",
+        )
+
     def add_table(self, table_name, **columns):
         self.cols = ""
 
