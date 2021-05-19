@@ -29,8 +29,8 @@ class Info(commands.Cog):
 
         await command.__call__(ctx=channel, user=author)
 
-    @commands.command(aliases=["u"])
-    async def user(self, ctx, member: discord.Member = None):
+    @commands.command(aliases=["ui"])
+    async def userinfo(self, ctx, member: discord.Member = None):
         """"""
 
         badges = []
