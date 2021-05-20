@@ -6,6 +6,8 @@ import discord
 from io import BytesIO
 from utils import paginator
 from discord.ext import commands, menus
+from socialscan.util import Platforms as p
+from socialscan.util import execute_queries
 
 
 def setup(bot):
@@ -16,6 +18,39 @@ class API(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command(aliases=["sscan"])
+    async def socialscan(self, ctx, account):
+        """"""
+
+        with ctx.typing():
+            results = await execute_queries(
+                [account],
+                [
+                    p.TWITTER,
+                    p.INSTAGRAM,
+                    p.REDDIT,
+                    p.GITHUB,
+                    p.GITLAB,
+                    p.SPOTIFY,
+                ],
+            )
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.description = "\n\n".join(
+            [
+                "**{}** on **{}**: {}\n`(Success: {}, Valid: {}, Available: {})`".format(
+                    r.query,
+                    r.platform,
+                    r.message,
+                    r.success,
+                    r.valid,
+                    r.available,
+                )
+                for r in results
+            ]
+        )
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["ss"])
     async def screenshot(self, ctx, *, website):
         """"""
@@ -25,18 +60,16 @@ class API(commands.Cog):
         if not website.startswith("http"):
             return await ctx.send("Geçerli bir web sitesi değil!")
 
-        message = await ctx.send("Yükleniyor...")
+        with ctx.typing():
+            async with self.bot.session.get(
+                "https://image.thum.io/get/width/1080/crop/720/png/{}".format(
+                    website
+                )
+            ) as resp:
+                image = BytesIO(await resp.read())
 
-        async with self.bot.session.get(
-            "https://image.thum.io/get/width/1080/crop/720/png/{}".format(
-                website
-            )
-        ) as resp:
-            image = BytesIO(await resp.read())
-
-        await message.delete()
         await ctx.send(
-            content="> <{}>".format(website),
+            content="<{}>".format(website),
             file=discord.File(
                 image, filename="screenshot_{}.png".format(website)
             ),
