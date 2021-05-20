@@ -3,9 +3,9 @@
 import random
 import discord
 import mimetypes
-from discord.ext import commands
+from discord.ext import commands, menus
 from datetime import datetime, timedelta
-from utils import config, lists, time as util_time
+from utils import config, lists, time as util_time, paginator
 
 
 def setup(bot):
@@ -169,6 +169,54 @@ class Info(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+
+    @commands.command(aliases=["e"])
+    async def emojis(self, ctx, guild_id=None):
+        """"""
+
+        embeds = []
+
+        if guild_id is not None and await self.bot.is_owner(ctx.author):
+            guild = self.bot.get_guild(guild_id)
+
+            if guild is None:
+                return await ctx.send("Sunucu bulunamadı!")
+        else:
+            guild = ctx.guild
+
+        col = 10
+        emojis_matrix = [
+            guild.emojis[i : i + col] for i in range(0, len(guild.emojis), col)
+        ]
+
+        abc = (
+            lambda e: "<a:{}:{}>".format(e.name, e.id)
+            if e.animated
+            else "<:{}:{}>".format(e.name, e.id)
+        )
+
+        for emojis in emojis_matrix:
+            embed = discord.Embed(color=self.bot.color)
+            embed.set_author(name=guild)
+
+            embed.description = "\n".join(
+                [
+                    "{} | `{} ({} gün önce)`".format(
+                        abc(e), abc(e), util_time.days_ago(e.created_at)
+                    )
+                    for e in emojis
+                ]
+            ) + "\n\nToplam: `{}/{}`\nID: `{}`".format(
+                len(emojis), len(guild.emojis), guild.id
+            )
+            embeds.append(embed)
+
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
+        )
+        await menu.start(ctx)
 
     @commands.command(aliases=["getir"])
     async def get(
