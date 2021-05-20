@@ -8,10 +8,10 @@ from discord.ext import commands
 
 
 def setup(bot):
-    bot.add_cog(Misc(bot))
+    bot.add_cog(Utility(bot))
 
 
-class Misc(commands.Cog):
+class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
