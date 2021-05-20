@@ -1,5 +1,6 @@
 pip
+aiowiki
+socialscan
 git+https://github.com/Gorialis/jishaku@master
-git+https://github.com/Gelbpunkt/aiowiki@master
 git+https://github.com/Rapptz/discord.py@master
 git+https://github.com/Rapptz/discord-ext-menus@master
