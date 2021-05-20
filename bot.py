@@ -7,7 +7,14 @@ from discord.ext import commands
 from utils import config, database, context
 
 
-EXTENSIONS = ["jishaku", "cogs.api", "cogs.events", "cogs.info", "cogs.misc"]
+EXTENSIONS = [
+    "jishaku",
+    "cogs.api",
+    "cogs.events",
+    "cogs.info",
+    "cogs.owner",
+    "cogs.utility",
+]
 
 intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -26,11 +33,11 @@ class YMYBot(commands.Bot):
             try:
                 self.load_extension(cog)
             except Exception as exc:
-                print(f"{cog} {exc.__class__.__name__}: {exc}")
+                print("{} {}: {}".format(cog, exc.__class__.__name__, exc))
 
     @property
     def __version__(self):
-        return "0.17.6"
+        return "0.22.6"
 
     async def on_resumed(self):
         print("Resumed...")
