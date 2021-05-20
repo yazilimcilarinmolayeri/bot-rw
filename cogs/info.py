@@ -3,9 +3,9 @@
 import random
 import discord
 import mimetypes
-from utils import config, lists
 from discord.ext import commands
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from utils import config, lists, time as util_time
 
 
 def setup(bot):
@@ -27,6 +27,36 @@ class Info(commands.Cog):
 
         await command.__call__(ctx=channel, user=author)
 
+    @commands.group(invoke_without_command=True, aliases=["a"])
+    async def avatar(self, ctx, member: discord.Member = None):
+        """"""
+
+        if member == None:
+            member = ctx.author
+
+        formats = ["png", "jpg", "jpeg", "webp"]
+        url = lambda format: member.avatar.with_static_format(format)
+
+        if member.avatar.is_animated():
+            formats.append("gif")
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=member)
+        embed.description = " ".join(
+            ["[`{}`]({})".format(f, url(f)) for f in formats]
+        )
+
+        embed.set_image(url=member.avatar.url)
+        embed.set_footer(text="ID: {}".format(member.id))
+
+        await ctx.send(embed=embed)
+
+    @avatar.command(name="history", aliases=["h"])
+    async def avatar_history(self, ctx, member: discord.Member = None):
+        """"""
+
+        pass
+
     @commands.command(aliases=["ui"])
     async def userinfo(self, ctx, member: discord.Member = None):
         """"""
@@ -38,18 +68,7 @@ class Info(commands.Cog):
 
         created_at = member.created_at
         joined_at = member.joined_at
-        c_day, c_month, c_year = (
-            created_at.day,
-            created_at.month,
-            created_at.year,
-        )
-        j_day, j_month, j_year = (
-            joined_at.day,
-            joined_at.month,
-            joined_at.year,
-        )
-        j_days = (datetime.now(timezone.utc) - joined_at).days
-        c_days = (datetime.now(timezone.utc) - created_at).days
+        j_days = util_time.days_ago(joined_at)
 
         perms = member.guild_permissions
         partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
@@ -80,16 +99,12 @@ class Info(commands.Cog):
                 " ".join(badges),
                 member.mention,
                 "{}.{}.{} ({} gün önce)".format(
-                    j_day,
-                    j_month,
-                    j_year,
+                    *util_time.day_month_year(joined_at),
                     j_days,
                 ),
                 "{}.{}.{} ({} gün önce)".format(
-                    c_day,
-                    c_month,
-                    c_year,
-                    c_days,
+                    *util_time.day_month_year(created_at),
+                    util_time.days_ago(created_at),
                 ),
             )
         )
@@ -99,19 +114,17 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["gi"])
-    async def guildinfo(self, ctx, guild: discord.Guild = None):
+    async def guildinfo(self, ctx, guild_id=None):
         """"""
 
-        if guild == None:
+        if guild_id is not None and await self.bot.is_owner(ctx.author):
+            guild = self.bot.get_guild(guild_id)
+
+            if guild is None:
+                return await ctx.send("Sunucu bulunamadı!")
+        else:
             guild = ctx.guild
 
-        created_at = guild.created_at
-        c_day, c_month, c_year = (
-            created_at.day,
-            created_at.month,
-            created_at.year,
-        )
-        c_days = (datetime.now(timezone.utc) - created_at).days
         subs = guild.premium_subscribers
 
         embed = discord.Embed(color=self.bot.color)
@@ -134,17 +147,15 @@ class Info(commands.Cog):
                 len(guild.text_channels) + len(guild.voice_channels),
                 len(guild.emojis),
                 "{}.{}.{} ({} gün önce)".format(
-                    c_day,
-                    c_month,
-                    c_year,
-                    c_days,
+                    *util_time.day_month_year(guild.created_at),
+                    util_time.days_ago(guild.created_at),
                 ),
                 guild.premium_tier,
                 guild.premium_subscription_count,
                 ", ".join(
                     "{} `({} gün önce)`".format(
                         m.mention,
-                        (datetime.now(timezone.utc) - m.premium_since).days,
+                        util_time.days_ago(m.premium_since),
                     )
                     for m in subs
                 )
