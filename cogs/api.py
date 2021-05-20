@@ -147,7 +147,7 @@ class API(commands.Cog):
         embed.description = (
             "{}\n\n"
             "Lisans: `{}`\n"
-            "Geliştirici: `{}` (`{}`)\n"
+            "Geliştirici: `{} ({})`\n"
             "Bağlantılar: {}"
         ).format(
             data["summary"] or " ",
