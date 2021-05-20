@@ -40,7 +40,7 @@ class Utility(commands.Cog):
         """"""
 
         branch = "main"
-        source_url = "https://github.com/yazilimcilarinmolayeri/rtfm-bot"
+        source_url = "https://github.com/yazilimcilarinmolayeri/ymybot-rw"
 
         if command is None:
             return await ctx.send(source_url)
