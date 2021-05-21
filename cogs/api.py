@@ -209,8 +209,8 @@ class API(commands.Cog):
         embed.description = data["alt"]
         embed.set_image(url=data["img"])
         embed.set_footer(
-            text="{} - {}.{}.{}".format(
-                data["num"], data["day"], data["month"], data["year"]
+            text="{}/{}/{} • {}".format(
+                data["day"], data["month"], data["year"], data["num"]
             )
         )
 
