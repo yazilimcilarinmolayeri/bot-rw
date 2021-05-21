@@ -17,6 +17,9 @@ class Info(commands.Cog):
         self.bot = bot
         self.db = bot.db
 
+    def list_to_matrix(self, l, col=10):
+        return [l[i : i + col] for i in range(0, len(l), col)]
+
     def is_url_image(self, url):
         mimetype, encoding = mimetypes.guess_type(url)
         return mimetype and mimetype.startswith("image")
@@ -68,7 +71,7 @@ class Info(commands.Cog):
 
         created_at = member.created_at
         joined_at = member.joined_at
-        j_days = util_time.days_ago(joined_at)
+        j_days = util_time.humanize(joined_at)
 
         perms = member.guild_permissions
         partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
@@ -80,7 +83,7 @@ class Info(commands.Cog):
             badges.append("<:administrator:844298864869769226>")
         if perms.manage_messages:
             badges.append("<:moderator:844298864857055252>")
-        if j_days > 365 * 2:
+        if int(j_days.split(" ")[0]) > 365 * 2:
             badges.append("<:oldmember:844377103000010752>")
         if (
             is_role(partner_role)
@@ -98,13 +101,13 @@ class Info(commands.Cog):
             "Oluşturma tarihi: `{}`".format(
                 " ".join(badges),
                 member.mention,
-                "{}.{}.{} ({} gün önce)".format(
+                "{}/{}/{} ({})".format(
                     *util_time.day_month_year(joined_at),
                     j_days,
                 ),
-                "{}.{}.{} ({} gün önce)".format(
+                "{}/{}/{} ({})".format(
                     *util_time.day_month_year(created_at),
-                    util_time.days_ago(created_at),
+                    util_time.humanize(created_at),
                 ),
             )
         )
@@ -146,16 +149,16 @@ class Info(commands.Cog):
                 len(guild.roles),
                 len(guild.text_channels) + len(guild.voice_channels),
                 len(guild.emojis),
-                "{}.{}.{} ({} gün önce)".format(
+                "{}/{}/{} ({})".format(
                     *util_time.day_month_year(guild.created_at),
-                    util_time.days_ago(guild.created_at),
+                    util_time.humanize(guild.created_at),
                 ),
                 guild.premium_tier,
                 guild.premium_subscription_count,
                 ", ".join(
-                    "{} `({} gün önce)`".format(
+                    "{} `({})`".format(
                         m.mention,
-                        util_time.days_ago(m.premium_since),
+                        util_time.humanize(m.premium_since),
                     )
                     for m in subs
                 )
@@ -184,30 +187,21 @@ class Info(commands.Cog):
         else:
             guild = ctx.guild
 
-        col = 10
-        emojis_matrix = [
-            guild.emojis[i : i + col] for i in range(0, len(guild.emojis), col)
-        ]
-
-        abc = (
-            lambda e: "<a:{}:{}>".format(e.name, e.id)
-            if e.animated
-            else "<:{}:{}>".format(e.name, e.id)
-        )
-
-        for emojis in emojis_matrix:
+        for emojis in self.list_to_matrix(guild.emojis):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild)
 
             embed.description = "\n".join(
                 [
-                    "{} | `{} ({} gün önce)`".format(
-                        abc(e), abc(e), util_time.days_ago(e.created_at)
+                    "{} `{} ({})`".format(
+                        ctx.get_emoji(guild, e.id),
+                        ctx.get_emoji(guild, e.id),
+                        util_time.humanize(e.created_at),
                     )
                     for e in emojis
                 ]
-            ) + "\n\nToplam: `{}/{}`\nID: `{}`".format(
-                len(emojis), len(guild.emojis), guild.id
+            ) + "\n\nToplam: `{}`\nID: `{}`".format(
+                len(guild.emojis), guild.id
             )
             embeds.append(embed)
 
