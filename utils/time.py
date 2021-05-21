@@ -7,6 +7,5 @@ def day_month_year(value):
     return (value.day, value.month, value.year)
 
 
-def humanize(dt, locale="tr", granularity=["day"]):
-
-    return arrow.get(dt).humanize(locale=locale, granularity=granularity)
+def humanize(dt, l="tr", od=False, g="auto"):
+    return arrow.get(dt).humanize(locale=l, only_distance=od, granularity=g)
