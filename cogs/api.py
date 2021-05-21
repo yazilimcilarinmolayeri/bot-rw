@@ -62,7 +62,7 @@ class API(commands.Cog):
 
         with ctx.typing():
             async with self.bot.session.get(
-                "https://image.thum.io/get/width/1080/crop/720/png/{}".format(
+                "https://image.thum.io/get/width/2000/crop/1200/png/{}".format(
                     website
                 )
             ) as resp:
