@@ -71,7 +71,7 @@ class Info(commands.Cog):
 
         created_at = member.created_at
         joined_at = member.joined_at
-        j_days = util_time.humanize(joined_at)
+        j_days = util_time.humanize(joined_at, g=["day"])
 
         perms = member.guild_permissions
         partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
@@ -107,7 +107,7 @@ class Info(commands.Cog):
                 ),
                 "{}/{}/{} ({})".format(
                     *util_time.day_month_year(created_at),
-                    util_time.humanize(created_at),
+                    util_time.humanize(created_at, g=["day"]),
                 ),
             )
         )
@@ -151,14 +151,14 @@ class Info(commands.Cog):
                 len(guild.emojis),
                 "{}/{}/{} ({})".format(
                     *util_time.day_month_year(guild.created_at),
-                    util_time.humanize(guild.created_at),
+                    util_time.humanize(guild.created_at, g=["day"]),
                 ),
                 guild.premium_tier,
                 guild.premium_subscription_count,
                 ", ".join(
                     "{} `({})`".format(
                         m.mention,
-                        util_time.humanize(m.premium_since),
+                        util_time.humanize(m.premium_since, g=["day"]),
                     )
                     for m in subs
                 )
@@ -196,7 +196,7 @@ class Info(commands.Cog):
                     "{} `{} ({})`".format(
                         ctx.get_emoji(guild, e.id),
                         ctx.get_emoji(guild, e.id),
-                        util_time.humanize(e.created_at),
+                        util_time.humanize(e.created_at, g=["day"]),
                     )
                     for e in emojis
                 ]
@@ -211,6 +211,61 @@ class Info(commands.Cog):
             source=paginator.EmbedSource(data=embeds),
         )
         await menu.start(ctx)
+
+    @commands.command(aliases=["eh"])
+    async def emojihistory(self, ctx, member: discord.Member = None):
+        """"""
+
+        embeds = []
+        guild = ctx.guild
+
+        if member == None:
+            member = ctx.author
+
+        data = self.bot.db.get_items("EmojiUsageStat")
+
+        # TODO: Design more functional
+        id_and_amount = {
+            d[2]: (  # Index 2: emoji_id
+                d[3],  # Index 3: amount
+                d[-1],  # Index -1: last_usage
+            )
+            for d in data
+            if member.id == d[0]  # Index 0: user_id
+            and guild.id == d[1]  # Index 1: guild_id
+        }
+        _sorted = sorted(
+            id_and_amount.items(), key=lambda kv: kv[1], reverse=True
+        )
+
+        for emojis in self.list_to_matrix(_sorted):
+            embed = discord.Embed(color=self.bot.color)
+            embed.set_author(name=member, icon_url=member.avatar.url)
+            embed.description = (
+                "\n".join(
+                    [
+                        "{} `{} (En son: {})`".format(
+                            ctx.get_emoji(guild, id),
+                            a_and_lu[0],  # Index 0: amount
+                            util_time.humanize(
+                                a_and_lu[1]  # Index 1: last_usage
+                            ),
+                        )
+                        for id, a_and_lu in emojis  # Damn loop
+                    ]
+                )
+            ) + "\n\nToplam: `{}`\nID: `{}`".format(len(_sorted), member.id)
+            embeds.append(embed)
+
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
+        )
+        try:
+            await menu.start(ctx)
+        except IndexError:
+            await ctx.send("Kayıt bulunamadı!")
 
     @commands.command(aliases=["getir"])
     async def get(
@@ -243,11 +298,6 @@ class Info(commands.Cog):
 
         message = random.choice(messages)
         author = message.author
-        day, month, year = (
-            message.created_at.day,
-            message.created_at.month,
-            message.created_at.year,
-        )
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=author, icon_url=author.avatar.url)
@@ -255,8 +305,9 @@ class Info(commands.Cog):
             message.content, message.jump_url
         )
         embed.set_footer(
-            text="{}.{}.{} {}".format(
-                day, month, year, "- Bot" if author.bot else " "
+            text="{}/{}/{} {}".format(
+                *util_time.day_month_year(message.created_at),
+                "• Bot" if author.bot else " ",
             )
         )
 
