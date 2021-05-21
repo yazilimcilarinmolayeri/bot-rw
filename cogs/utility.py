@@ -5,6 +5,7 @@ import time
 import inspect
 import discord
 from discord.ext import commands
+from utils import time as util_time
 
 
 def setup(bot):
@@ -20,9 +21,7 @@ class Utility(commands.Cog):
         """"""
 
         await ctx.send(
-            "Uptime: `{}`".format(
-                self.bot.uptime.strftime("%H:%M:%S %d.%m.%Y")
-            )
+            "Uptime: `{}`".format(util_time.humanize(self.bot.uptime))
         )
 
     @commands.command(aliases=["p"])
