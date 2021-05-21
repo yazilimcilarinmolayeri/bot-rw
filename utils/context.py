@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import discord
 from utils import lists
 from discord.ext import commands
 
@@ -14,6 +15,14 @@ class Context(commands.Context):
 
     def _format(self, emoji, content):
         return "{} | {}".format(emoji, content)
+
+    def get_emoji(self, guild, emoji_id):
+        emoji = discord.utils.get(guild.emojis, id=emoji_id)
+
+        if emoji.animated:
+            return "<a:{}:{}>".format(emoji.name, emoji.id)
+        else:
+            return "<:{}:{}>".format(emoji.name, emoji.id)
 
     async def info(self, content):
         emoji = self.symbols.get("info")
