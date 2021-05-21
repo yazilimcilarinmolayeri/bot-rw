@@ -136,7 +136,7 @@ class Events(commands.Cog):
         _update = lambda emoji, amount: self.db.sql_do(
             "UPDATE EmojiUsageStat SET amount={}, last_usage='{}' WHERE "
             "user_id={} AND guild_id={} AND emoji_id={}".format(
-                amount, datetime.now(), author.id, guild.id, emoji.id
+                amount, arrow.utcnow(), author.id, guild.id, emoji.id
             )
         )
 
