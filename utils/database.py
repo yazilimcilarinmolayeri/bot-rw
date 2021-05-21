@@ -38,6 +38,16 @@ class Database:
             datetime="TIMESTAMP",
         )
 
+        # EmojiUsageStat Table
+        self.add_table(
+            table_name="EmojiUsageStat",
+            user_id="INTEGER",
+            guild_id="INTEGER",
+            emoji_id="INTEGER",
+            amount="INTEGER",
+            last_usage="TIMESTAMP",
+        )
+
     def add_table(self, table_name, **columns):
         self.cols = ""
 
