@@ -37,7 +37,7 @@ class YMYBot(commands.Bot):
 
     @property
     def __version__(self):
-        return "0.22.6"
+        return "0.24.9"
 
     async def on_resumed(self):
         print("Resumed...")
