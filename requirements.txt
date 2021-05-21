@@ -1,4 +1,5 @@
 pip
+arrow
 aiowiki
 socialscan
 git+https://github.com/Gorialis/jishaku@master
