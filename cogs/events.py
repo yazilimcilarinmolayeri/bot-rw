@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import re
 import sys
+import arrow
 import discord
 import traceback
 from utils import config
 from datetime import datetime
+from collections import Counter
 from discord.ext import commands
 from discord.ext.commands import errors
 
@@ -34,7 +37,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if not hasattr(self, "uptime"):
-            self.bot.uptime = datetime.now()
+            self.bot.uptime = arrow.utcnow()
 
         print(
             "{} (ID: {})\ndiscord.py version: {}".format(
@@ -64,22 +67,20 @@ class Events(commands.Cog):
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
-            embed.set_author(name=author, icon_url=author.avatar_url)
+            embed.set_author(name=author, icon_url=author.avatar.url)
             embed.add_field(
                 name="Bahsetme Bilgisi",
-                value=(
-                    "Kanal: `#{} ({})`\n"
-                    "Sunucu: `{} ({})`\n\n"
-                    "[`Mesaja zıpla!`]({})".format(
-                        message.channel.name,
-                        message.channel.id,
-                        author.guild,
-                        author.guild.id,
-                        message.jump_url,
-                    ),
+                value="Kanal: `#{} ({})`\n"
+                "Sunucu: `{} ({})`\n\n"
+                "[`Mesaja zıpla!`]({})".format(
+                    message.channel.name,
+                    message.channel.id,
+                    author.guild,
+                    author.guild.id,
+                    message.jump_url,
                 ),
             )
-            embed.set_footer(text=f"ID: {author.id}")
+            embed.set_footer(text="ID: {}".format(author.id))
 
             if message.attachments:
                 attachment_url = message.attachments[0].url
@@ -100,13 +101,60 @@ class Events(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar.url)
-            embed.set_footer(text=f"ID: {author.id}")
+            embed.set_footer(text="ID: {}".format(author.id))
 
             if message.attachments:
                 attachment_url = message.attachments[0].url
                 embed.set_image(url=attachment_url)
 
             await channel.send(embed=embed)
+
+    @commands.Cog.listener(name="on_message")
+    async def on_emoji(self, message):
+        guild = message.guild
+        author = message.author
+
+        custom_emojis = Counter(
+            [
+                discord.utils.get(guild.emojis, id=e)
+                for e in [
+                    int(e.split(":")[2].replace(">", ""))
+                    for e in re.findall(r"<:\w*:\d*>", message.content)
+                ]
+            ]
+        )
+
+        if not len(custom_emojis):
+            return
+
+        data = self.db.get_item("EmojiUsageStat", ("user_id", author.id))
+        _insert = lambda emoji, amont: self.db.insert(
+            "EmojiUsageStat",
+            *[author.id, guild.id, emoji.id, amont, arrow.utcnow()],
+        )
+        # TODO: Functionally add to utils/database.py
+        _update = lambda emoji, amount: self.db.sql_do(
+            "UPDATE EmojiUsageStat SET amount={}, last_usage='{}' WHERE "
+            "user_id={} AND guild_id={} AND emoji_id={}".format(
+                amount, datetime.now(), author.id, guild.id, emoji.id
+            )
+        )
+
+        # TODO: Design optimized and combine with 2nd for loop
+        for d in data:
+            for emoji, amount in custom_emojis.items():
+                try:
+                    if d[2] == emoji.id:  # Index 2: emoji_id
+                        _update(emoji, d[3] + amount)  # Index 3: amount
+                except KeyError:
+                    _insert(emoji, amount)
+
+        for emoji, amount in custom_emojis.items():
+            try:
+                if not emoji.id in [d[2] for d in data]:  # Index 2: emoji_id
+                    _insert(emoji, amount)
+            except AttributeError:
+                continue
 
     @commands.Cog.listener(name="on_user_update")
     async def on_update_avatar(self, before, after):
