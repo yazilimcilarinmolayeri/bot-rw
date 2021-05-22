@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 import aiohttp
@@ -20,7 +21,7 @@ intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-class YMYBot(commands.Bot):
+class YMYBOT(commands.Bot):
     def __init__(self):
         super().__init__(command_prefix=config.PREFIX, intents=intents)
 
@@ -62,3 +63,7 @@ class YMYBot(commands.Bot):
 
     def run(self):
         super().run(config.TOKEN, reconnect=True)
+
+
+if __name__ == "__main__":
+    YMYBOT().run()
