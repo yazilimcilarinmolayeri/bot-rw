@@ -1,16 +1,18 @@
 [Unit]
-Description = ymybot-rw service
 After = network.target
+Description = ymybot-rw service
 
 [Service]
 Type = simple
-User = bot
-Group = bot
-WorkingDirectory=/home/bot/ymybot-rw
-ExecStart = /usr/bin/python3 /home/bot/ymybot-rw/launcher.py
-Restart = on-failure
 RestartSec = 5
+Restart = on-failure
 TimeoutStartSec = infinity
+
+Environment=USERNAME=user
+User = USERNAME
+Group = USERNAME
+WorkingDirectory = /home/USERNAME/ymybot-rw
+ExecStart = /home/USERNAME/ymybot-rw/bot.py
 
 [Install]
 WantedBy = multi-user.target
