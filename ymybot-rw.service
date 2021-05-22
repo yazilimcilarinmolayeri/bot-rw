@@ -8,11 +8,10 @@ RestartSec = 5
 Restart = on-failure
 TimeoutStartSec = infinity
 
-Environment=USERNAME=user
-User = USERNAME
-Group = USERNAME
-WorkingDirectory = /home/USERNAME/ymybot-rw
-ExecStart = /home/USERNAME/ymybot-rw/bot.py
+User = user
+Group = user
+WorkingDirectory = /home/user/ymybot-rw
+ExecStart = /home/user/ymybot-rw/bot.py
 
 [Install]
 WantedBy = multi-user.target
