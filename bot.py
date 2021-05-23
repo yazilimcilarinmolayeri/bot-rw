@@ -23,7 +23,11 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class YMYBOT(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=config.PREFIX, intents=intents)
+        super().__init__(
+            command_prefix=config.PREFIX,
+            intents=intents,
+            owner_ids=config.OWNER_IDS,
+        )
 
         self.uptime = ""
         self.color = 0x2F3136
