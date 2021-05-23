@@ -70,10 +70,10 @@ class Events(commands.Cog):
             embed.set_author(name=author, icon_url=author.avatar.url)
             embed.add_field(
                 name="Bahsetme Bilgisi",
-                value="Kanal: `#{} ({})`\n"
-                "Sunucu: `{} ({})`\n\n"
+                value="Kanal: {} `(ID: {})`\n"
+                "Sunucu: `{} (ID: {})`\n\n"
                 "[`Mesaja zıpla!`]({})".format(
-                    message.channel.name,
+                    message.channel.mention,
                     message.channel.id,
                     author.guild,
                     author.guild.id,
@@ -109,11 +109,7 @@ class Events(commands.Cog):
 
             await channel.send(embed=embed)
 
-    @commands.Cog.listener(name="on_message")
-    async def on_emoji(self, message):
-        guild = message.guild
-        author = message.author
-
+    def cumstom_emoji_counter(self, guild, message):
         custom_emojis = Counter(
             [
                 discord.utils.get(guild.emojis, id=e)
@@ -123,6 +119,11 @@ class Events(commands.Cog):
                 ]
             ]
         )
+
+        return custom_emojis
+
+    def update_emoji_stats(self, guild, message, author):
+        custom_emojis = self.cumstom_emoji_counter(guild, message)
 
         if not len(custom_emojis):
             return
@@ -155,6 +156,21 @@ class Events(commands.Cog):
                     _insert(emoji, amount)
             except AttributeError:
                 continue
+
+    @commands.Cog.listener(name="on_message")
+    async def on_emoji(self, message):
+        guild = message.guild
+        author = message.author
+
+        self.update_emoji_stats(guild, message, author)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        b_custom_emojis = self.cumstom_emoji_counter(before.guild, before)
+        a_custom_emojis = self.cumstom_emoji_counter(after.guild, after)
+
+        if len(a_custom_emojis) > len(b_custom_emojis):
+            self.update_emoji_stats(after.guild, after, after.author)
 
     @commands.Cog.listener(name="on_user_update")
     async def on_update_avatar(self, before, after):
@@ -206,7 +222,8 @@ class Events(commands.Cog):
                 if ctx.invoked_subcommand
                 else str(ctx.command)
             )
-            await ctx.send_help(helper)
+            # await ctx.send_help(helper)
+            await ctx.add_reactions("\U000026d4")
 
         if isinstance(err, errors.CommandOnCooldown):
             await ctx.send(
