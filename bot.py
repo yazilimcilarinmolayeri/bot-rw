@@ -26,7 +26,7 @@ class YMYBOT(commands.Bot):
         super().__init__(
             command_prefix=config.PREFIX,
             intents=intents,
-            owner_ids=config.OWNER_IDS,
+            owner_ids=set(config.OWNER_IDS),
         )
 
         self.uptime = ""
