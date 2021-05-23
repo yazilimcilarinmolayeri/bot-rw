@@ -17,22 +17,9 @@ class Info(commands.Cog):
         self.bot = bot
         self.db = bot.db
 
-    def list_to_matrix(self, l, col=10):
-        return [l[i : i + col] for i in range(0, len(l), col)]
-
-    def is_url_image(self, url):
-        mimetype, encoding = mimetypes.guess_type(url)
-        return mimetype and mimetype.startswith("image")
-
-    async def send_profile_message(self, author):
-        channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
-        command = self.bot.get_command("profile")
-
-        await command.__call__(ctx=channel, user=author)
-
     @commands.group(invoke_without_command=True, aliases=["a"])
     async def avatar(self, ctx, member: discord.Member = None):
-        """"""
+        """Shows a user's avatar."""
 
         if member == None:
             member = ctx.author
@@ -56,13 +43,13 @@ class Info(commands.Cog):
 
     @avatar.command(name="history", aliases=["h"])
     async def avatar_history(self, ctx, member: discord.Member = None):
-        """"""
+        """Shows a user's avatar history."""
 
         pass
 
     @commands.command(aliases=["ui"])
     async def userinfo(self, ctx, member: discord.Member = None):
-        """"""
+        """Shows info about a user."""
 
         badges = []
 
@@ -116,9 +103,9 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["gi"])
-    async def guildinfo(self, ctx, guild_id=None):
-        """"""
+    @commands.command(aliases=["si"])
+    async def serverinfo(self, ctx, guild_id=None):
+        """Shows info about the current server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
             guild = self.bot.get_guild(guild_id)
@@ -173,9 +160,12 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    def list_to_matrix(self, l, col=10):
+        return [l[i : i + col] for i in range(0, len(l), col)]
+
     @commands.command(aliases=["e"])
     async def emojis(self, ctx, guild_id=None):
-        """"""
+        """Shows you about the emoji info int the server."""
 
         embeds = []
 
@@ -212,9 +202,9 @@ class Info(commands.Cog):
         )
         await menu.start(ctx)
 
-    @commands.command(aliases=["eh"])
-    async def emojihistory(self, ctx, member: discord.Member = None):
-        """"""
+    @commands.command(aliases=["es"])
+    async def emojistats(self, ctx, member: discord.Member = None):
+        """Shows you statistics about the emoji usage on author."""
 
         embeds = []
         guild = ctx.guild
@@ -274,7 +264,7 @@ class Info(commands.Cog):
         channel: discord.TextChannel = None,
         author: discord.Member = None,
     ):
-        """"""
+        """Brings a message from the past (1 year ago)."""
 
         if channel == None:
             channel = ctx
@@ -313,9 +303,19 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    def is_url_image(self, url):
+        mimetype, encoding = mimetypes.guess_type(url)
+        return mimetype and mimetype.startswith("image")
+
+    async def send_profile_message(self, author):
+        channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
+        command = self.bot.get_command("profile")
+
+        await command.__call__(ctx=channel, user=author)
+
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, user: discord.Member = None):
-        """"""
+        """Shows info a user profile."""
 
         if user is None:
             user = ctx.author
@@ -348,7 +348,7 @@ class Info(commands.Cog):
 
     @profile.command(name="setup")
     async def profile_setup(self, ctx):
-        """"""
+        """Setup a user profile."""
 
         answers = []
         author = ctx.message.author
@@ -404,7 +404,7 @@ class Info(commands.Cog):
     @profile.group(name="delete")
     @commands.has_permissions(manage_messages=True)
     async def profile_delete(self, ctx, user: discord.Member):
-        """"""
+        """Delete a user profile."""
 
         if not self.db.check_item("Profile", ("user_id", user.id)):
             return await ctx.send("Profil bulunamadı!")
@@ -416,7 +416,7 @@ class Info(commands.Cog):
 
     @profile.group(name="edit")
     async def profile_edit(self, ctx):
-        """"""
+        """Edit a user profile."""
 
         commands = ctx.command.commands
 
