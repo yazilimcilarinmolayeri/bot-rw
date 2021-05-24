@@ -5,7 +5,7 @@ import time
 import inspect
 import discord
 from discord.ext import commands
-from utils import config, time as util_time
+from utils import time as util_time
 
 
 def setup(bot):
@@ -15,6 +15,7 @@ def setup(bot):
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.c = bot.config
 
     @commands.command(aliases=["u"])
     async def uptime(self, ctx):
@@ -40,7 +41,7 @@ class Utility(commands.Cog):
         """Gives feedback about the bot."""
 
         author = ctx.author
-        channel = self.bot.get_channel(config.FEEDBACK_CHANNEL_ID)
+        channel = self.bot.get_channel(self.c.getint("Channel", "FEEDBACK_CHANNEL_ID"))
 
         if channel is None:
             return

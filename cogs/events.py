@@ -5,11 +5,11 @@ import sys
 import arrow
 import discord
 import traceback
-from utils import config
 from datetime import datetime
 from collections import Counter
 from discord.ext import commands
 from discord.ext.commands import errors
+from discord import Status, ActivityType
 
 
 def setup(bot):
@@ -20,18 +20,19 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = bot.db
+        self.c = bot.config
 
     async def _change_presence(self):
-        guild = self.bot.get_guild(config.DEFAULT_GUILD_ID)
+        guild = self.bot.get_guild(self.c.getint("Guild", "DEFAULT_GUILD_ID"))
         bots = sum(m.bot for m in guild.members)
         humans = guild.member_count - bots
 
         await self.bot.change_presence(
             activity=discord.Activity(
-                type=config.ACTIVITY_TYPE,
+                type=ActivityType.watching,
                 name="{} + {} üyeyi".format(humans, bots),
             ),
-            status=config.STATUS_TYPE,
+            status=Status.idle,
         )
 
     @commands.Cog.listener()
@@ -63,7 +64,9 @@ class Events(commands.Cog):
             self.bot.user.mentioned_in(message)
             and message.mention_everyone is False
         ):
-            channel = self.bot.get_channel(config.MENTION_LOG_CHANNEL_ID)
+            channel = self.bot.get_channel(
+                self.c.getint("Channel", "MENTION_LOG_CHANNEL_ID")
+            )
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
@@ -96,7 +99,9 @@ class Events(commands.Cog):
             return
 
         if message.guild is None:
-            channel = self.bot.get_channel(config.DM_LOG_CHANNEL_ID)
+            channel = self.bot.get_channel(
+                self.c.getint("Channel", "DM_LOG_CHANNEL_ID")
+            )
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
@@ -182,7 +187,9 @@ class Events(commands.Cog):
             return
 
         avatar_url = user.avatar.url[: user.avatar.url.find("?")]
-        channel = self.bot.get_channel(config.AVATAR_LOG_CHANNEL_ID)
+        channel = self.bot.get_channel(
+            self.c.getint("Channel", "AVATAR_LOG_CHANNEL_ID")
+        )
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=user)

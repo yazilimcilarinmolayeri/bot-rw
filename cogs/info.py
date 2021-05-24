@@ -5,7 +5,7 @@ import discord
 import mimetypes
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
-from utils import config, lists, time as util_time, paginator
+from utils import lists, time as util_time, paginator
 
 
 def setup(bot):
@@ -16,6 +16,7 @@ class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = bot.db
+        self.c = bot.config
 
     @commands.group(invoke_without_command=True, aliases=["a"])
     async def avatar(self, ctx, member: discord.Member = None):
@@ -61,8 +62,8 @@ class Info(commands.Cog):
         j_days = util_time.humanize(joined_at, g=["day"])
 
         perms = member.guild_permissions
-        partner_role = ctx.guild.get_role(config.PARTNER_ROLE_ID)
-        sponsor_role = ctx.guild.get_role(config.SPONSOR_ROLE_ID)
+        partner_role = ctx.guild.get_role(self.c.get("Role", "PARTNER_ROLE_ID"))
+        sponsor_role = ctx.guild.get_role(self.c.get("Role", "SPONSOR_ROLE_ID"))
 
         is_role = lambda role: True if role in member.roles else False
 
@@ -308,7 +309,7 @@ class Info(commands.Cog):
         return mimetype and mimetype.startswith("image")
 
     async def send_profile_message(self, author):
-        channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
+        channel = self.bot.get_channel(self.c.get("Channel", "PROFILE_CHANNEL_ID"))
         command = self.bot.get_command("profile")
 
         await command.__call__(ctx=channel, user=author)
@@ -392,7 +393,7 @@ class Info(commands.Cog):
 
         self.db.insert("Profile", *answers)
 
-        profile_channel = self.bot.get_channel(config.PROFILE_CHANNEL_ID)
+        profile_channel = self.bot.get_channel(self.c.get("Channel", "PROFILE_CHANNEL_ID"))
         embed.description = "{}, Kurulum tamamlandı! Gözat: {}".format(
             author.mention, profile_channel.mention
         )
