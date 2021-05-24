@@ -4,8 +4,9 @@
 import aiohttp
 import discord
 import warnings
+import configparser
 from discord.ext import commands
-from utils import config, database, context
+from utils import database, context
 
 
 EXTENSIONS = [
@@ -16,6 +17,15 @@ EXTENSIONS = [
     "cogs.owner",
     "cogs.utility",
 ]
+CONFIG = configparser.ConfigParser()
+FILES = CONFIG.read("config.cfg")
+DESCRIPTION = """
+    "Hello! I am a multifunctional Discord bot (ymybot rewrite version)."
+"""
+
+if not len(FILES):
+    print("Config file not found!")
+    exit()
 
 intents = discord.Intents.all()  # New in version 1.5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -24,12 +34,14 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 class YMYBOT(commands.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix=config.PREFIX,
             intents=intents,
-            owner_ids=set(config.OWNER_IDS),
+            description=DESCRIPTION,
+            command_prefix=CONFIG.get("Bot", "PREFIX"),
+            owner_ids=set([int(_id) for _id in CONFIG.get("Bot", "OWNER_IDS").split(",")]),
         )
 
         self.uptime = ""
+        self.config = CONFIG
         self.color = 0x2F3136
         self.db = database.Database("database")
         self.session = aiohttp.ClientSession(loop=self.loop)
@@ -42,7 +54,7 @@ class YMYBOT(commands.Bot):
 
     @property
     def __version__(self):
-        return "0.27.11"
+        return "0.27.11",
 
     async def on_resumed(self):
         print("Resumed...")
@@ -66,7 +78,7 @@ class YMYBOT(commands.Bot):
         await self.session.close()
 
     def run(self):
-        super().run(config.TOKEN, reconnect=True)
+        super().run(self.config.get("Bot", "TOKEN"), reconnect=True)
 
 
 if __name__ == "__main__":
