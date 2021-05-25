@@ -8,7 +8,7 @@
 Hello! I am a multifunctional Discord bot (ymybot rewrite version)
 > API's, Info, Owner, Utility and more...
 
-## Installation and Setup
+## Download and Installation
 
 1. Clone the repository:
 ```
