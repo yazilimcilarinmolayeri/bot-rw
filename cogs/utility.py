@@ -5,6 +5,7 @@ import time
 import inspect
 import discord
 from discord.ext import commands
+from discord.ui import View, Button
 from utils import time as util_time
 
 
@@ -119,6 +120,23 @@ class Utility(commands.Cog):
 
         await self.say_permissions(ctx, member, channel)
 
+    @commands.command()
+    async def buttons(self, ctx):
+        """Buttons test command."""
+
+        buttons = [
+            Button(style=discord.ButtonStyle.primary, label="Primary"),
+            Button(style=discord.ButtonStyle.secondary, label="Secondary"),
+            Button(style=discord.ButtonStyle.success, label="Success"),
+            Button(style=discord.ButtonStyle.danger, label="Danger"),
+            Button(style=discord.ButtonStyle.link, label="Link", url="https://example.com"),
+        ]
+
+        view = View()
+        [view.add_item(button) for button in buttons]
+
+        await ctx.send("Buttons test command.", view=view)
+ 
     @commands.command(aliases=["kaynak"])
     async def source(self, ctx, *, command=None):
         """Displays my full source code or for a specific command."""
