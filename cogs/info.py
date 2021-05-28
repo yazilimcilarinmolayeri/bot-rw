@@ -309,7 +309,7 @@ class Info(commands.Cog):
         return mimetype and mimetype.startswith("image")
 
     async def send_profile_message(self, author):
-        channel = self.bot.get_channel(self.c.get("Channel", "PROFILE_CHANNEL_ID"))
+        channel = self.bot.get_channel(self.c.getint("Channel", "PROFILE_CHANNEL_ID"))
         command = self.bot.get_command("profile")
 
         await command.__call__(ctx=channel, user=author)
