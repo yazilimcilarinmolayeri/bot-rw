@@ -6,7 +6,7 @@ import inspect
 import discord
 from discord.ext import commands
 from discord.ui import View, Button
-from utils import time as util_time
+from utils import lists, time as util_time
 
 
 def setup(bot):
@@ -27,14 +27,24 @@ class Utility(commands.Cog):
         )
 
     @commands.command(aliases=["p"])
-    async def ping(self, ctx):
+    async def ping(self, ctx, member: discord.Member = None):
         """Used to test bot's response time."""
+
+        if member != None:
+            return await ctx.send(
+                "\n".join(
+                    [
+                        line.replace("you", member.mention)
+                        for line in lists.never_gonna_give_you_up_lyrics
+                    ]
+                )
+            )
 
         before = time.monotonic()
         message = await ctx.send("Pinging...")
         ping = (time.monotonic() - before) * 1000
 
-        await message.edit(content="Pong! `{}ms`".format(round(ping, 2)))
+        await message.edit(content="Pong: `{} ms`".format(round(ping, 2)))
 
     @commands.command()
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
@@ -42,7 +52,9 @@ class Utility(commands.Cog):
         """Gives feedback about the bot."""
 
         author = ctx.author
-        channel = self.bot.get_channel(self.c.getint("Channel", "FEEDBACK_CHANNEL_ID"))
+        channel = self.bot.get_channel(
+            self.c.getint("Channel", "FEEDBACK_CHANNEL_ID")
+        )
 
         if channel is None:
             return
@@ -129,14 +141,18 @@ class Utility(commands.Cog):
             Button(style=discord.ButtonStyle.secondary, label="Secondary"),
             Button(style=discord.ButtonStyle.success, label="Success"),
             Button(style=discord.ButtonStyle.danger, label="Danger"),
-            Button(style=discord.ButtonStyle.link, label="Link", url="https://example.com"),
+            Button(
+                style=discord.ButtonStyle.link,
+                label="Link",
+                url="https://example.com",
+            ),
         ]
 
         view = View()
         [view.add_item(button) for button in buttons]
 
         await ctx.send("Buttons test command.", view=view)
- 
+
     @commands.command(aliases=["kaynak"])
     async def source(self, ctx, *, command=None):
         """Displays my full source code or for a specific command."""
