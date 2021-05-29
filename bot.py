@@ -37,7 +37,9 @@ class YMYBOT(commands.Bot):
             intents=intents,
             description=DESCRIPTION,
             command_prefix=CONFIG.get("Bot", "PREFIX"),
-            owner_ids=set([int(_id) for _id in CONFIG.get("Bot", "OWNER_IDS").split(",")]),
+            owner_ids=set(
+                [int(_id) for _id in CONFIG.get("Bot", "OWNER_IDS").split(",")]
+            ),
         )
 
         self.uptime = ""
@@ -54,7 +56,7 @@ class YMYBOT(commands.Bot):
 
     @property
     def __version__(self):
-        return "0.27.11",
+        return "0.27.11"
 
     async def on_resumed(self):
         print("Resumed...")
