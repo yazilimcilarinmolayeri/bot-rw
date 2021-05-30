@@ -56,7 +56,7 @@ class Profile(Model):
 
 async def init():
     await Tortoise.init(
-        db_url="sqlite://database.sqlite3",
+        db_url="sqlite://ymybot-rw-db.sqlite3",
         modules={"models": ["utils.models"]},
     )
     await Tortoise.generate_schemas()
