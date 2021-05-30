@@ -221,7 +221,7 @@ class Info(commands.Cog):
 
         return stats
 
-    @commands.command(aliases=["es"])
+    @commands.group(invoke_without_command=True, aliases=["es"])
     async def emojistats(self, ctx, member: discord.Member = None):
         """Shows you statistics about the emoji usage on author."""
 
@@ -569,4 +569,3 @@ class Info(commands.Cog):
         )
         await ctx.message.add_reaction("\U00002705")
         await self.send_profile_message(ctx.author)
-

@@ -129,7 +129,7 @@ class Events(commands.Cog):
 
         return custom_emojis
 
-    def update_emoji_stats(self, guild, message, author):
+    async def update_emoji_stats(self, guild, message, author):
         custom_emojis = self.cumstom_emoji_counter(guild, message)
 
         if not len(custom_emojis):
