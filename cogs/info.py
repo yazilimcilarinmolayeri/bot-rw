@@ -397,7 +397,7 @@ class Info(commands.Cog):
         embed.set_thumbnail(url=member.avatar.url)
         embed.set_image(
             url=screenshot_url
-            if screenshot_url != "-"
+            if screenshot_url != "?"
             else discord.Embed.Empty
         )
         embed.set_footer(text="ID: {}".format(member.id))
@@ -447,7 +447,7 @@ class Info(commands.Cog):
             answer = await self.bot.wait_for("message", check=check)
 
             if answer.content.lower() == "s":
-                answers[fields[i + 1]] = "-"
+                answers[fields[i + 1]] = "?"
             elif answer.content.lower() == "c":
                 return await question_embed.delete()
             else:
