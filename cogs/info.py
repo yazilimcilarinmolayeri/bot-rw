@@ -366,7 +366,7 @@ class Info(commands.Cog):
         )
         command = self.bot.get_command("profile")
 
-        await command.__call__(ctx=channel, user=author)
+        await command.__call__(ctx=channel, member=author)
 
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, member: discord.Member = None):
