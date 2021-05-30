@@ -5,7 +5,7 @@ condig.ini
 
 # Database files
 *.db
-database
+*.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
