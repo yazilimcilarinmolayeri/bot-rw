@@ -3,9 +3,10 @@
 import random
 import discord
 import mimetypes
+from tortoise.query_utils import Q
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
-from utils import lists, time as util_time, paginator
+from utils import lists, paginator, models, time as util_time
 
 
 def setup(bot):
@@ -15,7 +16,6 @@ def setup(bot):
 class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = bot.db
         self.c = bot.config
 
     @commands.group(invoke_without_command=True, aliases=["a"])
@@ -207,6 +207,20 @@ class Info(commands.Cog):
         )
         await menu.start(ctx)
 
+    def get_emoji_stats(self, ctx, data):
+        stats = "\n".join(
+            [
+                "{} `{} (En son: {})`".format(
+                    ctx.get_emoji(ctx.guild, d["emoji_id"]),
+                    d["amount"],
+                    util_time.humanize(d["last_usage"]),
+                )
+                for d in data
+            ]
+        )
+
+        return stats
+
     @commands.command(aliases=["es"])
     async def emojistats(self, ctx, member: discord.Member = None):
         """Shows you statistics about the emoji usage on author."""
@@ -217,39 +231,73 @@ class Info(commands.Cog):
         if member == None:
             member = ctx.author
 
-        data = self.bot.db.get_items("EmojiUsageStat")
-
-        # TODO: Design more functional
-        id_and_amount = {
-            d[2]: (  # Index 2: emoji_id
-                d[3],  # Index 3: amount
-                d[-1],  # Index -1: last_usage
+        data = (
+            await models.EmojiUsageStat.filter(
+                Q(guild_id=guild.id) & Q(user_id=member.id)
             )
-            for d in data
-            if member.id == d[0]  # Index 0: user_id
-            and guild.id == d[1]  # Index 1: guild_id
-        }
-        _sorted = sorted(
-            id_and_amount.items(), key=lambda kv: kv[1], reverse=True
+            .order_by("-amount")
+            .values("emoji_id", "amount", "last_usage")
         )
+        total = sum([d["amount"] for d in data])
 
-        for emojis in self.list_to_matrix(_sorted):
+        for data in self.list_to_matrix(data):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=member, icon_url=member.avatar.url)
-            embed.description = (
-                "\n".join(
-                    [
-                        "{} `{} (En son: {})`".format(
-                            ctx.get_emoji(guild, id),
-                            a_and_lu[0],  # Index 0: amount
-                            util_time.humanize(
-                                a_and_lu[1]  # Index 1: last_usage
-                            ),
-                        )
-                        for id, a_and_lu in emojis  # Damn loop
-                    ]
-                )
-            ) + "\n\nToplam: `{}`\nID: `{}`".format(len(_sorted), member.id)
+            embed.description = "{}\n\n{}".format(
+                self.get_emoji_stats(ctx, data),
+                "Toplam: `{}`\nID: `{}`".format(total, member.id),
+            )
+            embeds.append(embed)
+
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
+        )
+        try:
+            await menu.start(ctx)
+        except IndexError:
+            await ctx.send("Kayıt bulunamadı!")
+
+    @emojistats.command(name="server", aliases=["s"])
+    async def emojistats_server(self, ctx):
+        """Shows statistics about the emoji usage on server."""
+
+        embeds = []
+        guild = ctx.guild
+
+        def get_member(member_id):
+            member = guild.get_member(member_id)
+            return member
+
+        data = (
+            await models.EmojiUsageStat.filter(Q(guild_id=guild.id))
+            .order_by("-amount")
+            .values("user_id", "emoji_id", "amount", "last_usage")
+        )
+
+        last_usage = (
+            await models.EmojiUsageStat.filter(Q(guild_id=guild.id))
+            .order_by("-last_usage")
+            .limit(1)
+            .values("user_id", "emoji_id", "amount", "last_usage")
+        )
+
+        last_usage = last_usage[0]
+
+        for data in self.list_to_matrix(data, col=5):
+            embed = discord.Embed(color=self.bot.color)
+            embed.set_author(name=guild, icon_url=guild.icon.url)
+            embed.description = "{}\n\nEn son:\n{}\n\n{}".format(
+                self.get_emoji_stats(ctx, data),
+                "{} `{} (En son: {})`\nProfil: {}".format(
+                    ctx.get_emoji(ctx.guild, last_usage["emoji_id"]),
+                    last_usage["amount"],
+                    util_time.humanize(last_usage["last_usage"]),
+                    get_member(last_usage["user_id"]).mention,
+                ),
+                "ID: `{}`".format(guild.id),
+            )
             embeds.append(embed)
 
         menu = menus.MenuPages(
@@ -321,47 +369,62 @@ class Info(commands.Cog):
         await command.__call__(ctx=channel, user=author)
 
     @commands.group(invoke_without_command=True)
-    async def profile(self, ctx, user: discord.Member = None):
+    async def profile(self, ctx, member: discord.Member = None):
         """Shows info a user profile."""
 
-        if user is None:
-            user = ctx.author
+        if member is None:
+            member = ctx.author
 
-        data = self.db.get_item("Profile", ("user_id", user.id))
+        data = await models.Profile.values_list(pk=member.id)
 
         if not len(data):
             return await ctx.send("Profil bulunamadı!")
 
-        data = data[0]
+        member_id, screenshot_url = data[1], data[-1]
+        data = data[1:-1]
 
         embed = discord.Embed(
             color=self.bot.color, timestamp=datetime.utcnow()
         )
         embed.description = "{} **{}**\n\n".format(
-            user.mention, user
+            member.mention, member
         ) + "\n".join(
             [
                 "{}: `{}`".format(lists.profile_titles[i], j)
-                for i, j in enumerate(data[1:-1])
+                for i, j in enumerate(data)
             ]
         )
-        embed.set_thumbnail(url=user.avatar.url)
+        embed.set_thumbnail(url=member.avatar.url)
         embed.set_image(
-            url=data[-1] if data[-1] != "-" else discord.Embed.Empty
+            url=screenshot_url
+            if screenshot_url != "-"
+            else discord.Embed.Empty
         )
-        embed.set_footer(text="ID: {}".format(user.id))
-
+        embed.set_footer(text="ID: {}".format(member.id))
         await ctx.send(embed=embed)
 
     @profile.command(name="setup")
     async def profile_setup(self, ctx):
         """Setup a user profile."""
 
-        answers = []
+        answers = {}
+        fields = [
+            "user_id",
+            "operation_system",
+            "desktop_environment",
+            "desktop_themes",
+            "web_browser",
+            "code_editors",
+            "terminal_software",
+            "shell_software",
+            "screenshot_url",
+        ]
         author = ctx.message.author
-        answers.append(author.id)
+        answers[fields[0]] = author.id
 
-        if self.db.check_item("Profile", ("user_id", author.id)):
+        p = await models.Profile.values_list(pk=author.id)
+
+        if len(p):
             return await ctx.send("Var olan profilini düzenle...")
 
         def check(m):
@@ -374,7 +437,7 @@ class Info(commands.Cog):
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_footer(
-            text="'S' girerek soruyu geçebilir, 'C' girerek iptal edebilirsin."
+            text="'S' girerek geçebilir, 'C' girerek soruyu iptal edebilirsin."
         )
         question_embed = await ctx.send(embed=embed)
 
@@ -384,7 +447,7 @@ class Info(commands.Cog):
             answer = await self.bot.wait_for("message", check=check)
 
             if answer.content.lower() == "s":
-                answers.append("-")
+                answers[fields[i + 1]] = "-"
             elif answer.content.lower() == "c":
                 return await question_embed.delete()
             else:
@@ -393,34 +456,29 @@ class Info(commands.Cog):
                         return await ctx.send(
                             "Geçersiz bağlantı! Çıkılıyor..."
                         )
-                answers.append(answer.content)
+                answers[fields[i + 1]] = answer.content
 
             await answer.delete()
 
-        self.db.insert("Profile", *answers)
+        await models.Profile.create(**answers)
 
         profile_channel = self.bot.get_channel(
             self.c.get("Channel", "PROFILE_CHANNEL_ID")
         )
-        embed.description = "{}, Kurulum tamamlandı! Gözat: {}".format(
-            author.mention, profile_channel.mention
-        )
+        embed.description = "{}, Kurulum tamamlandı!".format(author.mention)
         embed.set_footer(text=discord.Embed.Empty)
 
         await question_embed.edit(embed=embed)
-        await self.send_profile_message(ctx.message.author)
+        # await self.send_profile_message(ctx.message.author)
 
     @profile.group(name="delete")
     @commands.has_permissions(manage_messages=True)
-    async def profile_delete(self, ctx, user: discord.Member):
+    async def profile_delete(self, ctx, member: discord.Member):
         """Delete a user profile."""
 
-        if not self.db.check_item("Profile", ("user_id", user.id)):
-            return await ctx.send("Profil bulunamadı!")
-
-        self.db.remove("Profile", ("user_id", user.id))
+        await models.Profile.get(pk=member.id).delete()
         await ctx.send(
-            "{} adlı kullanıcının profili silindi!".format(user.mention)
+            "{} adlı kullanıcının profili silindi!".format(member.mention)
         )
 
     @profile.group(name="edit")
@@ -440,86 +498,65 @@ class Info(commands.Cog):
     @profile_edit.command(aliases=["os"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def operation_system(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            operation_system=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            operation_system=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["de"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def desktop_environment(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            desktop_environment=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            desktop_environment=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["themes"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def desktop_themes(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            desktop_themes=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            desktop_themes=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["browser"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def web_browser(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            web_browser=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            web_browser=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["editors"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def code_editors(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            code_editors=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            code_editors=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["terminal"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def terminal_software(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            terminal_software=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            terminal_software=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["shell"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def shell_software(self, ctx, *, new_profile_item):
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            shell_software=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            shell_software=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["ss"])
     @commands.cooldown(1, 300, commands.BucketType.user)
@@ -527,11 +564,9 @@ class Info(commands.Cog):
         if not self.is_url_image(new_profile_item):
             return await ctx.message.add_reaction("\U0000203c")
 
-        self.db.update(
-            "Profile",
-            ("user_id", ctx.message.author.id),
-            screenshot_url=new_profile_item,
+        await models.Profile.get(pk=ctx.author.id).update(
+            screenshot_url=new_profile_item
         )
-
         await ctx.message.add_reaction("\U00002705")
-        await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.author)
+
