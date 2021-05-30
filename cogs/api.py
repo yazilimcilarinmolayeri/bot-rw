@@ -20,7 +20,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["sscan"])
     async def socialscan(self, ctx, account):
-        """"""
+        """Querying username and email usage on online platforms."""
 
         with ctx.typing():
             results = await execute_queries(
@@ -53,7 +53,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["ss"])
     async def screenshot(self, ctx, *, website):
-        """"""
+        """Take the website screenshot."""
 
         website = website.replace("<", "").replace(">", "")
 
@@ -77,7 +77,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["deprem"])
     async def quake(self, ctx, last=1):
-        """"""
+        """Show the Kandilli quake informations."""
 
         embeds = []
 
@@ -121,7 +121,7 @@ class API(commands.Cog):
 
     @commands.command()
     async def pypi(self, ctx, package):
-        """"""
+        """Show PyPi package informations."""
 
         async with self.bot.session.get(
             "https://pypi.org/pypi/{}/json".format(package)
@@ -162,7 +162,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["viki"])
     async def wiki(self, ctx, *, search):
-        """"""
+        """Search the Wikipedia Turkey."""
 
         embeds = []
 
@@ -185,7 +185,7 @@ class API(commands.Cog):
 
     @commands.command()
     async def xkcd(self, ctx, num=None):
-        """"""
+        """A webcomic of romance, sarcasm, math, and language."""
 
         url = "https://xkcd.com"
 
