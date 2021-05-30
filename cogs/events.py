@@ -5,9 +5,11 @@ import sys
 import arrow
 import discord
 import traceback
+from utils import models
 from datetime import datetime
 from collections import Counter
 from discord.ext import commands
+from tortoise.query_utils import Q
 from discord.ext.commands import errors
 from discord import Status, ActivityType
 
@@ -19,7 +21,6 @@ def setup(bot):
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = bot.db
         self.c = bot.config
 
     async def _change_presence(self):
@@ -46,6 +47,7 @@ class Events(commands.Cog):
             )
         )
 
+        await models.init() # database init
         await self._change_presence()
 
     @commands.Cog.listener()
@@ -133,32 +135,40 @@ class Events(commands.Cog):
         if not len(custom_emojis):
             return
 
-        data = self.db.get_item("EmojiUsageStat", ("user_id", author.id))
-        _insert = lambda emoji, amont: self.db.insert(
-            "EmojiUsageStat",
-            *[author.id, guild.id, emoji.id, amont, arrow.utcnow()],
-        )
-        # TODO: Functionally add to utils/database.py
-        _update = lambda emoji, amount: self.db.sql_do(
-            "UPDATE EmojiUsageStat SET amount={}, last_usage='{}' WHERE "
-            "user_id={} AND guild_id={} AND emoji_id={}".format(
-                amount, arrow.utcnow(), author.id, guild.id, emoji.id
-            )
-        )
+        data = await models.EmojiUsageStat.filter(guild_id=guild.id).values()
 
         # TODO: Design optimized and combine with 2nd for loop
         for d in data:
             for emoji, amount in custom_emojis.items():
                 try:
-                    if d[2] == emoji.id:  # Index 2: emoji_id
-                        _update(emoji, d[3] + amount)  # Index 3: amount
+                    if d["emoji_id"] == emoji.id:
+                        await models.EmojiUsageStat.filter(
+                            Q(guild_id=guild.id)
+                            & Q(user_id=author.id)
+                            & Q(emoji_id=emoji.id)
+                        ).update(
+                            amount=d["amount"] + amount,
+                            last_usage=datetime.utcnow(),
+                        )
                 except KeyError:
-                    _insert(emoji, amount)
+                    await models.EmojiUsageStat.create(
+                        guild_id=guild.id,
+                        user_id=author.id,
+                        emoji_id=emoji.id,
+                        amount=0,
+                        last_usage=datetime.utcnow(),
+                    )
 
         for emoji, amount in custom_emojis.items():
             try:
-                if not emoji.id in [d[2] for d in data]:  # Index 2: emoji_id
-                    _insert(emoji, amount)
+                if not emoji.id in [d["emoji_id"] for d in data]:
+                    await models.EmojiUsageStat.create(
+                        guild_id=guild.id,
+                        user_id=author.id,
+                        emoji_id=emoji.id,
+                        amount=amount,
+                        last_usage=datetime.utcnow(),
+                    )
             except AttributeError:
                 continue
 
@@ -167,7 +177,7 @@ class Events(commands.Cog):
         guild = message.guild
         author = message.author
 
-        self.update_emoji_stats(guild, message, author)
+        await self.update_emoji_stats(guild, author, message)
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
@@ -175,7 +185,7 @@ class Events(commands.Cog):
         a_custom_emojis = self.cumstom_emoji_counter(after.guild, after)
 
         if len(a_custom_emojis) > len(b_custom_emojis):
-            self.update_emoji_stats(after.guild, after, after.author)
+            await self.update_emoji_stats(after.guild, after.author, after)
 
     @commands.Cog.listener(name="on_user_update")
     async def on_update_avatar(self, before, after):
@@ -197,7 +207,6 @@ class Events(commands.Cog):
         embed.set_footer(text="ID: {}".format(user.id))
 
         await channel.send(embed=embed)
-        self.db.insert("AvatarHistory", *[user.id, avatar_url, datetime.now()])
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, err):
