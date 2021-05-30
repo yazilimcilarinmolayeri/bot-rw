@@ -5,8 +5,8 @@ import aiohttp
 import discord
 import warnings
 import configparser
+from utils import context
 from discord.ext import commands
-from utils import database, context
 
 
 EXTENSIONS = [
@@ -45,7 +45,6 @@ class YMYBOT(commands.Bot):
         self.uptime = ""
         self.config = CONFIG
         self.color = 0x2F3136
-        self.db = database.Database("database")
         self.session = aiohttp.ClientSession(loop=self.loop)
 
         for cog in EXTENSIONS:

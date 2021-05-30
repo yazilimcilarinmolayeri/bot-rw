@@ -162,7 +162,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["viki"])
     async def wiki(self, ctx, *, search):
-        """Search the Wikipedia Turkey."""
+        """Search the Wikipedia Turkish."""
 
         embeds = []
 
