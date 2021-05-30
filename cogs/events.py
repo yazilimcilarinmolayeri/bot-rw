@@ -47,7 +47,7 @@ class Events(commands.Cog):
             )
         )
 
-        await models.init() # database init
+        await models.init()  # database init
         await self._change_presence()
 
     @commands.Cog.listener()
