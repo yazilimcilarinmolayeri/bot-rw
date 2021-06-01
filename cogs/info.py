@@ -4,6 +4,7 @@ import random
 import discord
 import mimetypes
 from tortoise.query_utils import Q
+from tortoise.functions import Sum
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
 from utils import lists, paginator, models, time as util_time
@@ -207,12 +208,17 @@ class Info(commands.Cog):
         )
         await menu.start(ctx)
 
-    def get_emoji_stats(self, ctx, data):
+    def get_emoji_stats(self, ctx, data, sum=False):
+        if sum:
+            key = "sum"
+        else:
+            key = "amount"
+
         stats = "\n".join(
             [
                 "{} `{} (En son: {})`".format(
                     ctx.get_emoji(ctx.guild, d["emoji_id"]),
-                    d["amount"],
+                    d[key],
                     util_time.humanize(d["last_usage"]),
                 )
                 for d in data
@@ -265,22 +271,21 @@ class Info(commands.Cog):
 
         embeds = []
         guild = ctx.guild
-
-        def get_member(member_id):
-            member = guild.get_member(member_id)
-            return member
+        get_member = lambda member_id: guild.get_member(member_id)
 
         data = (
-            await models.EmojiUsageStat.filter(Q(guild_id=guild.id))
-            .order_by("-amount")
-            .values("user_id", "emoji_id", "amount", "last_usage")
+            await models.EmojiUsageStat.filter(guild_id=guild.id)
+            .annotate(sum=Sum("amount"))
+            .group_by("emoji_id")
+            .order_by("-sum")
+            .values()
         )
 
         last_usage = (
-            await models.EmojiUsageStat.filter(Q(guild_id=guild.id))
+            await models.EmojiUsageStat.filter(guild_id=guild.id)
             .order_by("-last_usage")
             .limit(1)
-            .values("user_id", "emoji_id", "amount", "last_usage")
+            .values()
         )
 
         last_usage = last_usage[0]
@@ -289,7 +294,7 @@ class Info(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
             embed.description = "{}\n\nEn son:\n{}\n\n{}".format(
-                self.get_emoji_stats(ctx, data),
+                self.get_emoji_stats(ctx, data, sum=True),
                 "{} `{} (En son: {})`\nProfil: {}".format(
                     ctx.get_emoji(ctx.guild, last_usage["emoji_id"]),
                     last_usage["amount"],
