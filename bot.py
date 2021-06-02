@@ -13,6 +13,7 @@ EXTENSIONS = [
     "jishaku",
     "cogs.api",
     "cogs.events",
+    "cogs.feed",
     "cogs.info",
     "cogs.owner",
     "cogs.utility",
