@@ -29,9 +29,7 @@ class Feed(commands.Cog):
         guild = self.bot.get_guild(guild_id)
         channel = guild.get_channel(channel_id)
 
-        await channel.send(
-            "\U0001f4f0 **| {}**\n{}".format(entry.title, entry.link)
-        )
+        await channel.send("{}\n> {}".format(entry.title, entry.link))
 
     @tasks.loop(minutes=10.0)
     async def feed_checker(self):
@@ -58,11 +56,12 @@ class Feed(commands.Cog):
 
     @commands.command()
     async def feeds(self, ctx):
-        """"""
+        """Shows the list of feeds on the server."""
 
         embeds = []
         guild = ctx.guild
         data = await models.Feed.filter(guild_id=guild.id).values()
+        total = sum([1 for d in data])
 
         if not len(data):
             return await ctx.send("Kayıt bulunamadı!")
@@ -70,17 +69,20 @@ class Feed(commands.Cog):
         for data in self.list_to_matrix(data, col=5):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "\n".join(
-                [
-                    "ID: `{}`\n"
-                    "Kanal: {}\n"
-                    "URL: `{}`\n".format(
-                        d["feed_id"],
-                        guild.get_channel(d["channel_id"]).mention,
-                        d["feed_url"],
-                    )
-                    for d in data
-                ]
+            embed.description = "{}\n{}".format(
+                "\n".join(
+                    [
+                        "ID: `{}`\n"
+                        "Kanal: {}\n"
+                        "URL: `{}`\n".format(
+                            d["feed_id"],
+                            guild.get_channel(d["channel_id"]).mention,
+                            d["feed_url"],
+                        )
+                        for d in data
+                    ]
+                ),
+                "Toplam: `{}`".format(total),
             )
             embeds.append(embed)
 
@@ -91,9 +93,9 @@ class Feed(commands.Cog):
         )
         await menu.start(ctx)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, aliases=["fm"])
     async def feedmanager(self, ctx):
-        """"""
+        """Manage the feeds on the server."""
 
         command = self.bot.get_command("feeds")
         await command.__call__(ctx=ctx)
@@ -114,7 +116,7 @@ class Feed(commands.Cog):
     @feedmanager.command(name="add")
     @commands.has_permissions(manage_messages=True)
     async def feedmanager_add(self, ctx, channel: discord.TextChannel, url):
-        """"""
+        """Adds a feed to the channel."""
 
         guild = ctx.guild
         message = await ctx.send("RSS/Feed ekleniyor...")
@@ -144,14 +146,14 @@ class Feed(commands.Cog):
     @feedmanager.command(name="remove")
     @commands.has_permissions(manage_messages=True)
     async def feedmanager_remove(self, ctx, feed_id):
-        """"""
+        """Removes the feed from the channel."""
 
         await models.Feed.get(pk=feed_id).delete()
         await ctx.send("RSS/Feed kaldırıldı.")
 
     @feedmanager.command(name="backup")
     async def feedmanager_backup(self, ctx):
-        """"""
+        """Takes JSON backup of feed list."""
 
         backup = {}
         feeds = await models.Feed.all()
