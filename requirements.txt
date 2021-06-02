@@ -1,6 +1,7 @@
 pip
 arrow
 socialscan
+feedparser
 tortoise-orm
 git+https://github.com/Gelbpunkt/aiowiki@master
 
