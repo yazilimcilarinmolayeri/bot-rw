@@ -27,6 +27,21 @@ class EmojiUsageStat(Model):
             return []
 
 
+class Feed(Model):
+    feed_id = fields.CharField(pk=True, max_length=8)
+    guild_id = fields.IntField()
+    channel_id = fields.IntField()
+    feed_url = fields.TextField()
+    last_entry_url = fields.TextField()
+    last_entry = fields.DatetimeField()
+
+    class Meta:
+        table = "Feed"
+
+    def __str__(self):
+        return self.name
+
+
 class Profile(Model):
     user_id = fields.IntField(pk=True)
     operation_system = fields.CharField(max_length=255)
