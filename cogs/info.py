@@ -3,8 +3,6 @@
 import random
 import discord
 import mimetypes
-from tortoise.query_utils import Q
-from tortoise.functions import Sum
 from discord.ext import commands, menus
 from datetime import datetime, timedelta
 from utils import lists, paginator, models, time as util_time
@@ -189,7 +187,7 @@ class Info(commands.Cog):
 
             embed.description = "\n".join(
                 [
-                    "{} `{} ({})`".format(
+                    "{} `{} (Eklendi: {})`".format(
                         ctx.get_emoji(guild, e.id),
                         ctx.get_emoji(guild, e.id),
                         util_time.humanize(e.created_at, g=["day"]),
@@ -207,113 +205,6 @@ class Info(commands.Cog):
             source=paginator.EmbedSource(data=embeds),
         )
         await menu.start(ctx)
-
-    def get_emoji_stats(self, ctx, data, sum=False):
-        if sum:
-            key = "sum"
-        else:
-            key = "amount"
-
-        stats = "\n".join(
-            [
-                "{} `{} (En son: {})`".format(
-                    ctx.get_emoji(ctx.guild, d["emoji_id"]),
-                    d[key],
-                    util_time.humanize(d["last_usage"]),
-                )
-                for d in data
-            ]
-        )
-
-        return stats
-
-    @commands.group(invoke_without_command=True, aliases=["es"])
-    async def emojistats(self, ctx, member: discord.Member = None):
-        """Shows you statistics about the emoji usage on author."""
-
-        embeds = []
-        guild = ctx.guild
-
-        if member == None:
-            member = ctx.author
-
-        data = (
-            await models.EmojiUsageStat.filter(
-                Q(guild_id=guild.id) & Q(user_id=member.id)
-            )
-            .order_by("-amount")
-            .values("emoji_id", "amount", "last_usage")
-        )
-        total = sum([d["amount"] for d in data])
-
-        for data in self.list_to_matrix(data):
-            embed = discord.Embed(color=self.bot.color)
-            embed.set_author(name=member, icon_url=member.avatar.url)
-            embed.description = "{}\n\n{}".format(
-                self.get_emoji_stats(ctx, data),
-                "Toplam: `{}`\nID: `{}`".format(total, member.id),
-            )
-            embeds.append(embed)
-
-        menu = menus.MenuPages(
-            timeout=30,
-            clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
-        )
-        try:
-            await menu.start(ctx)
-        except IndexError:
-            await ctx.send("Kayıt bulunamadı!")
-
-    @emojistats.command(name="server", aliases=["s"])
-    async def emojistats_server(self, ctx):
-        """Shows statistics about the emoji usage on server."""
-
-        embeds = []
-        guild = ctx.guild
-        get_member = lambda member_id: guild.get_member(member_id)
-
-        data = (
-            await models.EmojiUsageStat.filter(guild_id=guild.id)
-            .annotate(sum=Sum("amount"))
-            .group_by("emoji_id")
-            .order_by("-sum")
-            .values()
-        )
-
-        last_usage = (
-            await models.EmojiUsageStat.filter(guild_id=guild.id)
-            .order_by("-last_usage")
-            .limit(1)
-            .values()
-        )
-
-        last_usage = last_usage[0]
-
-        for data in self.list_to_matrix(data, col=5):
-            embed = discord.Embed(color=self.bot.color)
-            embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "{}\n\nEn son:\n{}\n\n{}".format(
-                self.get_emoji_stats(ctx, data, sum=True),
-                "{} `{} (En son: {})`\nProfil: {}".format(
-                    ctx.get_emoji(ctx.guild, last_usage["emoji_id"]),
-                    last_usage["amount"],
-                    util_time.humanize(last_usage["last_usage"]),
-                    get_member(last_usage["user_id"]).mention,
-                ),
-                "ID: `{}`".format(guild.id),
-            )
-            embeds.append(embed)
-
-        menu = menus.MenuPages(
-            timeout=30,
-            clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
-        )
-        try:
-            await menu.start(ctx)
-        except IndexError:
-            await ctx.send("Kayıt bulunamadı!")
 
     @commands.command(aliases=["getir"])
     async def get(
@@ -476,10 +367,10 @@ class Info(commands.Cog):
         await question_embed.edit(embed=embed)
         # await self.send_profile_message(ctx.message.author)
 
-    @profile.group(name="delete")
+    @profile.group(name="remove")
     @commands.has_permissions(manage_messages=True)
-    async def profile_delete(self, ctx, member: discord.Member):
-        """Delete a user profile."""
+    async def profile_remove(self, ctx, member: discord.Member):
+        """Remove a user profile."""
 
         await models.Profile.get(pk=member.id).delete()
         await ctx.send(
