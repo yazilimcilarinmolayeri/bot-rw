@@ -16,6 +16,7 @@ EXTENSIONS = [
     "cogs.feed",
     "cogs.info",
     "cogs.owner",
+    "cogs.stats",
     "cogs.utility",
 ]
 CONFIG = configparser.ConfigParser()
