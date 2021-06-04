@@ -52,7 +52,7 @@ class Feed(commands.Cog):
             pass
 
     @feed_checker.before_loop
-    async def before_printer(self):
+    async def before_feed_checker(self):
         print("Waiting...")
         await self.bot.wait_until_ready()
 
