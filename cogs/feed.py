@@ -51,6 +51,11 @@ class Feed(commands.Cog):
         except exceptions.ConfigurationError:
             pass
 
+    @feed_checker.before_loop
+    async def before_printer(self):
+        print("Waiting...")
+        await self.bot.wait_until_ready()
+
     def list_to_matrix(self, l, col=10):
         return [l[i : i + col] for i in range(0, len(l), col)]
 
