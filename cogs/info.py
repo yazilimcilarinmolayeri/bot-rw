@@ -24,7 +24,7 @@ class Info(commands.Cog):
         if member == None:
             member = ctx.author
 
-        formats = ["png", "jpg", "jpeg", "webp"]
+        formats = ["png", "jpg", "webp"]
         url = lambda format: member.avatar.with_static_format(format)
 
         if member.avatar.is_animated():
@@ -74,7 +74,7 @@ class Info(commands.Cog):
             badges.append("<:administrator:844298864869769226>")
         if perms.manage_messages:
             badges.append("<:moderator:844298864857055252>")
-        if int(j_days.split(" ")[0]) > 365 * 2:
+        if joined_at.day > 365 * 2:
             badges.append("<:oldmember:844377103000010752>")
         if (
             is_role(partner_role)
