@@ -4,7 +4,7 @@ import random
 import discord
 import mimetypes
 from discord.ext import commands, menus
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from utils import lists, paginator, models, time as util_time
 
 
@@ -74,7 +74,7 @@ class Info(commands.Cog):
             badges.append("<:administrator:844298864869769226>")
         if perms.manage_messages:
             badges.append("<:moderator:844298864857055252>")
-        if joined_at.day > 365 * 2:
+        if (datetime.now(timezone.utc) - joined_at).days > 365 * 2:
             badges.append("<:oldmember:844377103000010752>")
         if (
             is_role(partner_role)
