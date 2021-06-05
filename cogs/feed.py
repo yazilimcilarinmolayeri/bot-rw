@@ -8,8 +8,8 @@ import feedparser
 from io import StringIO
 from datetime import datetime
 from tortoise import exceptions
-from utils import paginator, models
 from discord.ext import commands, tasks, menus
+from utils import paginator, models, time as util_time
 
 
 def setup(bot):
@@ -77,10 +77,11 @@ class Feed(commands.Cog):
             embed.description = "{}\n{}".format(
                 "\n".join(
                     [
-                        "ID: `{}`\n"
-                        "Kanal: {}\n"
-                        "URL: `{}`\n".format(
+                        "ID: `{0}`\n"
+                        "En son: `{1}` ({2})\n"
+                        "Adres: [`{3}`]({3})\n".format(
                             d["feed_id"],
+                            util_time.humanize(d["last_entry"]),
                             guild.get_channel(d["channel_id"]).mention,
                             d["feed_url"],
                         )
