@@ -53,7 +53,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["ss"])
     async def screenshot(self, ctx, *, website):
-        """Take the website screenshot."""
+        """Take a website screenshot."""
 
         website = website.replace("<", "").replace(">", "")
 
@@ -77,7 +77,7 @@ class API(commands.Cog):
 
     @commands.command(aliases=["deprem"])
     async def quake(self, ctx, last=1):
-        """Show the Kandilli quake informations."""
+        """Show quake information from the Kandilli Observatory."""
 
         embeds = []
 
