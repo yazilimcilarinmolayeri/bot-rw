@@ -46,6 +46,24 @@ class Utility(commands.Cog):
         await message.edit(content="Pong: `{} ms`".format(round(ping, 2)))
 
     @commands.command()
+    async def tias(self, ctx, channel: discord.TextChannel = None):
+        """Send the "try it and see" message."""
+
+        if channel == None:
+            channel = ctx
+
+        await channel.send("https://tryitands.ee")
+
+    @commands.command(aliases=["ddg"])
+    @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.user)
+    async def lmddgtfy(self, ctx, *, keywords: str):
+        """Let me DuckDuckGo that for you."""
+
+        await ctx.send(
+            "https://lmddgtfy.net/?q={}".format(keywords.replace(" ", "+"))
+        )
+
+    @commands.command()
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
     async def feedback(self, ctx, *, content):
         """Gives feedback about the bot."""
