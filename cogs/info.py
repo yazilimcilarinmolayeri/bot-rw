@@ -130,9 +130,9 @@ class Info(commands.Cog):
             "Kanal sayısı: `{}` "
             "Emoji sayısı: `{}`\n"
             "Oluşturulma tarihi: `{}`\n\n"
-            "Seviye: `{}` "
+            "Seviye: `{}`\n"
             "Toplam takviye: `{}`\n"
-            "Son takviyeci(ler): {}".format(
+            "Son takviyeci(ler):\n{}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -146,7 +146,7 @@ class Info(commands.Cog):
                 ),
                 guild.premium_tier,
                 guild.premium_subscription_count,
-                ", ".join(
+                "\n".join(
                     "{} `({})`".format(
                         m.mention,
                         util_time.humanize(m.premium_since, g=["day"]),
