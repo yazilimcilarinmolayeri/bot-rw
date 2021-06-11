@@ -131,7 +131,7 @@ class Info(commands.Cog):
             "Emoji sayısı: `{}`\n"
             "Oluşturulma tarihi: `{}`\n\n"
             "Seviye: `{}`\n"
-            "Toplam takviye: `{}`\n"
+            "Toplam takviye: `{}`\n\n"
             "Son takviyeci(ler):\n{}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
@@ -149,12 +149,12 @@ class Info(commands.Cog):
                 "\n".join(
                     "{} `({})`".format(
                         m.mention,
-                        util_time.humanize(m.premium_since, g=["day"]),
+                        util_time.humanize(m.premium_since),
                     )
                     for m in subs
                 )
                 if len(subs)
-                else "`Yok`",
+                else "",
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
