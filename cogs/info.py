@@ -147,11 +147,12 @@ class Info(commands.Cog):
                 guild.premium_tier,
                 guild.premium_subscription_count,
                 "\n".join(
-                    "{} `({})`".format(
+                    "{}. {} `({})`".format(
+                        i + 1,
                         m.mention,
                         util_time.humanize(m.premium_since),
                     )
-                    for m in subs
+                    for i, m in enumerate(subs)
                 )
                 if len(subs)
                 else "",
