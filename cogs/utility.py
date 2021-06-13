@@ -2,6 +2,7 @@
 
 import os
 import time
+import random
 import inspect
 import discord
 from discord.ext import commands
@@ -184,3 +185,12 @@ class Utility(commands.Cog):
         )
 
         await ctx.send(final_url)
+
+    @commands.command()
+    async def choose(self, ctx, *choices: commands.clean_content):
+        """Chooses between multiple choices."""
+
+        if len(choices) < 2:
+            return await ctx.send("En az iki seçenek girmelisin!")
+
+        await ctx.send(random.choice(choices))
