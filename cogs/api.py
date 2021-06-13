@@ -282,3 +282,20 @@ class API(commands.Cog):
             data = await resp.json()
 
         await self.send_activity(ctx, embed, data)
+
+    @commands.command(aliases=["yn"])
+    async def yesno(self, ctx):
+        """Making a good decision might require some help."""
+
+        url = "https://yesno.wtf/api"
+
+        async with self.bot.session.get(url) as resp:
+            if resp.status != 200:
+                return await ctx.send("Bağlantı hatası!")
+            data = await resp.json()
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.title = data["answer"].title()
+        embed.set_image(url=data["image"])
+
+        await ctx.send(embed=embed)
