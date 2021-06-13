@@ -215,3 +215,70 @@ class API(commands.Cog):
         )
 
         await ctx.send(embed=embed)
+
+    async def send_activity(self, ctx, embed, data):
+        embed.description = (
+            "{}\n\n"
+            "Tür: `{}`\n"
+            "Ulaşılabilirlik: `{}`\n"
+            "Katılımcılar: `{}`\n"
+            "Fiyat: `{}`".format(
+                data["activity"],
+                data["type"].title(),
+                data["accessibility"],
+                data["participants"],
+                data["price"],
+            )
+        )
+        embed.set_footer(text="Anahtar: {}".format(data["key"]))
+
+        await ctx.send(embed=embed)
+
+    @commands.group(invoke_without_command=True)
+    async def bored(self, ctx):
+        """Let's find you something to do."""
+
+        url = "http://www.boredapi.com/api"
+
+        async with self.bot.session.get("{}/activity".format(url)) as resp:
+            if resp.status != 200:
+                return await ctx.send("Bağlantı hatası!")
+            data = await resp.json()
+
+        embed = discord.Embed(color=self.bot.color)
+        await self.send_activity(ctx, embed, data)
+
+    @bored.command(name="type")
+    async def bored_type(self, ctx, type=None):
+        """Find a random activity with a given type."""
+
+        url = "http://www.boredapi.com/api"
+        types = [
+            "education",
+            "recreational",
+            "social",
+            "diy",
+            "charity",
+            "cooking",
+            "relaxation",
+            "music",
+            "busywork",
+        ]
+        embed = discord.Embed(color=self.bot.color)
+
+        if type == None:
+            embed.description = "Aktivite türleri:\n{}".format(
+                ", ".join(["`{}`".format(t) for t in types])
+            )
+            return await ctx.send(embed=embed)
+
+        params = {"type": type}
+
+        async with self.bot.session.get(
+            "{}/activity".format(url), params=params
+        ) as resp:
+            if resp.status != 200:
+                return await ctx.send("Bağlantı hatası!")
+            data = await resp.json()
+
+        await self.send_activity(ctx, embed, data)
