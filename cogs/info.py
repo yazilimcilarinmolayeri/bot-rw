@@ -350,9 +350,7 @@ class Info(commands.Cog):
             else:
                 if len(lists.profile_questions) - 1 == i:
                     if not self.is_url_image(answer.content):
-                        return await ctx.send(
-                            "Geçersiz bağlantı! Çıkılıyor..."
-                        )
+                        answers[fields[i + 1]] = "?"
                 answers[fields[i + 1]] = answer.content
 
             await answer.delete()
