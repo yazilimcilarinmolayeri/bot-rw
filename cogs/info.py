@@ -334,7 +334,7 @@ class Info(commands.Cog):
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_footer(
-            text="'S' girerek geçebilir, 'C' girerek soruyu iptal edebilirsin."
+            text="'s' girerek geçebilir, 'c' girerek iptal edebilirsin."
         )
         question_embed = await ctx.send(embed=embed)
 
@@ -366,7 +366,7 @@ class Info(commands.Cog):
         embed.set_footer(text=discord.Embed.Empty)
 
         await question_embed.edit(embed=embed)
-        # await self.send_profile_message(ctx.message.author)
+        await self.send_profile_message(ctx.message.author)
 
     @profile.group(name="remove")
     @commands.has_permissions(manage_messages=True)
