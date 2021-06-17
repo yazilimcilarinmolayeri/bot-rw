@@ -31,7 +31,7 @@ class Feed(commands.Cog):
 
         await channel.send("{}\n> {}".format(entry.title, entry.link))
 
-    @tasks.loop(minutes=10.0)
+    @tasks.loop(minutes=5.0)
     async def feed_checker(self):
         try:
             feeds = await models.Feed.all()
@@ -78,11 +78,11 @@ class Feed(commands.Cog):
                 "\n".join(
                     [
                         "ID: `{0}`\n"
-                        "En son: `{1}` ({2})\n"
+                        "Kanal: {1} (`{2}`)\n"
                         "Adres: [`{3}`]({3})\n".format(
                             d["feed_id"],
-                            util_time.humanize(d["last_entry"]),
                             guild.get_channel(d["channel_id"]).mention,
+                            util_time.humanize(d["last_entry"]),
                             d["feed_url"],
                         )
                         for d in data
