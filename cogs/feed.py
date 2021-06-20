@@ -78,7 +78,7 @@ class Feed(commands.Cog):
                 "\n".join(
                     [
                         "ID: `{0}`\n"
-                        "Kanal: {1} (`{2}`)\n"
+                        "Kanal: {1} `({2})`\n"
                         "Adres: [`{3}`]({3})\n".format(
                             d["feed_id"],
                             guild.get_channel(d["channel_id"]).mention,
