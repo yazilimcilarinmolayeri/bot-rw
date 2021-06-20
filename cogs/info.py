@@ -157,10 +157,10 @@ class Info(commands.Cog):
                 else "`?`",
             )
         )
-        # embed.set_thumbnail(url=guild.icon.url)
-        embed.set_image(
-            url=guild.banner.url if guild.banner else discord.Embed.Empty
-        )
+        embed.set_thumbnail(url=guild.icon.url)
+        # embed.set_image(
+        #     url=guild.banner.url if guild.banner else discord.Embed.Empty
+        # )
         embed.set_footer(
             text="Sahip: {} • ID: {}".format(guild.owner, guild.id)
         )
