@@ -146,7 +146,7 @@ class Info(commands.Cog):
                 guild.premium_subscription_count,
                 guild.premium_tier,
                 "\n".join(
-                    "\n`{}.` {} `({})`".format(
+                    "`{}.` {} `({})`".format(
                         i + 1,
                         m.mention,
                         util_time.humanize(m.premium_since),
