@@ -185,10 +185,9 @@ class Info(commands.Cog):
             "Kanal: {}\n"
             "Kategori: `{}`\n"
             "Oluşturma tarihi: `{}`\n"
-            "Açıklama: `{}`\n\n"
+            "Açıklama: ```{}```\n"
             "Sabitli mesaj: `{}`\n"
-            "Son mesaj: {} `({})`\n\n"
-            "[`Mesaja zıpla!`]({})".format(
+            "Son mesaj: {} `({})`".format(
                 channel.mention,
                 channel.category,
                 "{}/{}/{} ({})".format(
@@ -199,7 +198,6 @@ class Info(commands.Cog):
                 len(await channel.pins()),
                 last_message.author.mention,
                 util_time.humanize(last_message.created_at),
-                last_message.jump_url,
             )
         )
         embed.set_footer(text="ID: {}".format(ctx.channel.id))
@@ -212,8 +210,8 @@ class Info(commands.Cog):
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=ctx.guild)
-        embed.description = (
-            "{}\n\nToplam: {}" ", ".join([r.mention for r in ctx.guild.roles]),
+        embed.description = "{}\n\nToplam: `{}`".format(
+            ", ".join([r.mention for r in ctx.guild.roles[1:]]),
             len(ctx.guild.roles),
         )
         embed.set_footer(text="ID: {}".format(ctx.guild.id))
