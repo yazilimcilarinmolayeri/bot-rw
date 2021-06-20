@@ -122,7 +122,7 @@ class Info(commands.Cog):
         subs = guild.premium_subscribers
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=guild)
+        embed.set_author(name=guild, icon_url=guild.icon.url)
         embed.description = (
             "{}"
             "Üye sayısı: `{}` "
@@ -174,19 +174,19 @@ class Info(commands.Cog):
 
         if channel == None:
             channel = ctx.channel
+            last_message = channel.last_message
+        else:
             messages = await channel.history(limit=2).flatten()
             last_message = messages[-1]
-        else:
-            last_message = channel.last_message
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=ctx.guild)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon.url)
         embed.description = (
             "Kanal: {}\n"
             "Kategori: `{}`\n"
             "Oluşturma tarihi: `{}`\n\n"
             "Sabitli mesaj: `{}`\n"
-            "Son mesaj: {} `({})`".format(
+            "En son: {} `({})`".format(
                 channel.mention,
                 channel.category,
                 "{}/{}/{} ({})".format(
@@ -207,7 +207,7 @@ class Info(commands.Cog):
         """Lists roles in the server."""
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=ctx.guild)
+        embed.set_author(name=ctx.guild, icon_url=guild.icon.url)
         embed.description = "{}\n\nToplam: `{}`".format(
             ", ".join([r.mention for r in ctx.guild.roles[1:]]),
             len(ctx.guild.roles),
@@ -232,7 +232,7 @@ class Info(commands.Cog):
 
         for emojis in self.list_to_matrix(guild.emojis):
             embed = discord.Embed(color=self.bot.color)
-            embed.set_author(name=guild)
+            embed.set_author(name=guild, icon_url=guild.icon.url)
 
             embed.description = "\n".join(
                 [
@@ -243,8 +243,8 @@ class Info(commands.Cog):
                     )
                     for e in emojis
                 ]
-            ) + "\n\nToplam: `{}`\nID: `{}`".format(
-                len(guild.emojis), guild.id
+            ) + "\n\nToplam: `{}`".format(
+                len(guild.emojis)
             )
             embeds.append(embed)
 
