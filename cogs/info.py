@@ -234,17 +234,18 @@ class Info(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
 
-            embed.description = "\n".join(
-                [
-                    "{} `{} (Eklendi: {})`".format(
-                        ctx.get_emoji(guild, e.id),
-                        ctx.get_emoji(guild, e.id),
-                        util_time.humanize(e.created_at, g=["day"]),
-                    )
-                    for e in emojis
-                ]
-            ) + "\n\nToplam: `{}`".format(
-                len(guild.emojis)
+            embed.description = (
+                "\n".join(
+                    [
+                        "{} `{} (Eklendi: {})`".format(
+                            ctx.get_emoji(guild, e.id),
+                            ctx.get_emoji(guild, e.id),
+                            util_time.humanize(e.created_at, g=["day"]),
+                        )
+                        for e in emojis
+                    ]
+                )
+                + "\n\nToplam: `{}`".format(len(guild.emojis))
             )
             embeds.append(embed)
 

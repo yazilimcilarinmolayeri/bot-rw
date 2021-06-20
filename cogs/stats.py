@@ -105,7 +105,7 @@ class Stats(commands.Cog):
                     get_member(last_usage["user_id"]).mention,
                     last_usage["amount"],
                     util_time.humanize(last_usage["last_usage"]),
-                )
+                ),
             )
             embeds.append(embed)
 
