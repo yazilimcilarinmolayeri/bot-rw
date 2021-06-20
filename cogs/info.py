@@ -206,6 +206,20 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def roles(self, ctx):
+        """Lists roles in the server."""
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=ctx.guild)
+        embed.description = (
+            "{}\n\nToplam: {}" ", ".join([r.mention for r in ctx.guild.roles]),
+            len(ctx.guild.roles),
+        )
+        embed.set_footer(text="ID: {}".format(ctx.guild.id))
+
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["e"])
     async def emojis(self, ctx, guild_id=None):
         """Shows you about the emoji info int the server."""
