@@ -131,7 +131,7 @@ class Info(commands.Cog):
             "Emoji sayısı: `{}`\n"
             "Oluşturulma tarihi: `{}`\n\n"
             "Toplam takviye: `{} (Seviye: {})`\n"
-            "Son takviyeci(ler): {}".format(
+            "Son takviyeci(ler): \n{}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -146,7 +146,7 @@ class Info(commands.Cog):
                 guild.premium_subscription_count,
                 guild.premium_tier,
                 "\n".join(
-                    "`{}.` {} `({})`".format(
+                    "{}. {} `({})`".format(
                         i + 1,
                         m.mention,
                         util_time.humanize(m.premium_since),
@@ -157,7 +157,7 @@ class Info(commands.Cog):
                 else "`?`",
             )
         )
-        embed.set_thumbnail(url=guild.icon.url)
+        # embed.set_thumbnail(url=guild.icon.url)
         embed.set_image(
             url=guild.banner.url if guild.banner else discord.Embed.Empty
         )
