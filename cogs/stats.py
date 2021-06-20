@@ -56,7 +56,7 @@ class Stats(commands.Cog):
             embed.set_author(name=member, icon_url=member.avatar.url)
             embed.description = "{}\n\n{}".format(
                 self.get_emoji_stats(ctx, data),
-                "Toplam: `{}`\nID: `{}`".format(total, member.id),
+                "Toplam: `{}`".format(total),
             )
             embeds.append(embed)
 
@@ -98,15 +98,14 @@ class Stats(commands.Cog):
         for data in self.list_to_matrix(data, col=5):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "{}\n\nEn son:\n{}\n\n{}".format(
+            embed.description = "{}\n\nEn son:\n{}".format(
                 self.get_emoji_stats(ctx, data, key="sum"),
-                "{} `{} (En son: {})`\nProfil: {}".format(
+                "{} {} `{} ({})`".format(
                     ctx.get_emoji(ctx.guild, last_usage["emoji_id"]),
+                    get_member(last_usage["user_id"]).mention,
                     last_usage["amount"],
                     util_time.humanize(last_usage["last_usage"]),
-                    get_member(last_usage["user_id"]).mention,
-                ),
-                "ID: `{}`".format(guild.id),
+                )
             )
             embeds.append(embed)
 
