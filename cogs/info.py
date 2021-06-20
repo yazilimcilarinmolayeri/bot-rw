@@ -168,6 +168,44 @@ class Info(commands.Cog):
     def list_to_matrix(self, l, col=10):
         return [l[i : i + col] for i in range(0, len(l), col)]
 
+    @commands.command(aliases=["c"])
+    async def channel(self, ctx, channel: discord.TextChannel = None):
+        """Shows info about the text channel."""
+
+        if channel == None:
+            channel = ctx.channel
+            messages = await channel.history(limit=2).flatten()
+            last_message = messages[-1]
+        else:
+            last_message = channel.last_message
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=ctx.guild)
+        embed.description = (
+            "Kanal: {}\n"
+            "Kategori: `{}`\n"
+            "Oluşturma tarihi: `{}`\n"
+            "Açıklama: `{}`\n\n"
+            "Sabitli mesaj: `{}`\n"
+            "Son mesaj: {} `({})`\n\n"
+            "[`Mesaja zıpla!`]({})".format(
+                channel.mention,
+                channel.category,
+                "{}/{}/{} ({})".format(
+                    *util_time.day_month_year(channel.created_at),
+                    util_time.humanize(channel.created_at, g=["day"]),
+                ),
+                channel.topic or "?",
+                len(await channel.pins()),
+                last_message.author.mention,
+                util_time.humanize(last_message.created_at),
+                last_message.jump_url,
+            )
+        )
+        embed.set_footer(text="ID: {}".format(ctx.channel.id))
+
+        await ctx.send(embed=embed)
+
     @commands.command(aliases=["e"])
     async def emojis(self, ctx, guild_id=None):
         """Shows you about the emoji info int the server."""
