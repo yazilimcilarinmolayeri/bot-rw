@@ -184,8 +184,7 @@ class Info(commands.Cog):
         embed.description = (
             "Kanal: {}\n"
             "Kategori: `{}`\n"
-            "Oluşturma tarihi: `{}`\n"
-            "Açıklama: ```{}```\n"
+            "Oluşturma tarihi: `{}`\n\n"
             "Sabitli mesaj: `{}`\n"
             "Son mesaj: {} `({})`".format(
                 channel.mention,
@@ -194,7 +193,6 @@ class Info(commands.Cog):
                     *util_time.day_month_year(channel.created_at),
                     util_time.humanize(channel.created_at, g=["day"]),
                 ),
-                channel.topic or "?",
                 len(await channel.pins()),
                 last_message.author.mention,
                 util_time.humanize(last_message.created_at),
