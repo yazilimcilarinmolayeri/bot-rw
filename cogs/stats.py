@@ -96,12 +96,17 @@ class Stats(commands.Cog):
         last_usage = last_usage[0]
 
         for data in self.list_to_matrix(data, col=5):
+            try:
+                emoji = ctx.get_emoji(ctx.guild, last_usage["emoji_id"])
+            except AttributeError:
+                continue
+
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
             embed.description = "{}\n\nEn son:\n{}".format(
                 self.get_emoji_stats(ctx, data, key="sum"),
                 "{} {} `{} ({})`".format(
-                    ctx.get_emoji(ctx.guild, last_usage["emoji_id"]),
+                    emoji,
                     get_member(last_usage["user_id"]).mention,
                     last_usage["amount"],
                     util_time.humanize(last_usage["last_usage"]),
