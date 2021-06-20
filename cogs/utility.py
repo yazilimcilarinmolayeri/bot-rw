@@ -141,7 +141,6 @@ class Utility(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.has_permissions(manage_roles=True)
     async def botperms(self, ctx, *, channel: discord.TextChannel = None):
         """Shows the bot's permissions in a specific channel."""
 
