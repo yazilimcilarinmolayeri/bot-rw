@@ -130,9 +130,8 @@ class Info(commands.Cog):
             "Kanal sayısı: `{}` "
             "Emoji sayısı: `{}`\n"
             "Oluşturulma tarihi: `{}`\n\n"
-            "Seviye: `{}`\n"
-            "Toplam takviye: `{}`\n\n"
-            "Son takviyeci(ler):\n{}".format(
+            "Toplam takviye: `{} (Seviye: {})`\n"
+            "Son takviyeci(ler): {}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -144,10 +143,10 @@ class Info(commands.Cog):
                     *util_time.day_month_year(guild.created_at),
                     util_time.humanize(guild.created_at, g=["day"]),
                 ),
-                guild.premium_tier,
                 guild.premium_subscription_count,
+                guild.premium_tier,
                 "\n".join(
-                    "{}. {} `({})`".format(
+                    "\n`{}.` {} `({})`".format(
                         i + 1,
                         m.mention,
                         util_time.humanize(m.premium_since),
@@ -155,10 +154,13 @@ class Info(commands.Cog):
                     for i, m in enumerate(subs)
                 )
                 if len(subs)
-                else "",
+                else "`?`",
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
+        embed.set_image(
+            url=guild.banner.url if guild.banner else discord.Embed.Empty
+        )
         embed.set_footer(
             text="Sahip: {} • ID: {}".format(guild.owner, guild.id)
         )
