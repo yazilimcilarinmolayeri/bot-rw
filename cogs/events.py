@@ -25,13 +25,18 @@ class Events(commands.Cog):
 
     async def _change_presence(self):
         guild = self.bot.get_guild(self.c.getint("Guild", "DEFAULT_GUILD_ID"))
-        bots = sum(m.bot for m in guild.members)
-        humans = guild.member_count - bots
+
+        try:
+            bots = sum(m.bot for m in guild.members)
+            humans = guild.member_count - bots
+            name = "{} + {} üyeyi".format(humans, bots)
+        except AttributeError:
+            name = "?"
 
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=ActivityType.watching,
-                name="{} + {} üyeyi".format(humans, bots),
+                name=name,
             ),
             status=Status.idle,
         )
