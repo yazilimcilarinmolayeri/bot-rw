@@ -132,6 +132,9 @@ class Events(commands.Cog):
             ]
         )
 
+        if None in custom_emojis:
+            del custom_emojis[None]
+
         return custom_emojis
 
     async def update_emoji_stats(self, guild, author, message):
