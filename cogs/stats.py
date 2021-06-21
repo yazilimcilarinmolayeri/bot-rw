@@ -97,7 +97,7 @@ class Stats(commands.Cog):
 
         last_usage = last_usage[0]
 
-        for data in self.list_to_matrix(data, col=5):
+        for data in self.list_to_matrix(data):
             emoji = ctx.get_emoji(ctx.guild, last_usage["emoji_id"])
 
             if not emoji:
