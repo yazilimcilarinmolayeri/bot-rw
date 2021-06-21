@@ -29,7 +29,12 @@ class Feed(commands.Cog):
         guild = self.bot.get_guild(guild_id)
         channel = guild.get_channel(channel_id)
 
-        await channel.send("{}\n> {}".format(entry.title, entry.link))
+        async with self.bot.session as session:
+            webhook = discord.Webhook.from_url(
+                self.c.get("Webhook", "NEWS_URL"), session=session
+            )
+
+            await webhook.send("{}\n> {}".format(entry.title, entry.link))
 
     @tasks.loop(minutes=5.0)
     async def feed_checker(self):
