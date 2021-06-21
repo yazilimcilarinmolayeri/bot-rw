@@ -19,10 +19,12 @@ class Stats(commands.Cog):
         return [l[i : i + col] for i in range(0, len(l), col)]
 
     def get_emoji_stats(self, ctx, data, key="amount"):
+        check_emoji = lambda emoji: "\U0001f5d1" if not emoji else emoji
+
         stats = "\n".join(
             [
                 "{} `{} (En son: {})`".format(
-                    ctx.get_emoji(ctx.guild, d["emoji_id"]),
+                    check_emoji(ctx.get_emoji(ctx.guild, d["emoji_id"])),
                     d[key],
                     util_time.humanize(d["last_usage"]),
                 )
@@ -96,19 +98,18 @@ class Stats(commands.Cog):
         last_usage = last_usage[0]
 
         for data in self.list_to_matrix(data, col=5):
-            try:
-                emoji = ctx.get_emoji(ctx.guild, last_usage["emoji_id"])
-            except AttributeError:
-                continue
+            emoji = ctx.get_emoji(ctx.guild, last_usage["emoji_id"])
+
+            if not emoji:
+                emoji = "\U0001f5d1"
 
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "{}\n\nEn son:\n{}".format(
+            embed.description = "{}\n\nEn son: {}".format(
                 self.get_emoji_stats(ctx, data, key="sum"),
-                "{} {} `{} ({})`".format(
+                "{} {} `({})`".format(
                     emoji,
                     get_member(last_usage["user_id"]).mention,
-                    last_usage["amount"],
                     util_time.humanize(last_usage["last_usage"]),
                 ),
             )
