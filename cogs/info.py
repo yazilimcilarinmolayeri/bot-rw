@@ -122,7 +122,6 @@ class Info(commands.Cog):
         subs = guild.premium_subscribers
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=guild, icon_url=guild.icon.url)
         embed.description = (
             "{}"
             "Üye sayısı: `{}` "
@@ -401,10 +400,17 @@ class Info(commands.Cog):
             else:
                 if len(lists.profile_questions) - 1 == i:
                     if not self.is_url_image(answer.content):
-                        await ctx.send("Geçersiz bağlantı! Soru geçiliyor...")
+                        await ctx.send(
+                            "Geçersiz bağlantı! Soru geçiliyor...",
+                            delete_after=3.0,
+                        )
                         answers[fields[i + 1]] = "?"
+                        continue
+
                 answers[fields[i + 1]] = answer.content
             await answer.delete()
+
+        await answer.delete()
         await models.Profile.create(**answers)
 
         profile_channel = self.bot.get_channel(
@@ -423,7 +429,7 @@ class Info(commands.Cog):
 
         await models.Profile.get(pk=member.id).delete()
         await ctx.send(
-            "{} adlı kullanıcının profili silindi!".format(member.mention)
+            "`{}` adlı kullanıcının profili kaldırıldı!".format(member)
         )
 
     @profile.group(name="edit")
