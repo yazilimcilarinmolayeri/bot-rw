@@ -193,3 +193,7 @@ class Utility(commands.Cog):
             return await ctx.send("En az iki seçenek girmelisin!")
 
         await ctx.send(random.choice(choices))
+
+    @commands.command(aliases=["wm"])
+    async def webhookmanager(self, ctx):
+        pass

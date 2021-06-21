@@ -4,7 +4,7 @@ import discord
 from tortoise.query_utils import Q
 from tortoise.functions import Sum
 from discord.ext import commands, menus
-from utils import paginator, models, time as util_time
+from utils import paginator, models, functions, time as util_time
 
 
 def setup(bot):
@@ -14,9 +14,6 @@ def setup(bot):
 class Stats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    def list_to_matrix(self, l, col=10):
-        return [l[i : i + col] for i in range(0, len(l), col)]
 
     def get_emoji_stats(self, ctx, data, key="amount"):
         check_emoji = lambda emoji: "\U0001f5d1" if not emoji else emoji
@@ -53,7 +50,7 @@ class Stats(commands.Cog):
         )
         total = sum([d["amount"] for d in data])
 
-        for data in self.list_to_matrix(data):
+        for data in functions.list_to_matrix(data):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=member, icon_url=member.avatar.url)
             embed.description = "{}\n\n{}".format(
@@ -97,7 +94,7 @@ class Stats(commands.Cog):
 
         last_usage = last_usage[0]
 
-        for data in self.list_to_matrix(data):
+        for data in functions.list_to_matrix(data):
             emoji = ctx.get_emoji(ctx.guild, last_usage["emoji_id"])
 
             if not emoji:

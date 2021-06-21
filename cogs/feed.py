@@ -9,7 +9,7 @@ from io import StringIO
 from datetime import datetime
 from tortoise import exceptions
 from discord.ext import commands, tasks, menus
-from utils import paginator, models, time as util_time
+from utils import paginator, models, functions, time as util_time
 
 
 def setup(bot):
@@ -58,11 +58,7 @@ class Feed(commands.Cog):
 
     @feed_checker.before_loop
     async def before_feed_checker(self):
-        print("Waiting...")
         await self.bot.wait_until_ready()
-
-    def list_to_matrix(self, l, col=10):
-        return [l[i : i + col] for i in range(0, len(l), col)]
 
     @commands.command()
     async def feeds(self, ctx):
@@ -76,7 +72,7 @@ class Feed(commands.Cog):
         if not len(data):
             return await ctx.send("Kayıt bulunamadı!")
 
-        for data in self.list_to_matrix(data, col=5):
+        for data in functions.list_to_matrix(data, col=5):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
             embed.description = "{}\n{}".format(
@@ -110,19 +106,6 @@ class Feed(commands.Cog):
 
         command = self.bot.get_command("feeds")
         await command.__call__(ctx=ctx)
-
-    @feedmanager.command(name="test")
-    async def feedmanager_test(self, ctx, url):
-        """"""
-
-        pass
-
-    @feedmanager.command(name="check")
-    @commands.has_permissions(manage_messages=True)
-    async def feedmanager_check(self, ctx):
-        """"""
-
-        pass
 
     @feedmanager.command(name="add")
     @commands.has_permissions(manage_messages=True)

@@ -2,10 +2,9 @@
 
 import random
 import discord
-import mimetypes
 from discord.ext import commands, menus
 from datetime import datetime, timedelta, timezone
-from utils import lists, paginator, models, time as util_time
+from utils import lists, paginator, models, functions, time as util_time
 
 
 def setup(bot):
@@ -166,9 +165,6 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    def list_to_matrix(self, l, col=10):
-        return [l[i : i + col] for i in range(0, len(l), col)]
-
     @commands.command(aliases=["c"])
     async def channel(self, ctx, channel: discord.TextChannel = None):
         """Shows info about the text channel."""
@@ -231,7 +227,7 @@ class Info(commands.Cog):
         else:
             guild = ctx.guild
 
-        for emojis in self.list_to_matrix(guild.emojis):
+        for emojis in functions.list_to_matrix(guild.emojis):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
 
@@ -302,10 +298,6 @@ class Info(commands.Cog):
         )
 
         await ctx.send(embed=embed)
-
-    def is_url_image(self, url):
-        mimetype, encoding = mimetypes.guess_type(url)
-        return mimetype and mimetype.startswith("image")
 
     async def send_profile_message(self, author):
         channel = self.bot.get_channel(
@@ -399,7 +391,7 @@ class Info(commands.Cog):
                 return await question_embed.delete()
             else:
                 if len(lists.profile_questions) - 1 == i:
-                    if not self.is_url_image(answer.content):
+                    if not functions.is_url_image(answer.content):
                         await ctx.send(
                             "Geçersiz bağlantı! Soru geçiliyor...",
                             delete_after=3.0,
@@ -512,7 +504,7 @@ class Info(commands.Cog):
     @profile_edit.command(aliases=["ss"])
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def screenshot_url(self, ctx, new_profile_item):
-        if not self.is_url_image(new_profile_item):
+        if not functions.is_url_image(new_profile_item):
             return await ctx.message.add_reaction("\U0000203c")
 
         await models.Profile.get(pk=ctx.author.id).update(

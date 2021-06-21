@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import re
 import sys
 import arrow
 import discord
 import traceback
-from utils import models
 from datetime import datetime
-from collections import Counter
 from discord.ext import commands
 from tortoise.query_utils import Q
+from utils import models, functions
 from discord.ext.commands import errors
 from discord import Status, ActivityType
 
@@ -121,24 +119,8 @@ class Events(commands.Cog):
 
             await channel.send(embed=embed)
 
-    def cumstom_emoji_counter(self, guild, message):
-        custom_emojis = Counter(
-            [
-                discord.utils.get(guild.emojis, id=e)
-                for e in [
-                    int(e.split(":")[2].replace(">", ""))
-                    for e in re.findall(r"<:\w*:\d*>", message.content)
-                ]
-            ]
-        )
-
-        if None in custom_emojis:
-            del custom_emojis[None]
-
-        return custom_emojis
-
     async def update_emoji_stats(self, guild, author, message):
-        custom_emojis = self.cumstom_emoji_counter(guild, message)
+        custom_emojis = functions.custom_emoji_counter(guild, message)
 
         if not len(custom_emojis):
             return
@@ -189,8 +171,8 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        b_custom_emojis = self.cumstom_emoji_counter(before.guild, before)
-        a_custom_emojis = self.cumstom_emoji_counter(after.guild, after)
+        b_custom_emojis = functions.custom_emoji_counter(before.guild, before)
+        a_custom_emojis = functions.custom_emoji_counter(after.guild, after)
 
         if len(a_custom_emojis) > len(b_custom_emojis):
             await self.update_emoji_stats(after.guild, after.author, after)
@@ -247,11 +229,11 @@ class Events(commands.Cog):
                 else str(ctx.command)
             )
             # await ctx.send_help(helper)
-            await ctx.add_reactions("\U000026d4")
+            await ctx.message.add_reactions("\U000026d4")
 
         if isinstance(err, errors.CommandOnCooldown):
             await ctx.send(
-                "Bu komut bekleme modunda! `{}`sn sonra tekrar dene.".format(
+                "Bu komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
                     round(err.retry_after)
                 )
             )
