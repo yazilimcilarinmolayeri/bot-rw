@@ -7,7 +7,7 @@ import discord
 import feedparser
 from io import StringIO
 from datetime import datetime
-from tortoise import exceptions
+from tortoise import tortoise_exceptions
 from discord.ext import commands, tasks, menus
 from utils import paginator, models, functions, time as util_time
 
@@ -19,7 +19,6 @@ def setup(bot):
 class Feed(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.c = bot.config
         self.feed_checker.start()
 
     def cog_unload(self):
@@ -29,32 +28,31 @@ class Feed(commands.Cog):
         guild = self.bot.get_guild(guild_id)
         channel = guild.get_channel(channel_id)
 
-        async with self.bot.session as session:
-            webhook = discord.Webhook.from_url(
-                self.c.get("Webhook", "NEWS_URL"), session=session
-            )
-
-            await webhook.send("{}\n> {}".format(entry.title, entry.link))
+        await channel.send("{}\n> {}".format(entry.title, entry.link))
 
     @tasks.loop(minutes=5.0)
     async def feed_checker(self):
         try:
             feeds = await models.Feed.all()
+        except tortoise_exceptions.ConfigurationError:
+            return
 
-            for feed in feeds:
-                parse = feedparser.parse(feed.feed_url)
+        for feed in feeds:
+            parse = feedparser.parse(feed.feed_url)
+
+            try:
                 last_entry = parse.entries[0]
+            except KeyError:
+                last_entry = feed.last_entry.link
 
-                if feed.last_entry_url != last_entry.link:
-                    await self.send_entry(
-                        feed.guild_id, feed.channel_id, last_entry
-                    )
-                    await models.Feed.get(pk=feed.feed_id).update(
-                        last_entry_url=last_entry.link,
-                        last_entry=datetime.utcnow(),
-                    )
-        except exceptions.ConfigurationError:
-            pass
+            if feed.last_entry_url == last_entry.link:
+                return
+
+            await self.send_entry(feed.guild_id, feed.channel_id, last_entry)
+            await models.Feed.get(pk=feed.feed_id).update(
+                last_entry_url=last_entry.link,
+                last_entry=datetime.utcnow(),
+            )
 
     @feed_checker.before_loop
     async def before_feed_checker(self):
@@ -79,7 +77,7 @@ class Feed(commands.Cog):
                 "\n".join(
                     [
                         "ID: `{0}`\n"
-                        "Kanal: {1} `({2})`\n"
+                        "Kanal: {1} `(En son: {2})`\n"
                         "Adres: [`{3}`]({3})\n".format(
                             d["feed_id"],
                             guild.get_channel(d["channel_id"]).mention,
