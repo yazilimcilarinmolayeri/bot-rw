@@ -204,6 +204,17 @@ class Events(commands.Cog):
         if isinstance(
             error,
             (
+                commands.CommandNotFound,
+                commands.DisabledCommand,
+                discord.Forbidden,
+                menus.MenuError,
+            ),
+        ):
+            return
+
+        if isinstance(
+            error,
+            (
                 commands.errors.BadArgument,
                 commands.errors.MissingRequiredArgument,
                 commands.CheckFailure,
@@ -218,18 +229,9 @@ class Events(commands.Cog):
                 )
             )
 
-        if isinstance(
-            error,
-            (
-                commands.CommandNotFound,
-                commands.DisabledCommand,
-                discord.Forbidden,
-                menus.MenuError,
-            ),
-        ):
-            return
-
-        default_guild = self.bot.get_guild(c.getint("Guild", "DEFAULT_GUILD_ID"))
+        default_guild = self.bot.get_guild(
+            self.c.getint("Guild", "DEFAULT_GUILD_ID")
+        )
         error_log_channel = default_guild.get_channel(546458377740353536)
 
         error = error.original
