@@ -403,7 +403,6 @@ class Info(commands.Cog):
                 answers[fields[i + 1]] = answer.content
             await answer.delete()
 
-        await answer.delete()
         await models.Profile.create(**answers)
 
         profile_channel = self.bot.get_channel(
