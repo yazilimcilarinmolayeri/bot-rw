@@ -1,7 +1,6 @@
 # Config files
 *.ini
 *.cfg
-condig.ini
 
 # Database files
 *.db
