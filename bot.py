@@ -26,7 +26,11 @@ from utils import context
 from discord.ext import commands
 
 
-EXTENSIONS = [
+description = """
+    "Hello! I am a multifunctional Discord bot (ymybot rewrite version)."
+"""
+
+extensions = (
     "jishaku",
     "cogs.api",
     "cogs.events",
@@ -35,38 +39,49 @@ EXTENSIONS = [
     "cogs.owner",
     "cogs.stats",
     "cogs.utility",
-]
-CONFIG = configparser.ConfigParser()
-FILES = CONFIG.read("config.cfg")
-DESCRIPTION = """
-    "Hello! I am a multifunctional Discord bot (ymybot rewrite version)."
-"""
+)
 
-if not len(FILES):
-    print("Config file not found!")
-    exit()
 
-intents = discord.Intents.all()  # New in version 1.5
+def _get_config():
+    config = configparser.ConfigParser()
+    files = config.read("config.cfg")
+
+    if not len(files):
+        print("Config file not found!")
+        exit()
+
+    return config
+
+
+def _prefix_callable(bot, msg):
+    user_id = bot.user.id
+    base = config.get("Bot", "PREFIX").split(",")
+    base.extend(["<@!{}> ".format(user_id), "<@{}> ".format(user_id)])
+
+    return base
+
+
+config = _get_config()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-class YMYBOT(commands.Bot):
+class YMYRWBot(commands.Bot):
     def __init__(self):
         super().__init__(
-            intents=intents,
-            description=DESCRIPTION,
-            command_prefix=CONFIG.get("Bot", "PREFIX"),
+            description=description,
+            intents=discord.Intents.all(),  # New in version 1.5
+            command_prefix=_prefix_callable,
             owner_ids=set(
-                [int(_id) for _id in CONFIG.get("Bot", "OWNER_IDS").split(",")]
+                [int(id) for id in config.get("Bot", "OWNER_IDS").split(",")]
             ),
         )
 
         self.uptime = ""
-        self.config = CONFIG
+        self.config = config
         self.color = 0x2F3136
         self.session = aiohttp.ClientSession(loop=self.loop)
 
-        for cog in EXTENSIONS:
+        for cog in extensions:
             try:
                 self.load_extension(cog)
             except Exception as exc:
@@ -102,4 +117,5 @@ class YMYBOT(commands.Bot):
 
 
 if __name__ == "__main__":
-    YMYBOT().run()
+    bot = YMYRWBot()
+    bot.run()
