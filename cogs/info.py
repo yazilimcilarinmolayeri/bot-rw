@@ -121,6 +121,7 @@ class Info(commands.Cog):
         subs = guild.premium_subscribers
 
         embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=guild)
         embed.description = (
             "{}"
             "Üye sayısı: `{}` "
