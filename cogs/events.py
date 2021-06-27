@@ -4,11 +4,12 @@ import sys
 import arrow
 import discord
 import traceback
+from io import StringIO
 from datetime import datetime
 from discord.ext import commands
 from tortoise.query_utils import Q
 from utils import models, functions
-from discord.ext.commands import errors
+from discord.ext import commands, menus
 from discord import Status, ActivityType
 
 
@@ -27,14 +28,14 @@ class Events(commands.Cog):
         try:
             bots = sum(m.bot for m in guild.members)
             humans = guild.member_count - bots
-            name = "{} + {} üyeyi".format(humans, bots)
+            name = "{} + {}".format(humans, bots)
         except AttributeError:
             name = "?"
 
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=ActivityType.watching,
-                name=name,
+                name="{} üyeyi".format(name),
             ),
             status=Status.idle,
         )
@@ -177,7 +178,7 @@ class Events(commands.Cog):
         if len(a_custom_emojis) > len(b_custom_emojis):
             await self.update_emoji_stats(after.guild, after.author, after)
 
-    @commands.Cog.listener(name="on_user_update")
+    # @commands.Cog.listener(name="on_user_update")
     async def on_update_avatar(self, before, after):
         user = after
         b_avatar_key = before.avatar.key
@@ -199,41 +200,54 @@ class Events(commands.Cog):
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, err):
-        msa = errors.MissingRequiredArgument
+    async def on_command_error(self, ctx, error):
+        if isinstance(
+            error,
+            (
+                commands.errors.BadArgument,
+                commands.errors.MissingRequiredArgument,
+                commands.CheckFailure,
+            ),
+        ):
+            return await ctx.message.add_reaction("\U0000203c")
 
-        if isinstance(err, commands.CommandInvokeError):
-            original = err.original
-
-            if not isinstance(original, discord.HTTPException):
-                # TODO: Add logger
-                print(
-                    "In {}:".format(ctx.command.qualified_name),
-                    file=sys.stderr,
-                )
-                traceback.print_tb(original.__traceback__)
-                print(
-                    "{}: {}".format(original.__class__.__name__, original),
-                    file=sys.stderr,
-                )
-
-        if isinstance(err, commands.CheckFailure):
-            await ctx.send(
-                "Bu komutu kullanabilmek için yeterli yetkiye sahip değilsin!"
-            )
-
-        if isinstance(err, msa) or isinstance(err, errors.BadArgument):
-            helper = (
-                str(ctx.invoked_subcommand)
-                if ctx.invoked_subcommand
-                else str(ctx.command)
-            )
-            # await ctx.send_help(helper)
-            await ctx.message.add_reactions("\U000026d4")
-
-        if isinstance(err, errors.CommandOnCooldown):
-            await ctx.send(
-                "Bu komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
+        if isinstance(error, commands.errors.CommandOnCooldown):
+            return await ctx.send(
+                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
                     round(err.retry_after)
                 )
             )
+
+        if isinstance(
+            error,
+            (
+                commands.CommandNotFound,
+                commands.DisabledCommand,
+                discord.Forbidden,
+                menus.MenuError,
+            ),
+        ):
+            return
+
+        error = error.original
+
+        default_guild = self.bot.get_guild(c.get("Guild", "DEFAULT_GUILD_ID"))
+        error_log_channel = default_guild.get_channel(858679708363653120)
+
+        exc = "".join(
+            traceback.format_exception(
+                type(error), error, error.__traceback__, chain=False
+            )
+        )
+
+        await error_log_channel.send(
+            content="In `{}`: `{}`: `{}`".format(
+                ctx.command.qualified_name,
+                error.__class__.__name__,
+                error,
+            ),
+            file=discord.File(
+                StringIO(exc),
+                filename="traceback.txt",
+            ),
+        )
