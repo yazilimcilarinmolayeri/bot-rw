@@ -229,11 +229,10 @@ class Events(commands.Cog):
         ):
             return
 
-        error = error.original
-
-        default_guild = self.bot.get_guild(c.get("Guild", "DEFAULT_GUILD_ID"))
+        default_guild = self.bot.get_guild(c.getint("Guild", "DEFAULT_GUILD_ID"))
         error_log_channel = default_guild.get_channel(546458377740353536)
 
+        error = error.original
         exc = "".join(
             traceback.format_exception(
                 type(error), error, error.__traceback__, chain=False
