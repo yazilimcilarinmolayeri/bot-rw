@@ -30,7 +30,7 @@ class Feed(commands.Cog):
 
         await channel.send("{}\n> {}".format(entry.title, entry.link))
 
-    @tasks.loop(minutes=5.0)
+    @tasks.loop(minutes=10.0)
     async def feed_checker(self):
         try:
             feeds = await models.Feed.all()
@@ -39,11 +39,7 @@ class Feed(commands.Cog):
 
         for feed in feeds:
             parse = feedparser.parse(feed.feed_url)
-
-            try:
-                last_entry = parse.entries[0]
-            except KeyError:
-                last_entry = feed.last_entry.link
+            last_entry = parse.entries[0]
 
             if feed.last_entry_url == last_entry.link:
                 return
