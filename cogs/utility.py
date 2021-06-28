@@ -2,9 +2,12 @@
 
 import os
 import time
+import arrow
+import psutil
 import random
 import inspect
 import discord
+import platform
 from discord.ext import commands
 from utils import lists, time as util_time
 
@@ -17,6 +20,7 @@ class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.c = bot.config
+        self.process = psutil.Process()
 
     @commands.command(aliases=["u"])
     async def uptime(self, ctx):
@@ -194,6 +198,92 @@ class Utility(commands.Cog):
 
         await ctx.send(random.choice(choices))
 
-    @commands.command(aliases=["wm"])
-    async def webhookmanager(self, ctx):
-        pass
+    async def get_last_commits(self, per_page=3):
+        commits = []
+        repo = "yazilimcilarinmolayeri/ymybot-rw"
+        url = "https://api.github.com/repos/{}/commits?per_page={}".format(
+            repo, per_page
+        )
+
+        async with self.bot.session.get(url) as resp:
+            if resp.status != 200:
+                return await ctx.send("Bağlantı hatası!")
+            data = await resp.json()
+
+        for commit in data:
+            date = arrow.get(commit["commit"]["committer"]["date"])
+            commits.append(
+                {
+                    "sha": commit["sha"],
+                    "html_url": commit["html_url"],
+                    "message": commit["commit"]["message"],
+                    "date": util_time.humanize(date),
+                }
+            )
+
+        return commits
+
+    @commands.command(aliases=["info"])
+    async def about(self, ctx):
+        """Tells you information about the bot itself."""
+
+        guilds = 0
+        text, voice = 0, 0
+        total_members = 0
+        total_unique = len(self.bot.users)
+
+        for guild in self.bot.guilds:
+            guilds += 1
+
+            if guild.unavailable:
+                continue
+
+            total_members += guild.member_count
+
+            for channel in guild.channels:
+                if isinstance(channel, discord.TextChannel):
+                    text += 1
+                elif isinstance(channel, discord.VoiceChannel):
+                    voice += 1
+
+        commits = await self.get_last_commits()
+        cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
+        memory_usage = round(
+            self.process.memory_full_info().uss / 1024 ** 2, 1
+        )
+
+        embed = discord.Embed(color=self.bot.color)
+        embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
+        embed.description = (
+            "{}\n\n"
+            "Guild:\nTotal: `{}` Text: `{}` Voice: `{}`\n\n"
+            "User:\nTotal: `{}` Unique: `{}`\n\n"
+            "Process:\nCPU: `{} %` RAM: `{} MiB`\n\n"
+            "Other:\n Lang: `Python {}` Lib: `discord.py {}`\n\n"
+            "Last changes:\n{}\n\n".format(
+                self.bot.description,
+                guilds,
+                text,
+                voice,
+                total_members,
+                total_unique,
+                cpu_usage,
+                memory_usage,
+                platform.python_version(),
+                discord.__version__,
+                "\n".join(
+                    [
+                        "[`{}`]({}) {} `({})`".format(
+                            c["sha"][:5],
+                            c["html_url"],
+                            c["message"],
+                            c["date"],
+                        )
+                        for c in commits
+                    ]
+                ),
+            )
+        )
+        embed.set_footer(text="ID: {}".format(self.bot.user.id))
+
+        await ctx.send(embed=embed)
