@@ -27,7 +27,7 @@ from discord.ext import commands
 
 
 description = """
-    "Hello! I am a multifunctional Discord bot (ymybot rewrite version)."
+    Hello! I am a multifunctional Discord bot (ymybot rewrite version).
 """
 
 extensions = (
