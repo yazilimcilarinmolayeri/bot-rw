@@ -205,7 +205,7 @@ class Info(commands.Cog):
         """Lists roles in the server."""
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=ctx.guild, icon_url=guild.icon.url)
+        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon.url)
         embed.description = "{}\n\nToplam: `{}`".format(
             ", ".join([r.mention for r in ctx.guild.roles[1:]]),
             len(ctx.guild.roles),
