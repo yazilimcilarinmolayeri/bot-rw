@@ -204,9 +204,9 @@ class Events(commands.Cog):
         if isinstance(
             error,
             (
+                discord.Forbidden,
                 commands.CommandNotFound,
                 commands.DisabledCommand,
-                discord.Forbidden,
                 menus.MenuError,
             ),
         ):
@@ -215,12 +215,13 @@ class Events(commands.Cog):
         if isinstance(
             error,
             (
+                commands.CheckFailure,
                 commands.errors.BadArgument,
                 commands.errors.MissingRequiredArgument,
-                commands.CheckFailure,
             ),
         ):
-            return await ctx.message.add_reaction("\U0000203c")
+            # Warning reaction
+            return await ctx.message.add_reaction("\U000026a0")
 
         if isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(
@@ -241,6 +242,8 @@ class Events(commands.Cog):
             )
         )
 
+        # Interrobang reaction
+        await ctx.message.add_reactions("\U00002049")
         await error_log_channel.send(
             content="In `{}`: `{}`: `{}`".format(
                 ctx.command.qualified_name,
