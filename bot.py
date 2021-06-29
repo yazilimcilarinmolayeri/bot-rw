@@ -28,6 +28,7 @@ from discord.ext import commands
 
 description = """
     Hello! I am a multifunctional Discord bot (ymybot rewrite version).
+    Source: https://github.com/yazilimcilarinmolayeri/ymybot-rw
 """
 
 extensions = (
