@@ -9,7 +9,7 @@ import inspect
 import discord
 import platform
 from discord.ext import commands
-from utils import lists, time as util_time
+from utils import lists, functions, time as util_time
 
 
 def setup(bot):
@@ -246,35 +246,36 @@ class Utility(commands.Cog):
                 elif isinstance(channel, discord.VoiceChannel):
                     voice += 1
 
+        cpu_usage = psutil.cpu_percent() / psutil.cpu_count()
+        memory_usage = self.process.memory_full_info().uss / 1024 ** 2
         commits = await self.get_last_commits()
-        cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
-        memory_usage = round(
-            self.process.memory_full_info().uss / 1024 ** 2, 1
-        )
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
         embed.description = (
             "{}\n\n"
-            "Guild:\nTotal: `{}` Text: `{}` Voice: `{}`\n\n"
-            "User:\nTotal: `{}` Unique: `{}`\n\n"
-            "Process:\nCPU: `{} %` RAM: `{} MiB`\n\n"
-            "Other:\n Lang: `Python {}` Lib: `discord.py {}`\n\n"
-            "Last changes:\n{}\n\n".format(
+            "Total guild(s): `{}` Channel: `{}`\n"
+            "Text channel: `{}` Voice channel: `{}`\n"
+            "Total member(s): `{}` Unique: `{}`\n\n"
+            "Usage: CPU: `{} %` Memory: `{} MiB`\n"
+            "Lang: `python {}` Lib: `discord.py {}`\nPlatform: `{}`\n\n"
+            "Last changes:\n{}".format(
                 self.bot.description,
                 guilds,
+                text + voice,
                 text,
                 voice,
                 total_members,
                 total_unique,
-                cpu_usage,
-                memory_usage,
+                round(cpu_usage, 1),
+                round(memory_usage, 1),
                 platform.python_version(),
                 discord.__version__,
+                functions.dist()["PRETTY_NAME"],
                 "\n".join(
                     [
                         "[`{}`]({}) {} `({})`".format(
-                            c["sha"][:5],
+                            c["sha"][:6],
                             c["html_url"],
                             c["message"],
                             c["date"],
