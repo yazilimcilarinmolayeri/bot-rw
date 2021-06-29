@@ -68,9 +68,23 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class YMYRWBot(commands.Bot):
     def __init__(self):
+        intents = discord.Intents(
+            guilds=True,
+            members=True,
+            bans=True,
+            presences=True,
+            messages=True,
+            guild_messages=True,
+            reactions=True,
+            guild_reactions=True,
+            emojis=True,
+            typing=True,
+            guild_typing=True,
+        )
+
         super().__init__(
             description=description,
-            intents=discord.Intents.all(),  # New in version 1.5
+            intents=intents,  # New in version 1.5
             command_prefix=_prefix_callable,
             owner_ids=set(
                 [int(id) for id in config.get("Bot", "OWNER_IDS").split(",")]
