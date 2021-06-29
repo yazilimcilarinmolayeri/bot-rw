@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import csv
 import discord
 import mimetypes
 from collections import Counter
@@ -31,3 +32,16 @@ def custom_emoji_counter(guild, message):
         del custom_emojis[None]
 
     return custom_emojis
+
+
+def dist():
+    release_data = {}
+
+    with open("/etc/os-release") as f:
+        reader = csv.reader(f, delimiter="=")
+
+        for row in reader:
+            if row:
+                release_data[row[0]] = row[1]
+
+    return release_data
