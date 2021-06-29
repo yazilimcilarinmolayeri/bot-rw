@@ -230,10 +230,9 @@ class Events(commands.Cog):
                 )
             )
 
-        default_guild = self.bot.get_guild(
-            self.c.getint("Guild", "DEFAULT_GUILD_ID")
+        channel = self.bot.get_channel(
+            self.c.getint("Channel", "ERROR_LOG_CHANNEL_ID")
         )
-        error_log_channel = default_guild.get_channel(546458377740353536)
 
         error = error.original
         exc = "".join(
@@ -244,7 +243,7 @@ class Events(commands.Cog):
 
         # Interrobang reaction
         await ctx.message.add_reactions("\U00002049")
-        await error_log_channel.send(
+        await channel.send(
             content="In `{}`: `{}`: `{}`".format(
                 ctx.command.qualified_name,
                 error.__class__.__name__,
