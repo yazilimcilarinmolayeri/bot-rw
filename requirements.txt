@@ -1,5 +1,6 @@
 pip
 arrow
+psutil
 socialscan
 feedparser
 tortoise-orm
