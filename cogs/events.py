@@ -201,6 +201,13 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.errors.CommandOnCooldown):
+            return await ctx.send(
+                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
+                    round(err.retry_after)
+                )
+            )
+        
         if isinstance(
             error,
             (
@@ -223,12 +230,7 @@ class Events(commands.Cog):
             # Warning reaction
             return await ctx.message.add_reaction("\U000026a0")
 
-        if isinstance(error, commands.errors.CommandOnCooldown):
-            return await ctx.send(
-                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
-                    round(err.retry_after)
-                )
-            )
+      
 
         channel = self.bot.get_channel(
             self.c.getint("Channel", "ERROR_LOG_CHANNEL_ID")
