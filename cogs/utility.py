@@ -60,7 +60,7 @@ class Utility(commands.Cog):
         await channel.send("https://tryitands.ee")
 
     @commands.command(aliases=["ddg"])
-    @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def lmddgtfy(self, ctx, *, keywords: str):
         """Let me DuckDuckGo that for you."""
 
