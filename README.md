@@ -1,12 +1,8 @@
 # ymybot-rw
-![](https://img.shields.io/badge/python-3.7%2B-blue)
-![](https://img.shields.io/pypi/v/discord.py?label=discord.py)
-![](https://img.shields.io/pypi/v/jishaku?label=jishaku)
-![](https://img.shields.io/badge/code%20style-black-black)
-![](https://discord.com/api/guilds/418887354699350028/embed.png)
+![](https://img.shields.io/badge/python-3.8%2B-blue) ![](https://img.shields.io/pypi/v/discord.py?label=discord.py) ![](https://img.shields.io/pypi/v/jishaku?label=jishaku) ![](https://img.shields.io/badge/code%20style-black-black) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/yazilimcilarinmolayeri/ymybot-rw/main.svg)](https://results.pre-commit.ci/latest/github/yazilimcilarinmolayeri/ymybot-rw/main)
 
 Hello! I am a multifunctional Discord bot (ymybot rewrite version)
-> API's, Info, Owner, Utility and more...
+> API's, Feed, Info, Owner, Stats, Utility and more...
 
 ## Download and Installation
 
@@ -50,6 +46,7 @@ $ python3 bot.py
 ```
 
 ## Support
+![](https://discord.com/api/guilds/418887354699350028/embed.png) <br/>
 You can join the server and test the bot. Invite: https://discord.gg/KazHgb2
 
 ## License
