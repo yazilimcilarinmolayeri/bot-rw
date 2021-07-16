@@ -207,7 +207,7 @@ class Events(commands.Cog):
                     round(err.retry_after)
                 )
             )
-        
+
         if isinstance(
             error,
             (
@@ -229,8 +229,6 @@ class Events(commands.Cog):
         ):
             # Warning reaction
             return await ctx.message.add_reaction("\U000026a0")
-
-      
 
         channel = self.bot.get_channel(
             self.c.getint("Channel", "ERROR_LOG_CHANNEL_ID")
