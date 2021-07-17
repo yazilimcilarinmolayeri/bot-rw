@@ -57,7 +57,6 @@ class Info(commands.Cog):
 
         created_at = member.created_at
         joined_at = member.joined_at
-        j_days = util_time.humanize(joined_at, g=["day"])
 
         perms = member.guild_permissions
         partner_role = ctx.guild.get_role(
@@ -87,18 +86,12 @@ class Info(commands.Cog):
         embed.description = (
             "{}\n\n"
             "Profil: {}\n"
-            "Giriş tarihi: `{}`\n"
-            "Oluşturma tarihi: `{}`".format(
+            "Giriş tarihi: {}\n"
+            "Oluşturma tarihi: {}".format(
                 " ".join(badges),
                 member.mention,
-                "{}/{}/{} ({})".format(
-                    *util_time.day_month_year(joined_at),
-                    j_days,
-                ),
-                "{}/{}/{} ({})".format(
-                    *util_time.day_month_year(created_at),
-                    util_time.humanize(created_at, g=["day"]),
-                ),
+                ctx.format_date(joined_at),
+                ctx.format_date(created_at),
             )
         )
         embed.set_thumbnail(url=member.avatar.url)
@@ -128,9 +121,9 @@ class Info(commands.Cog):
             "Rol sayısı: `{}`\n"
             "Kanal sayısı: `{}` "
             "Emoji sayısı: `{}`\n"
-            "Oluşturulma tarihi: `{}`\n\n"
-            "Toplam takviye: `{} (Seviye: {})`\n"
-            "Son takviyeci(ler): \n{}".format(
+            "Oluşturulma tarihi: {}\n\n"
+            "Seviye: `{} ({} takviye)`\n"
+            "Son takviyeler: {}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -138,17 +131,12 @@ class Info(commands.Cog):
                 len(guild.roles),
                 len(guild.text_channels) + len(guild.voice_channels),
                 len(guild.emojis),
-                "{}/{}/{} ({})".format(
-                    *util_time.day_month_year(guild.created_at),
-                    util_time.humanize(guild.created_at, g=["day"]),
-                ),
-                guild.premium_subscription_count,
+                ctx.format_date(guild.created_at),
                 guild.premium_tier,
-                "\n".join(
-                    "{}. {} `({})`".format(
-                        i + 1,
-                        m.mention,
-                        util_time.humanize(m.premium_since),
+                guild.premium_subscription_count,
+                ", ".join(
+                    "{} ({})".format(
+                        m.mention, ctx.format_relative(m.premium_since)
                     )
                     for i, m in enumerate(subs)
                 )
