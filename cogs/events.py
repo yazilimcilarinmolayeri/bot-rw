@@ -201,13 +201,6 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.errors.CommandOnCooldown):
-            return await ctx.send(
-                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
-                    round(err.retry_after)
-                )
-            )
-
         if isinstance(
             error,
             (
@@ -218,6 +211,13 @@ class Events(commands.Cog):
             ),
         ):
             return
+
+        if isinstance(error, commands.errors.CommandOnCooldown):
+            return await ctx.send(
+                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
+                    round(error.retry_after)
+                )
+            )
 
         if isinstance(
             error,
@@ -242,7 +242,7 @@ class Events(commands.Cog):
         )
 
         # Interrobang reaction
-        await ctx.message.add_reactions("\U00002049")
+        await ctx.message.add_reaction("\U00002049")
         await channel.send(
             content="In `{}`: `{}`: `{}`".format(
                 ctx.command.qualified_name,
