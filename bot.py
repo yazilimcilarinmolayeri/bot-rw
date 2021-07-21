@@ -18,13 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import aiohttp
 import discord
 import warnings
 import configparser
 from utils import context
 from discord.ext import commands
-
 
 description = """
     Hello! I am a multifunctional Discord bot (ymybot rewrite version).
@@ -41,6 +41,9 @@ extensions = (
     "cogs.stats",
     "cogs.utility",
 )
+
+os.environ["JISHAKU_UNDERSCORE"] = "True"
+os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 
 
 def _get_config():
@@ -66,7 +69,7 @@ config = _get_config()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-class YMYRWBot(commands.Bot):
+class Bot(commands.AutoShardedBot):
     def __init__(self):
         intents = discord.Intents(
             guilds=True,
@@ -106,6 +109,10 @@ class YMYRWBot(commands.Bot):
     def __version__(self):
         return "0.50.20"
 
+    @property
+    def owners(self):
+        return [self.get_user(id) for id in self.owner_ids]
+
     async def on_resumed(self):
         print("Resumed...")
 
@@ -132,5 +139,5 @@ class YMYRWBot(commands.Bot):
 
 
 if __name__ == "__main__":
-    bot = YMYRWBot()
+    bot = Bot()
     bot.run()
