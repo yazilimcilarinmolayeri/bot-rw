@@ -16,18 +16,156 @@ def setup(bot):
     bot.add_cog(Utility(bot))
 
 
+class HelpCommand(commands.HelpCommand):
+    def __init__(self):
+        super().__init__(
+            command_attrs={
+                "help": "Shows help about the bot, a command, or a category."
+            }
+        )
+
+        self.owner_cogs = ["Owner"]
+        self.ignore_cogs = ["Events", "Jishaku"]
+
+    async def send_bot_help(self, mapping):
+        total = 0
+        fields = []
+        ctx = self.context
+        owners = ctx.bot.owners
+
+        for extension in ctx.bot.cogs.values():
+            commands = [
+                "`{}`".format(c.qualified_name) for c in mapping[extension]
+            ]
+            total += len(commands)
+
+            if len(commands) == 0:
+                continue
+            if extension.qualified_name in self.ignore_cogs:
+                continue
+            if (
+                not (ctx.author in owners)
+                and extension.qualified_name in self.owner_cogs
+            ):
+                continue
+
+            fields.append(
+                "{}: {}".format(extension.qualified_name, ", ".join(commands))
+            )
+
+        embed = discord.Embed(color=ctx.bot.color)
+        embed.set_author(name=ctx.bot.user)
+        embed.description = (
+            "Hello! Welcome to the help page.\n"
+            "Use `{}{}` for more info on a command.\n\n"
+            "`<argument>`: This means the argument is required.\n"
+            "`[argument]`: This means the argument is optional.\n"
+            "`[A|B]`: This means that it can be either A or B.\n"
+            "`[argument...]`: This means you can have multiple arguments.\n\n"
+            "Commands:\n{}".format(
+                ctx.prefix,
+                self.get_command_signature(ctx.bot.get_command("help")),
+                "\n".join(fields),
+            )
+        )
+        embed.set_footer(
+            text="Total cog: {} • Total command: {}".format(
+                len(ctx.bot.cogs.values()), total
+            )
+        )
+
+        await ctx.send(embed=embed)
+
+    def get_command_signature(self, command):
+        parent = command.full_parent_name
+
+        if len(command.aliases) > 0:
+            aliases = "|".join(command.aliases)
+            fmt = "[{}|{}]".format(command.name, aliases)
+
+            if parent:
+                fmt = "{} {}".format(parent, fmt)
+
+            alias = fmt
+        else:
+            alias = (
+                command.name
+                if not parent
+                else "{} {}".format(parent, command.name)
+            )
+
+        return "{} {}".format(alias, command.signature).strip()
+
+    def common_command_formatting(self, command):
+        command_signature = self.get_command_signature(command)
+
+        description = "Usage: `{}`\nHelp: `{}`".format(
+            command_signature.strip(),
+            (command.help or "Help not found.").strip(),
+        )
+
+        cooldown = command._buckets._cooldown
+
+        if cooldown:
+            description += "\nCooldown: `{} per {} second`".format(
+                cooldown.rate, cooldown.per
+            )
+
+        return description
+
+    async def send_command_help(self, command):
+        embed = discord.Embed(color=self.context.bot.color)
+        embed.description = self.common_command_formatting(command)
+        embed.set_footer(text="Cog: {}".format(command.cog_name))
+
+        await self.context.send(embed=embed)
+
+    async def send_group_help(self, group):
+        fields = []
+
+        if len(group.commands) == 0:
+            return await self.send_command_help(group)
+
+        for command in group.commands:
+            fields.append(
+                "`{}`: `{}`".format(
+                    self.get_command_signature(command)
+                    .replace(command.full_parent_name, "")
+                    .strip(),
+                    command.description or command.help,
+                )
+            )
+
+        embed = discord.Embed(color=self.context.bot.color)
+        embed.description = "{}\n\nSubcommand:\n{}".format(
+            self.common_command_formatting(group), "\n".join(fields)
+        )
+
+        await self.context.send(embed=embed)
+
+    async def command_not_found(self, string):
+        pass
+
+
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.c = bot.config
         self.process = psutil.Process()
 
+        self._original_help_command = bot.help_command
+        bot.help_command = HelpCommand()
+        bot.help_command.cog = self
+
+    def cog_unload(self):
+        self.bot.help_command = self._original_help_command
+
     @commands.command(aliases=["u"])
     async def uptime(self, ctx):
         """Tells you how long the bot has been up for."""
 
         await ctx.send(
-            "Uptime: `{}`".format(util_time.humanize(self.bot.uptime))
+            "Uptime: {}".format(ctx.format_relative(self.bot.uptime))
         )
 
     @commands.command(aliases=["p"])
@@ -198,7 +336,7 @@ class Utility(commands.Cog):
 
         await ctx.send(random.choice(choices))
 
-    async def get_last_commits(self, per_page=3):
+    async def get_last_commits(self, ctx, per_page=3):
         commits = []
         repo = "yazilimcilarinmolayeri/ymybot-rw"
         url = "https://api.github.com/repos/{}/commits?per_page={}".format(
@@ -217,7 +355,7 @@ class Utility(commands.Cog):
                     "sha": commit["sha"],
                     "html_url": commit["html_url"],
                     "message": commit["commit"]["message"],
-                    "date": util_time.humanize(date),
+                    "date": ctx.format_relative(date),
                 }
             )
 
@@ -248,7 +386,7 @@ class Utility(commands.Cog):
 
         cpu_usage = psutil.cpu_percent() / psutil.cpu_count()
         memory_usage = self.process.memory_full_info().uss / 1024 ** 2
-        commits = await self.get_last_commits()
+        commits = await self.get_last_commits(ctx)
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
@@ -274,7 +412,7 @@ class Utility(commands.Cog):
                 functions.dist()["PRETTY_NAME"],
                 "\n".join(
                     [
-                        "[`{}`]({}) {} `({})`".format(
+                        "[`{}`]({}) {} ({})".format(
                             c["sha"][:6],
                             c["html_url"],
                             c["message"],
