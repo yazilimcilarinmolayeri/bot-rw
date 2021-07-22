@@ -54,7 +54,7 @@ class HelpCommand(commands.HelpCommand):
             )
 
         embed = discord.Embed(color=ctx.bot.color)
-        embed.set_author(name=ctx.bot.user)
+        embed.set_author(name="Help Page")
         embed.description = (
             "Hello! Welcome to the help page.\n"
             "Use `{}{}` for more info on a command.\n\n"
@@ -140,6 +140,7 @@ class HelpCommand(commands.HelpCommand):
         embed.description = "{}\n\nSubcommand:\n{}".format(
             self.common_command_formatting(group), "\n".join(fields)
         )
+        embed.set_footer(text="Cog: {}".format(command.cog_name))
 
         await self.context.send(embed=embed)
 
