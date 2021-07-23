@@ -50,36 +50,22 @@ class Info(commands.Cog):
     async def userinfo(self, ctx, member: discord.Member = None):
         """Shows info about a user."""
 
-        badges = []
-
         if member == None:
             member = ctx.author
 
-        created_at = member.created_at
-        joined_at = member.joined_at
-
+        badges = []
         perms = member.guild_permissions
-        partner_role = ctx.guild.get_role(
-            self.c.get("Role", "PARTNER_ROLE_ID")
-        )
-        sponsor_role = ctx.guild.get_role(
-            self.c.get("Role", "SPONSOR_ROLE_ID")
-        )
-
+        days = lambda date: (datetime.now(timezone.utc) - date).days
         is_role = lambda role: True if role in member.roles else False
 
         if perms.administrator:
-            badges.append("<:administrator:844298864869769226>")
+            badges.append(lists.badges["administrator"])
         if perms.manage_messages:
-            badges.append("<:moderator:844298864857055252>")
-        if (datetime.now(timezone.utc) - joined_at).days > 365 * 2:
-            badges.append("<:oldmember:844377103000010752>")
-        if (
-            is_role(partner_role)
-            or is_role(sponsor_role)
-            or member in ctx.guild.premium_subscribers
-        ):
-            badges.append("<:supporter:844298864625319946>")
+            badges.append(lists.badges["moderator"])
+        if days(member.joined_at) >= days(ctx.guild.created_at) - 365:
+            badges.append(lists.badges["oldmember"])
+        if member in ctx.guild.premium_subscribers:
+            badges.append(lists.badges["supporter"])
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=member)
@@ -90,8 +76,8 @@ class Info(commands.Cog):
             "Oluşturma tarihi: {}".format(
                 " ".join(badges),
                 member.mention,
-                ctx.format_date(joined_at),
-                ctx.format_date(created_at),
+                ctx.format_date(member.joined_at),
+                ctx.format_date(member.created_at),
             )
         )
         embed.set_thumbnail(url=member.avatar.url)
@@ -145,9 +131,6 @@ class Info(commands.Cog):
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
-        # embed.set_image(
-        #     url=guild.banner.url if guild.banner else discord.Embed.Empty
-        # )
         embed.set_footer(
             text="Sahip: {} • ID: {}".format(guild.owner, guild.id)
         )
