@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-symbols = {
-    "info": "<:infosymbol:844654258301042698>",
-    "success": "<:successsymbol:844654259383697439>",
-    "warning": "<:warningsymbol:844654259387367436>",
-    "error": "<:errorsymbol:844654258455969823>",
-    "loading": "<:loadingsymbol:844654259593150547>",
-    "link": "<:linksymbol:844654258510102580>",
+badges = {
+    "administrator": "<:administrator_badge:868205132003823617>",
+    "moderator": "<:moderator_badge:868205132519723020>",
+    "supporter": "<:supporter_badge:868205132855279746>",
+    "oldmember": "<:oldmember_badge:868205132779765811>",
 }
 
 profile_titles = [
