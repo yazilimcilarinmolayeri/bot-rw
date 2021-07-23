@@ -8,7 +8,6 @@ from utils import lists, time as util_time
 class Context(commands.Context):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.symbols = lists.symbols
 
     def __repr__(self):
         return "<Context>"
