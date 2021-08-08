@@ -38,6 +38,7 @@ extensions = (
     "cogs.feed",
     "cogs.info",
     "cogs.owner",
+    "cogs.reactionrole",
     "cogs.stats",
     "cogs.utility",
 )
