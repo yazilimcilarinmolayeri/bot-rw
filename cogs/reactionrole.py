@@ -19,6 +19,7 @@ def setup(bot):
 class ReactionRole(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.MAX_ROLE = 15
 
     async def _clear_reaction(self, payload, member):
         channel = self.bot.get_channel(payload.channel_id)
@@ -43,22 +44,36 @@ class ReactionRole(commands.Cog):
         rr = await models.ReactionRoles.get(emoji=payload.emoji)
         role = get(guild.roles, id=rr.role_id)
 
+        # Do not include "YMY Üyesi" role
+        if len(member.roles) - 1 >= self.MAX_ROLE:
+            await self._clear_reaction(payload, member)
+            return await self._send_message(
+                payload,
+                member,
+                "{}, you can take a max of `{}` roles.".format(
+                    member.mention, self.MAX_ROLE
+                ),
+            )
+
         if role.id in [r.id for r in member.roles]:
             await member.remove_roles(role)
             await self._clear_reaction(payload, member)
             await self._send_message(
                 payload,
                 member,
-                "The `{}` role has been removed.".format(role.name),
+                "`{}`, `{}` role has been __removed__.".format(
+                    member, role.name
+                ),
             )
-
         else:
             await member.add_roles(role)
             await self._clear_reaction(payload, member)
             await self._send_message(
                 payload,
                 member,
-                "The `{}` role has been added.".format(role.name),
+                "`{}`, `{}` role has been __added__.".format(
+                    member, role.name
+                ),
             )
 
     @commands.Cog.listener()
