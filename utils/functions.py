@@ -2,6 +2,8 @@
 
 import re
 import csv
+import string
+import random
 import discord
 import mimetypes
 from collections import Counter
@@ -45,3 +47,9 @@ def dist():
                 release_data[row[0]] = row[1]
 
     return release_data
+
+
+def random_id(length=8):
+    return "".join(
+        random.choices(string.ascii_lowercase + string.digits, k=length)
+    )
