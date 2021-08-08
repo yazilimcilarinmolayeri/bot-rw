@@ -128,7 +128,7 @@ class HelpCommand(commands.HelpCommand):
 
         for command in group.commands:
             fields.append(
-                "`{}`: `{}`".format(
+                "`{}`: {}".format(
                     self.get_command_signature(command)
                     .replace(command.full_parent_name, "")
                     .strip(),
