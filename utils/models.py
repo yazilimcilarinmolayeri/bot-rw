@@ -69,6 +69,39 @@ class Profile(Model):
             return []
 
 
+class Templates(Model):
+    id = fields.CharField(pk=True, max_length=8)
+    guild_id = fields.IntField()
+    channel_id = fields.IntField(null=True)
+    message_id = fields.IntField(null=True)
+    title = fields.CharField(default="Template Title", max_length=256)
+    color = fields.SmallIntField(default=3092790)
+    status = fields.BooleanField(default=True)
+
+    reactionroles: fields.ReverseRelation["ReactionRoles"]
+
+    class Meta:
+        table = "Templates"
+
+    def __str__(self):
+        return self.name
+
+
+class ReactionRoles(Model):
+    emoji = fields.CharField(max_length=100)
+    role_id = fields.IntField()
+
+    template: fields.ForeignKeyRelation[Templates] = fields.ForeignKeyField(
+        "models.Templates", related_name="reactionroles"
+    )
+
+    class Meta:
+        table = "ReactionRoles"
+
+    def __str__(self):
+        return self.name
+
+
 async def init():
     await Tortoise.init(
         db_url="sqlite://ymybot-rw-db.sqlite3",
