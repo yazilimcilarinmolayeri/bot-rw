@@ -84,6 +84,7 @@ class API(commands.Cog):
         async with self.bot.session.get(
             "https://api.berkealp.net/kandilli/index.php",
             params={"last": last},
+            ssl=True,
         ) as resp:
             if resp.status != 200:
                 return await ctx.send("Status code: `{}`".format(resp.status))
