@@ -76,7 +76,7 @@ class API(commands.Cog):
         )
 
     @commands.command(aliases=["deprem"])
-    async def quake(self, ctx, last=1):
+    async def quake(self, ctx, last: int = 1):
         """Show quake information from the Kandilli Observatory."""
 
         embeds = []
@@ -86,27 +86,24 @@ class API(commands.Cog):
             params={"last": last},
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
+                return await ctx.send("Status code: `{}`".format(resp.status))
             data = await resp.json()
 
         for d in data:
             embed = discord.Embed(color=self.bot.color)
-            date, time = d["Time"].split(" ")
             embed.description = (
-                "Tarih: `{}`\n"
-                "Saat: `{}`\n"
-                "Enlem: `{}`\n"
-                "Boylam: `{}`\n"
-                "Bölge: `{}`\n"
-                "Büyüklük: `{}` "
-                "Derinlik: `{} Km`".format(
-                    date,
-                    time,
+                "Latitude: `{}`\n"
+                "Longitude: `{}`\n"
+                "Magnitude: `{}`\n"
+                "Depth: `{} Km`\n"
+                "Datetime: `{}`\n"
+                "Region: `{}`".format(
                     d["Latitude"].split(";")[0],
                     d["Longitude"].split(";")[0],
-                    d["Region"],
                     d["Magnitude"],
                     d["Depth"],
+                    d["Time"],
+                    d["Region"],
                 ).replace("&deg", "°")
             )
             embed.set_thumbnail(url=d["MapImage"])
