@@ -2,13 +2,16 @@
 
 import os
 import time
-import arrow
-import psutil
 import random
 import inspect
-import discord
 import platform
+
+import discord
 from discord.ext import commands
+
+import arrow
+import psutil
+
 from utils import lists, functions, time as util_time
 
 
@@ -143,9 +146,6 @@ class HelpCommand(commands.HelpCommand):
         embed.set_footer(text="Cog: {}".format(command.cog_name))
 
         await self.context.send(embed=embed)
-
-    async def command_not_found(self, string):
-        pass
 
 
 class Utility(commands.Cog):
