@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import random
-import aiowiki
-import discord
 from io import BytesIO
-from utils import paginator
+
+import discord
 from discord.ext import commands, menus
+
+import aiowiki
 from socialscan.util import Platforms as p
 from socialscan.util import execute_queries
+
+from utils import paginator
 
 
 def setup(bot):
@@ -38,7 +41,8 @@ class API(commands.Cog):
         embed = discord.Embed(color=self.bot.color)
         embed.description = "\n\n".join(
             [
-                "**{}** on **{}**: {}\n`(Success: {}, Valid: {}, Available: {})`".format(
+                "**{}** on **{}**: {}\n"
+                "`(Success: {}, Valid: {}, Available: {})`".format(
                     r.query,
                     r.platform,
                     r.message,
@@ -52,42 +56,44 @@ class API(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["ss"])
-    async def screenshot(self, ctx, *, website):
+    async def screenshot(self, ctx, website):
         """Take a website screenshot."""
 
         website = website.replace("<", "").replace(">", "")
+        website = website.replace(".html", "")
 
         if not website.startswith("http"):
-            return await ctx.send("Geçerli bir web sitesi değil!")
+            return await ctx.send("Not a valid website. Use http or https.")
 
-        with ctx.typing():
-            async with self.bot.session.get(
-                "https://image.thum.io/get/width/2000/crop/1200/png/{}".format(
-                    website
-                )
-            ) as resp:
-                image = BytesIO(await resp.read())
-
-        await ctx.send(
-            content="<{}>".format(website),
-            file=discord.File(
-                image, filename="screenshot_{}.png".format(website)
-            ),
+        embed = discord.Embed(color=self.bot.color)
+        embed.description = "Source: `{}`".format(website)
+        embed.set_image(
+            url="https://image.thum.io/get/width/2000/crop/1200/png/{}".format(
+                website
+            )
         )
 
-    @commands.command(aliases=["deprem"])
+        await ctx.send("Please wait...", delete_after=3.0)
+        await ctx.send(embed=embed)
+
+    @commands.command()
     async def quake(self, ctx, last: int = 1):
         """Show quake information from the Kandilli Observatory."""
 
         embeds = []
+        max_data = 50
 
         async with self.bot.session.get(
             "https://api.berkealp.net/kandilli/index.php",
-            params={"last": last},
+            params={"last": max_data if last > max_data else last},
             ssl=True,
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("Status code: `{}`".format(resp.status))
+                return await ctx.send(
+                    "API connection error! Status code: `{}`".format(
+                        resp.status
+                    )
+                )
             data = await resp.json()
 
         for d in data:
@@ -95,8 +101,7 @@ class API(commands.Cog):
             embed.description = (
                 "Latitude: `{}`\n"
                 "Longitude: `{}`\n"
-                "Magnitude: `{}`\n"
-                "Depth: `{} Km`\n"
+                "Magnitude-Depth: `{}-{} Km`\n"
                 "Datetime: `{}`\n"
                 "Region: `{}`".format(
                     d["Latitude"].split(";")[0],
@@ -125,7 +130,7 @@ class API(commands.Cog):
             "https://pypi.org/pypi/{}/json".format(package)
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("Paket bulunamadı!")
+                return await ctx.send("Package not found.")
             data = await resp.json()
             data = data["info"]
 
@@ -144,9 +149,9 @@ class API(commands.Cog):
         embed.url = data["package_url"]
         embed.description = (
             "{}\n\n"
-            "Lisans: `{}`\n"
-            "Geliştirici: `{} ({})`\n"
-            "Bağlantılar: {}"
+            "License: `{}`\n"
+            "Author(s): `{} ({})`\n"
+            "Project links: {}"
         ).format(
             data["summary"] or " ",
             data["license"] or " ",
@@ -158,7 +163,7 @@ class API(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["viki"])
+    @commands.command()
     async def wiki(self, ctx, *, search):
         """Search the Turkish Wikipedia."""
 
@@ -189,7 +194,11 @@ class API(commands.Cog):
 
         async with self.bot.session.get("{}/info.0.json".format(url)) as resp:
             if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
+                return await ctx.send(
+                    "API connection error! Status code: `{}`".format(
+                        resp.status
+                    )
+                )
             data = await resp.json()
 
         if num == None:
@@ -199,7 +208,7 @@ class API(commands.Cog):
             "{}/{}/info.0.json".format(url, num)
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("Geçersiz numara!")
+                return await ctx.send("Invalid number.")
             data = await resp.json()
 
         embed = discord.Embed(color=self.bot.color)
@@ -207,8 +216,8 @@ class API(commands.Cog):
         embed.description = data["alt"]
         embed.set_image(url=data["img"])
         embed.set_footer(
-            text="{}/{}/{} • {}".format(
-                data["day"], data["month"], data["year"], data["num"]
+            text="{} • {}/{}/{}".format(
+                data["num"], data["day"], data["month"], data["year"]
             )
         )
 
@@ -217,10 +226,10 @@ class API(commands.Cog):
     async def send_activity(self, ctx, embed, data):
         embed.description = (
             "{}\n\n"
-            "Tür: `{}`\n"
-            "Ulaşılabilirlik: `{}`\n"
-            "Katılımcılar: `{}`\n"
-            "Fiyat: `{}`".format(
+            "Type: `{}`\n"
+            "Accessibility: `{}`\n"
+            "Participants: `{}`\n"
+            "Price: `{}`".format(
                 data["activity"],
                 data["type"].title(),
                 data["accessibility"],
@@ -228,7 +237,7 @@ class API(commands.Cog):
                 data["price"],
             )
         )
-        embed.set_footer(text="Anahtar: {}".format(data["key"]))
+        embed.set_footer(text="Key: {}".format(data["key"]))
 
         await ctx.send(embed=embed)
 
@@ -240,7 +249,11 @@ class API(commands.Cog):
 
         async with self.bot.session.get("{}/activity".format(url)) as resp:
             if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
+                return await ctx.send(
+                    "API connection error! Status code: `{}`".format(
+                        resp.status
+                    )
+                )
             data = await resp.json()
 
         embed = discord.Embed(color=self.bot.color)
@@ -265,18 +278,20 @@ class API(commands.Cog):
         embed = discord.Embed(color=self.bot.color)
 
         if type == None:
-            embed.description = "Aktivite türleri:\n{}".format(
+            embed.description = "Activity types: {}".format(
                 ", ".join(["`{}`".format(t) for t in types])
             )
             return await ctx.send(embed=embed)
 
-        params = {"type": type}
-
         async with self.bot.session.get(
-            "{}/activity".format(url), params=params
+            "{}/activity".format(url), params={"type": type}
         ) as resp:
             if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
+                return await ctx.send(
+                    "API connection error! Status code: `{}`".format(
+                        resp.status
+                    )
+                )
             data = await resp.json()
 
         await self.send_activity(ctx, embed, data)
@@ -289,11 +304,15 @@ class API(commands.Cog):
 
         async with self.bot.session.get(url) as resp:
             if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
+                return await ctx.send(
+                    "API connection error! Status code: `{}`".format(
+                        resp.status
+                    )
+                )
             data = await resp.json()
 
         embed = discord.Embed(color=self.bot.color)
-        embed.title = data["answer"].title()
+        embed.description = data["answer"].upper()
         embed.set_image(url=data["image"])
 
         await ctx.send(embed=embed)
