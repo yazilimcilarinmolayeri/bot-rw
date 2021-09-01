@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import arrow
-import discord
 import traceback
 from io import StringIO
 from datetime import datetime
+
+import discord
 from discord.ext import commands
-from tortoise.query_utils import Q
-from utils import models, functions
 from discord.ext import commands, menus
 from discord import Status, ActivityType
+
+import arrow
+from tortoise.query_utils import Q
+
+from utils import models, functions
 
 
 def setup(bot):
@@ -52,15 +55,17 @@ class Events(commands.Cog):
         )
 
         await models.init()  # database init
-        await self._change_presence()
+        # await self._change_presence()
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        await self._change_presence()
+        # await self._change_presence()
+        pass
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        await self._change_presence()
+        # await self._change_presence()
+        pass
 
     @commands.Cog.listener(name="on_message")
     async def on_bot_mention(self, message):
@@ -208,27 +213,28 @@ class Events(commands.Cog):
                 commands.CommandNotFound,
                 commands.DisabledCommand,
                 menus.MenuError,
+                discord.errors.HTTPException,
             ),
         ):
             return
 
         if isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(
-                "Komut bekleme modunda! `{}sn` sonra tekrar dene.".format(
+                "Please wait `{}` second to use this command again.".format(
                     round(error.retry_after)
                 )
             )
 
-        if isinstance(
-            error,
-            (
-                commands.CheckFailure,
-                commands.errors.BadArgument,
-                commands.errors.MissingRequiredArgument,
-            ),
-        ):
-            # Warning reaction
-            return await ctx.message.add_reaction("\U000026a0")
+        if isinstance(error, commands.errors.MissingRequiredArgument):
+            # TODO: Better formatted output
+            return await ctx.send(error)
+
+        if isinstance(error, commands.errors.BadArgument):
+            return await ctx.send(str(error).replace('"', "`"))
+
+        if isinstance(error, commands.CheckFailure):
+            # Smiling imp reaction
+            return await ctx.message.add_reaction("\U0001f608")
 
         channel = self.bot.get_channel(
             self.c.getint("Channel", "ERROR_LOG_CHANNEL_ID")
