@@ -35,7 +35,7 @@ class ReactionRole(commands.Cog):
             await channel.send(content=message, delete_after=3.0)
 
     async def add_or_remove_role(self, payload, template):
-        guild = self.bot.get_guild(id=payload.guild_id)
+        guild = self.bot.get_guild(payload.guild_id)
         member = await guild.fetch_member(payload.user_id)
 
         if member.bot:
