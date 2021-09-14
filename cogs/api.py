@@ -66,7 +66,9 @@ class API(commands.Cog):
             return await ctx.send("Not a valid website. Use http or https.")
 
         embed = discord.Embed(color=self.bot.color)
-        embed.description = "Source: `{}`".format(website)
+        embed.description = "Source: `{}`\nInvoker: {}".format(
+            website, ctx.author.mention
+        )
         embed.set_image(
             url="https://image.thum.io/get/width/2000/crop/1200/png/{}".format(
                 website
