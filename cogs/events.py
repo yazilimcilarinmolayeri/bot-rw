@@ -6,9 +6,8 @@ from io import StringIO
 from datetime import datetime
 
 import discord
-from discord.ext import commands
-from discord.ext import commands, menus
 from discord import Status, ActivityType
+from discord.ext import commands, menus, tasks
 
 import arrow
 from tortoise.query_utils import Q
@@ -24,21 +23,22 @@ class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.c = bot.config
+        self.change_presence.start()
 
-    async def _change_presence(self):
-        guild = self.bot.get_guild(self.c.getint("Guild", "DEFAULT_GUILD_ID"))
+    def cog_unload(self):
+        self.change_presence.cancel()
 
-        try:
-            bots = sum(m.bot for m in guild.members)
-            humans = guild.member_count - bots
-            name = "{} + {}".format(humans, bots)
-        except AttributeError:
-            name = "?"
+    @tasks.loop(minutes=10.0)
+    async def change_presence(self):
+        async with self.bot.session.get(
+            "http://whatthecommit.com/index.txt"
+        ) as resp:
+            name = await resp.text()
 
         await self.bot.change_presence(
             activity=discord.Activity(
-                type=ActivityType.watching,
-                name="{} üyeyi".format(name),
+                type=ActivityType.playing,
+                name=name.replace("\n", ""),
             ),
             status=Status.idle,
         )
@@ -54,17 +54,14 @@ class Events(commands.Cog):
             )
         )
 
-        await models.init()  # database init
-        # await self._change_presence()
+        await models.init()  # Database init
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        # await self._change_presence()
         pass
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        # await self._change_presence()
         pass
 
     @commands.Cog.listener(name="on_message")
