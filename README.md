@@ -1,42 +1,40 @@
 # ymybot-rw
+
 ![](https://img.shields.io/badge/python-3.8%2B-blue) ![](https://img.shields.io/pypi/v/discord.py?label=discord.py) ![](https://img.shields.io/pypi/v/jishaku?label=jishaku) ![](https://img.shields.io/badge/code%20style-black-black) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/yazilimcilarinmolayeri/ymybot-rw/main.svg)](https://results.pre-commit.ci/latest/github/yazilimcilarinmolayeri/ymybot-rw/main)
 
-Hello! I am a multifunctional Discord bot (ymybot rewrite version)
-> API's, Feed, Info, Owner, Stats, Utility and more...
+Hello! I am a multifunctional Discord bot (ymybot rewrite version). API's, Feed, Info, Owner, ReactionRole, Stats, Utility and more...
 
-## Download and Installation
+## Installation and Configuration
 
-1. Clone the repository:
+1. Clone the repository.
 ```
 $ git clone https://github.com/yazilimcilarinmolayeri/ymybot-rw
 $ cd ymybot-rw/
 ```
 
-2. Create a virtual environment (optionally):
+2. Create a virtual environment (optionally).
 ```
 $ pip3 install -r dev-requirements.txt
 $ virtualenv .venv
 $ source .venv/bin/activate
 ```
 
-3. Install the ymybot-rw's dependencies:
+3. Install the ymybot-rw's dependencies.
 ```
-pip3 install -r requirements.txt
+$ pip3 install -r requirements.txt
 ```
 
-4. Create a config.cfg file: <br/>
-Sample file: https://gist.github.com/ccctux/de1f8c8c94ab5efa754ac26ada6fca32
+4. Create a config.cfg file. Template: https://gist.github.com/ccctux/de1f8c8c94ab5efa754ac26ada6fca32
 ```
 $ touch config.cfg
 ```
 
-5. Setup the service file: <br/>
-Replace `user` with your custom username before.
+5. Setup the service file. Replace `user` with your custom username before.
 ```
 $ [sudo] cp ymybot-rw.service /etc/systemd/system/
 ```
 
-6. Enable services (optionally) and start the bot:
+6. Enable services (optionally) and start the bot.
 ```
 $ [sudo] systemctl daemon-reload
 $ [sudo] systemctl enable ymybot.service
@@ -46,7 +44,6 @@ $ python3 bot.py
 ```
 
 ## Support
-![](https://discord.com/api/guilds/418887354699350028/embed.png) <br/>
 You can join the server and test the bot. Invite: https://discord.gg/KazHgb2
 
 ## License
