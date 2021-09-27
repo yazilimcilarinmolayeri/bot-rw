@@ -8,39 +8,39 @@ Hello! I am a multifunctional Discord bot (ymybot rewrite version). API's, Feed,
 
 1. Clone the repository.
 ```
-$ git clone https://github.com/yazilimcilarinmolayeri/ymybot-rw
-$ cd ymybot-rw/
+git clone https://github.com/yazilimcilarinmolayeri/ymybot-rw
+cd ymybot-rw/
 ```
 
 2. Create a virtual environment (optionally).
 ```
-$ pip3 install -r dev-requirements.txt
-$ virtualenv .venv
-$ source .venv/bin/activate
+pip3 install -r dev-requirements.txt
+virtualenv .venv
+source .venv/bin/activate
 ```
 
 3. Install the ymybot-rw's dependencies.
 ```
-$ pip3 install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 4. Create a config.cfg file. Template: https://gist.github.com/ccctux/de1f8c8c94ab5efa754ac26ada6fca32
 ```
-$ touch config.cfg
+touch config.cfg
 ```
 
 5. Setup the service file. Replace `user` with your custom username before.
 ```
-$ [sudo] cp ymybot-rw.service /etc/systemd/system/
+[sudo] cp ymybot-rw.service /etc/systemd/system/
 ```
 
 6. Enable services (optionally) and start the bot.
 ```
-$ [sudo] systemctl daemon-reload
-$ [sudo] systemctl enable ymybot.service
-$ [sudo] systemctl start ymybot.service
+[sudo] systemctl daemon-reload
+[sudo] systemctl enable ymybot-rw.service
+[sudo] systemctl start ymybot-rw.service
 # or
-$ python3 bot.py
+python3 bot.py
 ```
 
 ## Support
