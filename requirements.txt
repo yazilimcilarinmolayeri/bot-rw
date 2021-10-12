@@ -3,7 +3,7 @@ arrow
 psutil
 socialscan
 feedparser
-tortoise-orm
+tortoise-orm==0.17.7
 git+https://github.com/Gelbpunkt/aiowiki@master
 
 git+https://github.com/Gorialis/jishaku@master
