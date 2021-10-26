@@ -23,20 +23,9 @@ class Info(commands.Cog):
         if member == None:
             member = ctx.author
 
-        formats = ["png", "jpg", "webp"]
-        url = lambda format: member.avatar.with_static_format(format)
-
-        if member.avatar.is_animated():
-            formats.append("gif")
-
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=member)
-        embed.description = "Formatlar: {}".format(
-            ", ".join(["[`{}`]({})".format(f, url(f)) for f in formats])
-        )
-
-        embed.set_image(url=member.avatar.url)
-        embed.set_footer(text="ID: {}".format(member.id))
+        embed.set_image(url=member.display_avatar.url)
 
         await ctx.send(embed=embed)
 
