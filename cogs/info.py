@@ -266,7 +266,7 @@ class Info(commands.Cog):
         )
         command = self.bot.get_command("profile")
 
-        await command.__call__(ctx=channel, member=author)
+        await command.__call__(context=channel, member=author)
 
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, member: discord.Member = None):
@@ -278,7 +278,7 @@ class Info(commands.Cog):
         data = await models.Profile.values_list(pk=member.id)
 
         if not len(data):
-            return await ctx.send("Profil bulunamadı!")
+            return await ctx.send("Profile is none!")
 
         member_id, screenshot_url = data[1], data[-1]
         data = data[1:-1]
@@ -294,13 +294,13 @@ class Info(commands.Cog):
                 for i, j in enumerate(data)
             ]
         )
-        embed.set_thumbnail(url=member.avatar.url)
+        embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(
             url=screenshot_url
             if screenshot_url != "?"
             else discord.Embed.Empty
         )
-        embed.set_footer(text="ID: {}".format(member.id))
+
         await ctx.send(embed=embed)
 
     @profile.command(name="setup")
@@ -325,7 +325,7 @@ class Info(commands.Cog):
         p = await models.Profile.values_list(pk=author.id)
 
         if len(p):
-            return await ctx.send("Var olan profilini düzenle...")
+            return await ctx.send("You have a profile, please be edit.")
 
         def check(m):
             try:
@@ -336,13 +336,11 @@ class Info(commands.Cog):
                 return False
 
         embed = discord.Embed(color=self.bot.color)
-        embed.set_footer(
-            text="'s' girerek geçebilir, 'c' girerek iptal edebilirsin."
-        )
+        embed.set_footer(text="'s' for skip question, 'c' for cancel setup")
         question_embed = await ctx.send(embed=embed)
 
         for i, question in enumerate(lists.profile_questions):
-            embed.description = "{}, {}".format(author.mention, question)
+            embed.description = "{} {}".format(author.mention, question)
             await question_embed.edit(embed=embed)
             answer = await self.bot.wait_for("message", check=check)
 
@@ -354,7 +352,7 @@ class Info(commands.Cog):
                 if len(lists.profile_questions) - 1 == i:
                     if not functions.is_url_image(answer.content):
                         await ctx.send(
-                            "Geçersiz bağlantı! Soru geçiliyor...",
+                            "Invalid link, skiping question...",
                             delete_after=3.0,
                         )
                         answers[fields[i + 1]] = "?"
@@ -368,7 +366,7 @@ class Info(commands.Cog):
         profile_channel = self.bot.get_channel(
             self.c.get("Channel", "PROFILE_CHANNEL_ID")
         )
-        embed.description = "{}, Kurulum tamamlandı!".format(author.mention)
+        embed.description = "{} setup complete!".format(author.mention)
         embed.set_footer(text=discord.Embed.Empty)
 
         await question_embed.edit(embed=embed)
@@ -380,9 +378,7 @@ class Info(commands.Cog):
         """Remove a user profile."""
 
         await models.Profile.get(pk=member.id).delete()
-        await ctx.send(
-            "`{}` adlı kullanıcının profili kaldırıldı!".format(member)
-        )
+        await ctx.send("`{}`s profile has been removed.".format(member))
 
     @profile.group(name="edit")
     async def profile_edit(self, ctx):
@@ -391,7 +387,7 @@ class Info(commands.Cog):
         commands = ctx.command.commands
 
         embed = discord.Embed(color=self.bot.color)
-        embed.description = "Profil düzenlemek için argümanlar:\n" + ", ".join(
+        embed.description = "Arguments for profile edit:\n" + ", ".join(
             "`{}`".format(c.aliases[0]) for c in commands
         )
 
@@ -399,7 +395,7 @@ class Info(commands.Cog):
             await ctx.send(embed=embed)
 
     @profile_edit.command(aliases=["os"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def operation_system(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             operation_system=new_profile_item
@@ -408,7 +404,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["de"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def desktop_environment(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             desktop_environment=new_profile_item
@@ -417,7 +413,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["themes"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def desktop_themes(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             desktop_themes=new_profile_item
@@ -426,7 +422,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["browser"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def web_browser(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             web_browser=new_profile_item
@@ -435,7 +431,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["editors"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def code_editors(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             code_editors=new_profile_item
@@ -444,7 +440,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["terminal"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def terminal_software(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             terminal_software=new_profile_item
@@ -453,7 +449,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["shell"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def shell_software(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(
             shell_software=new_profile_item
@@ -462,7 +458,7 @@ class Info(commands.Cog):
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["ss"])
-    @commands.cooldown(1, 300, commands.BucketType.user)
+    @commands.cooldown(1, 120, commands.BucketType.user)
     async def screenshot_url(self, ctx, new_profile_item):
         if not functions.is_url_image(new_profile_item):
             return await ctx.message.add_reaction("\U0000203c")
