@@ -19,7 +19,7 @@ def setup(bot):
 class ReactionRole(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.MAX_ROLE = 15
+        self.MAX_ROLE = 30
 
     async def _clear_reaction(self, payload, member):
         channel = self.bot.get_channel(payload.channel_id)
