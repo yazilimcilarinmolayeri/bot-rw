@@ -386,7 +386,7 @@ class Utility(commands.Cog):
                     voice += 1
 
         cpu_usage = psutil.cpu_percent() / psutil.cpu_count()
-        memory_usage = self.process.memory_full_info().uss / 1024 ** 2
+        memory_usage = self.process.memory_full_info().uss / 1024**2
         commits = await self.get_last_commits(ctx)
 
         embed = discord.Embed(color=self.bot.color)
