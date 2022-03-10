@@ -1,13 +1,11 @@
 {
-  "bot":{
-    "command_prefix":[
-    ],
-    "owner_ids":[
-    ],
-    "token":""
+  "bot": {
+    "command_prefix": [],
+    "owner_ids": [],
+    "token": ""
   },
-  "channel":{
-    "error":0,
-    "dm_mention":0
+  "log": {
+    "error_channel_id": 0,
+    "dm_mention_channel_id": 0
   }
 }

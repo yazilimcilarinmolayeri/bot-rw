@@ -78,7 +78,9 @@ if __name__ == "__main__":
     logger = logging.getLogger("discord")
     logger.setLevel(logging.INFO)
     handler = logging.FileHandler(filename="bot.log", mode="w", encoding="utf-8")
-    formatter = logging.Formatter("[%(asctime)s][%(levelname)s][%(name)s] - %(message)s")
+    formatter = logging.Formatter(
+        "[%(asctime)s][%(levelname)s][%(name)s] - %(message)s"
+    )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 

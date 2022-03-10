@@ -1,3 +1,4 @@
+import re
 import sys
 import traceback
 from io import StringIO
@@ -22,7 +23,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.launch_time = datetime.utcnow()
-        
+
         print(
             "┬ ┬┌┬┐┬ ┬┌┐ ┌─┐┌┬┐  ┬─┐┬ ┬\n"
             "└┬┘│││└┬┘├┴┐│ │ │───├┬┘│││\n"
@@ -45,20 +46,15 @@ class Events(commands.Cog):
     @commands.Cog.listener(name="on_message")
     async def on_bot_mention(self, message):
         author = message.author
+        channel = self.bot.get_channel(self.bot.config["log"]["dm_mention_channel_id"])
 
-        if self.bot.user.mentioned_in(message) and message.mention_everyone is False:
-            channel = self.bot.get_channel(self.config["channel"]["dm_mention"])
+        if author.bot:
+            return
 
+        if message.guild is None:
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar.url)
-            embed.add_field(
-                name=f"Mention Info",
-                value=f"Channel: {message.channel.mention} "
-                f"`(ID: {message.channel.id})`\n"
-                f"Guild: `{author.guild} (ID: {author.guild.id})`\n\n"
-                f"[`Jump message!`]({message.jump_url})",
-            )
             embed.set_footer(text=f"ID: {author.id}")
 
             if message.attachments:
@@ -67,18 +63,16 @@ class Events(commands.Cog):
 
             await channel.send(embed=embed)
 
-    @commands.Cog.listener(name="on_message")
-    async def on_dm_message(self, message):
-        author = message.author
-
-        if author.bot:
-            return
-
-        if message.guild is None:
-            self.bot.get_channel(self.config["channel"]["dm_mention"])
-
+        if self.bot.user.mentioned_in(message) and message.mention_everyone is False:
             embed = discord.Embed(color=self.bot.color)
-            embed.description = message.content
+            embed.description = (
+                f"{message.content}\n\n"
+                f"Channel: {message.channel.mention} "
+                f"(`{message.channel.id}`)\n"
+                f"Guild: {author.guild} "
+                f"(`{author.guild.id}`)\n\n"
+                f"[`Jump message!`]({message.jump_url})"
+            )
             embed.set_author(name=author, icon_url=author.avatar.url)
             embed.set_footer(text=f"ID: {author.id}")
 
@@ -90,10 +84,6 @@ class Events(commands.Cog):
 
     async def update_emoji_stats(self, guild, author, message):
         custom_emojis = functions.custom_emoji_counter(guild, message)
-
-        if not len(custom_emojis):
-            return
-
         data = await models.EmojiUsageStat.filter(guild_id=guild.id).values()
 
         # TODO: Design optimized and combine with 2nd for loop
@@ -146,17 +136,6 @@ class Events(commands.Cog):
         if len(a_custom_emojis) > len(b_custom_emojis):
             await self.update_emoji_stats(after.guild, after.author, after)
 
-    # @commands.Cog.listener(name="on_user_update")
-    async def on_update_avatar(self, before, after):
-        user = after
-        b_avatar_key = before.avatar.key
-        a_avatar_key = after.avatar.key
-
-        if b_avatar_key == a_avatar_key:
-            return
-
-        avatar_url = user.avatar.url[: user.avatar.url.find("?")]
-
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(
@@ -193,12 +172,14 @@ class Events(commands.Cog):
             )
         )
 
-        channel = self.bot.get_channel(self.bot.config["channel"]["error"])
+        channel = self.bot.get_channel(self.bot.config["log"]["error_channel_id"])
 
         await ctx.message.add_reaction("\U00002049")
         await channel.send(
-            content=f"In `{ctx.command.qualified_name}`: "
-            f"`{error.__class__.__name__}`: `{error}`",
+            content=(
+                f"In `{ctx.command.qualified_name}`: "
+                f"`{error.__class__.__name__}`: `{error}`"
+            ),
             file=discord.File(
                 StringIO(exc),
                 filename="traceback.txt",

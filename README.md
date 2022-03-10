@@ -25,13 +25,11 @@ cp ymybot-rw.service /etc/systemd/system/
 
 5. Enable services (optionally) and start the bot.
 ```shell
+python3 bot.py
+# or
 systemctl daemon-reload
 systemctl enable ymybot-rw.service
 systemctl start ymybot-rw.service
-```
-or
-```shell
-python3 bot.py
 ```
 
 ## Support

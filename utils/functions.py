@@ -20,12 +20,16 @@ def is_url_image(url):
 
 
 def custom_emoji_counter(guild, message):
+    custom_emoji_regex = (
+        r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>"
+    )
+
     custom_emojis = Counter(
         [
-            discord.utils.get(guild.emojis, id=e)
-            for e in [
-                int(e.split(":")[2].replace(">", ""))
-                for e in re.findall(r"<:\w*:\d*>", message.content)
+            discord.utils.get(guild.emojis, id=emoji_id)
+            for emoji_id in [
+                int(emoji[2])
+                for emoji in re.findall(custom_emoji_regex, message.content)
             ]
         ]
     )
