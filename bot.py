@@ -1,35 +1,20 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
-"""
-Copyright (C) 2020-2021 yazilimcilarinmolayeri
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+#
+# Copyright (C) 2020-2022 yazilimcilarinmolayeri
+#
 
 import os
-import aiohttp
-import discord
+import json
+import logging
 import warnings
-import configparser
-from utils import context
+
+import discord
+import aiohttp
 from discord.ext import commands
 
-description = """
-    Hello! I am a multifunctional Discord bot (ymybot rewrite version).
-    Source: https://github.com/yazilimcilarinmolayeri/ymybot-rw
-"""
+from utils import context
+
 
 extensions = (
     "jishaku",
@@ -47,55 +32,10 @@ os.environ["JISHAKU_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 
 
-def _get_config():
-    config = configparser.ConfigParser()
-    files = config.read("config.cfg")
+class MyBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    if not len(files):
-        print("Config file not found!")
-        exit()
-
-    return config
-
-
-def _prefix_callable(bot, msg):
-    user_id = bot.user.id
-    base = config.get("Bot", "PREFIX").split(",")
-    base.extend(["<@!{}> ".format(user_id), "<@{}> ".format(user_id)])
-
-    return base
-
-
-config = _get_config()
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-
-class Bot(commands.AutoShardedBot):
-    def __init__(self):
-        intents = discord.Intents(
-            guilds=True,
-            members=True,
-            bans=True,
-            presences=True,
-            messages=True,
-            guild_messages=True,
-            reactions=True,
-            guild_reactions=True,
-            emojis=True,
-            typing=True,
-            guild_typing=True,
-        )
-
-        super().__init__(
-            description=description,
-            intents=intents,  # New in version 1.5
-            command_prefix=_prefix_callable,
-            owner_ids=set(
-                [int(id) for id in config.get("Bot", "OWNER_IDS").split(",")]
-            ),
-        )
-
-        self.uptime = ""
         self.config = config
         self.color = 0x2F3136
         self.session = aiohttp.ClientSession(loop=self.loop)
@@ -104,18 +44,11 @@ class Bot(commands.AutoShardedBot):
             try:
                 self.load_extension(cog)
             except Exception as exc:
-                print("{} {}: {}".format(cog, exc.__class__.__name__, exc))
-
-    @property
-    def __version__(self):
-        return "0.50.20"
+                print(f"{cog} {exc.__class__.__name__}: {exc}")
 
     @property
     def owners(self):
         return [self.get_user(id) for id in self.owner_ids]
-
-    async def on_resumed(self):
-        print("Resumed...")
 
     async def on_message(self, message):
         if message.author.bot:
@@ -136,9 +69,26 @@ class Bot(commands.AutoShardedBot):
         await self.session.close()
 
     def run(self):
-        super().run(self.config.get("Bot", "TOKEN"), reconnect=True)
+        super().run(self.config["bot"]["token"], reconnect=True)
 
 
 if __name__ == "__main__":
-    bot = Bot()
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    logger = logging.getLogger("discord")
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler(filename="bot.log", mode="w", encoding="utf-8")
+    formatter = logging.Formatter("[%(asctime)s][%(levelname)s][%(name)s] - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    with open("config.json") as file:
+        config = json.loads(file.read())
+
+    bot = MyBot(
+        config=config,
+        intents=discord.Intents.all(),
+        command_prefix=config["bot"]["command_prefix"],
+        owner_ids=set(config["bot"]["owner_ids"]),
+    )
     bot.run()

@@ -30,9 +30,7 @@ class Context(commands.Context):
         if dt is None:
             return "?"
 
-        return "{} ({})".format(
-            util_time.format_dt(dt, "F"), self.format_relative(dt)
-        )
+        return "{} ({})".format(util_time.format_dt(dt, "F"), self.format_relative(dt))
 
     async def show_help(self, command=None):
         cmd = self.bot.get_command("help")

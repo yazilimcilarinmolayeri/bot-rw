@@ -110,9 +110,7 @@ class Info(commands.Cog):
                 guild.premium_tier,
                 guild.premium_subscription_count,
                 ", ".join(
-                    "{} ({})".format(
-                        m.mention, ctx.format_relative(m.premium_since)
-                    )
+                    "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
                     for i, m in enumerate(subs)
                 )
                 if len(subs)
@@ -120,9 +118,7 @@ class Info(commands.Cog):
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(
-            text="Sahip: {} • ID: {}".format(guild.owner, guild.id)
-        )
+        embed.set_footer(text="Sahip: {} • ID: {}".format(guild.owner, guild.id))
 
         await ctx.send(embed=embed)
 
@@ -192,19 +188,16 @@ class Info(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
 
-            embed.description = (
-                "\n".join(
-                    [
-                        "{} `{} (Eklendi: {})`".format(
-                            ctx.get_emoji(guild, e.id),
-                            ctx.get_emoji(guild, e.id),
-                            util_time.humanize(e.created_at, g=["day"]),
-                        )
-                        for e in emojis
-                    ]
-                )
-                + "\n\nToplam: `{}`".format(len(guild.emojis))
-            )
+            embed.description = "\n".join(
+                [
+                    "{} `{} (Eklendi: {})`".format(
+                        ctx.get_emoji(guild, e.id),
+                        ctx.get_emoji(guild, e.id),
+                        util_time.humanize(e.created_at, g=["day"]),
+                    )
+                    for e in emojis
+                ]
+            ) + "\n\nToplam: `{}`".format(len(guild.emojis))
             embeds.append(embed)
 
         menu = menus.MenuPages(
@@ -229,9 +222,7 @@ class Info(commands.Cog):
             perms = channel.permissions_for(ctx.author)
 
             if not perms.view_channel:
-                return await ctx.send(
-                    "Bu kanalı görme yetkisine sahip değilsin!"
-                )
+                return await ctx.send("Bu kanalı görme yetkisine sahip değilsin!")
 
         messages = await channel.history(
             around=datetime.today() - timedelta(days=365)
@@ -261,9 +252,7 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     async def send_profile_message(self, author):
-        channel = self.bot.get_channel(
-            self.c.getint("Channel", "PROFILE_CHANNEL_ID")
-        )
+        channel = self.bot.get_channel(self.c.getint("Channel", "PROFILE_CHANNEL_ID"))
         command = self.bot.get_command("profile")
 
         await command.__call__(context=channel, member=author)
@@ -283,22 +272,13 @@ class Info(commands.Cog):
         member_id, screenshot_url = data[1], data[-1]
         data = data[1:-1]
 
-        embed = discord.Embed(
-            color=self.bot.color, timestamp=datetime.utcnow()
-        )
-        embed.description = "{} **{}**\n\n".format(
-            member.mention, member
-        ) + "\n".join(
-            [
-                "{}: `{}`".format(lists.profile_titles[i], j)
-                for i, j in enumerate(data)
-            ]
+        embed = discord.Embed(color=self.bot.color, timestamp=datetime.utcnow())
+        embed.description = "{} **{}**\n\n".format(member.mention, member) + "\n".join(
+            ["{}: `{}`".format(lists.profile_titles[i], j) for i, j in enumerate(data)]
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(
-            url=screenshot_url
-            if screenshot_url != "?"
-            else discord.Embed.Empty
+            url=screenshot_url if screenshot_url != "?" else discord.Embed.Empty
         )
 
         await ctx.send(embed=embed)
@@ -329,9 +309,7 @@ class Info(commands.Cog):
 
         def check(m):
             try:
-                return (m.channel.id == ctx.channel.id) and (
-                    m.author.id == author.id
-                )
+                return (m.channel.id == ctx.channel.id) and (m.author.id == author.id)
             except:
                 return False
 
@@ -424,18 +402,14 @@ class Info(commands.Cog):
     @profile_edit.command(aliases=["browser"])
     @commands.cooldown(1, 120, commands.BucketType.user)
     async def web_browser(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            web_browser=new_profile_item
-        )
+        await models.Profile.get(pk=ctx.author.id).update(web_browser=new_profile_item)
         await ctx.message.add_reaction("\U00002705")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["editors"])
     @commands.cooldown(1, 120, commands.BucketType.user)
     async def code_editors(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            code_editors=new_profile_item
-        )
+        await models.Profile.get(pk=ctx.author.id).update(code_editors=new_profile_item)
         await ctx.message.add_reaction("\U00002705")
         await self.send_profile_message(ctx.author)
 

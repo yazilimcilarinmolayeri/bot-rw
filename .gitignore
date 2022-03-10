@@ -1,6 +1,5 @@
-# Config files
-*.ini
-*.cfg
+# Config file
+*.json
 
 # Database files
 *.db

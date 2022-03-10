@@ -50,9 +50,7 @@ class ReactionRole(commands.Cog):
             return await self._send_message(
                 payload,
                 member,
-                "`{}`, `{}` role has been __removed__.".format(
-                    member, role.name
-                ),
+                "`{}`, `{}` role has been __removed__.".format(member, role.name),
             )
         else:
             if len(member.roles) - 1 >= self.MAX_ROLE:
@@ -70,9 +68,7 @@ class ReactionRole(commands.Cog):
                 return await self._send_message(
                     payload,
                     member,
-                    "`{}`, `{}` role has been __added__.".format(
-                        member, role.name
-                    ),
+                    "`{}`, `{}` role has been __added__.".format(member, role.name),
                 )
 
     @commands.Cog.listener()
@@ -146,9 +142,7 @@ class ReactionRole(commands.Cog):
     async def rrmanager_info(self, ctx, template_id):
         """Shows info about a template."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
 
         if template.channel_id:
             channel = self.bot.get_channel(template.channel_id)
@@ -184,9 +178,7 @@ class ReactionRole(commands.Cog):
     async def rrmanager_title(self, ctx, template_id, *, title):
         """Template title update."""
 
-        await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        ).update(
+        await models.Templates.get(id=template_id, guild_id=ctx.guild.id).update(
             title=title,
         )
         await ctx.send("Title updated.")
@@ -195,12 +187,8 @@ class ReactionRole(commands.Cog):
     async def rrmanager_color(self, ctx, template_id, color):
         """Template color update. It accepts in 0xff00ff format."""
 
-        await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        ).update(
-            color=self.bot.color
-            if color.lower() == "default"
-            else int(color, 16),
+        await models.Templates.get(id=template_id, guild_id=ctx.guild.id).update(
+            color=self.bot.color if color.lower() == "default" else int(color, 16),
         )
         await ctx.send("Color updated.")
 
@@ -208,9 +196,7 @@ class ReactionRole(commands.Cog):
     async def rrmanager_add(self, ctx, template_id, emoji, role: discord.Role):
         """Add reaction role binding to template."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
 
         # TODO: Skip if there are more than 20 binding
         # TODO: Skip the same binding if it already exists
@@ -227,9 +213,7 @@ class ReactionRole(commands.Cog):
     async def rrmanager_remove(self, ctx, template_id, emoji):
         """Remove reaction role binding to template."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
         await models.ReactionRoles.get(emoji=emoji, template=template).delete()
         await ctx.send("Emoji and binding role removed.")
 
@@ -251,9 +235,7 @@ class ReactionRole(commands.Cog):
     async def rrmanager_show(self, ctx, template_id):
         """Show reaction role template message for test."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
 
         embed = discord.Embed(color=template.color)
         await self.rr_embed(ctx, embed, template)
@@ -261,14 +243,10 @@ class ReactionRole(commands.Cog):
         await ctx.send(embed=embed)
 
     @rrmanager.command(name="send")
-    async def rrmanager_send(
-        self, ctx, template_id, channel: discord.TextChannel
-    ):
+    async def rrmanager_send(self, ctx, template_id, channel: discord.TextChannel):
         """Send reaction role template message to channel."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
 
         embed = discord.Embed(color=template.color)
         await self.rr_embed(ctx, embed, template)
@@ -283,17 +261,13 @@ class ReactionRole(commands.Cog):
         async for r in template.reactionroles:
             await message.add_reaction(r.emoji)
 
-        await info_message.edit(
-            content="{} Done.".format(info_message.content)
-        )
+        await info_message.edit(content="{} Done.".format(info_message.content))
 
     @rrmanager.command(name="update")
     async def rrmanager_update(self, ctx, template_id):
         """Update reaction role template message."""
 
-        template = await models.Templates.get(
-            id=template_id, guild_id=ctx.guild.id
-        )
+        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
 
         channel = self.bot.get_channel(template.channel_id)
         message = await channel.fetch_message(template.message_id)
@@ -310,9 +284,7 @@ class ReactionRole(commands.Cog):
         async for r in template.reactionroles:
             await message.add_reaction(r.emoji)
 
-        await info_message.edit(
-            content="{} Done.".format(info_message.content)
-        )
+        await info_message.edit(content="{} Done.".format(info_message.content))
 
     @rrmanager.command(name="kill")
     async def rrmanager_kill(self, ctx, *template_ids: commands.clean_content):
@@ -321,8 +293,6 @@ class ReactionRole(commands.Cog):
         # TODO: Get template message and delete.
 
         for template_id in template_ids:
-            await models.Templates.get(
-                id=template_id, guild_id=ctx.guild.id
-            ).delete()
+            await models.Templates.get(id=template_id, guild_id=ctx.guild.id).delete()
 
         await ctx.send("Template(s) killed.")

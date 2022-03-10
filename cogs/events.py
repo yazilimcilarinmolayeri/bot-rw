@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 import sys
 import traceback
 from io import StringIO
 from datetime import datetime
 
 import discord
+from tortoise.query_utils import Q
 from discord import Status, ActivityType
 from discord.ext import commands, menus, tasks
-
-import arrow
-from tortoise.query_utils import Q
 
 from utils import models, functions
 
@@ -22,36 +18,18 @@ def setup(bot):
 class Events(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.c = bot.config
-        self.change_presence.start()
-
-    def cog_unload(self):
-        self.change_presence.cancel()
-
-    @tasks.loop(minutes=10.0)
-    async def change_presence(self):
-        async with self.bot.session.get(
-            "http://whatthecommit.com/index.txt"
-        ) as resp:
-            name = await resp.text()
-
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=ActivityType.playing,
-                name=name.replace("\n", ""),
-            ),
-            status=Status.idle,
-        )
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if not hasattr(self, "uptime"):
-            self.bot.uptime = arrow.utcnow()
-
+        self.bot.launch_time = datetime.utcnow()
+        
         print(
-            "{} (ID: {})\ndiscord.py version: {}".format(
-                self.bot.user, self.bot.user.id, discord.__version__
-            )
+            "┬ ┬┌┬┐┬ ┬┌┐ ┌─┐┌┬┐  ┬─┐┬ ┬\n"
+            "└┬┘│││└┬┘├┴┐│ │ │───├┬┘│││\n"
+            " ┴ ┴ ┴ ┴ └─┘└─┘ ┴   ┴└─└┴┘\n"
+            f"Bot name: {self.bot.user}\n"
+            f"ID: {self.bot.user.id}\n"
+            f"Library version: {discord.__version__}"
         )
 
         await models.init()  # Database init
@@ -68,30 +46,20 @@ class Events(commands.Cog):
     async def on_bot_mention(self, message):
         author = message.author
 
-        if (
-            self.bot.user.mentioned_in(message)
-            and message.mention_everyone is False
-        ):
-            channel = self.bot.get_channel(
-                self.c.getint("Channel", "MENTION_LOG_CHANNEL_ID")
-            )
+        if self.bot.user.mentioned_in(message) and message.mention_everyone is False:
+            channel = self.bot.get_channel(self.config["channel"]["dm_mention"])
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar.url)
             embed.add_field(
-                name="Bahsetme Bilgisi",
-                value="Kanal: {} `(ID: {})`\n"
-                "Sunucu: `{} (ID: {})`\n\n"
-                "[`Mesaja zıpla!`]({})".format(
-                    message.channel.mention,
-                    message.channel.id,
-                    author.guild,
-                    author.guild.id,
-                    message.jump_url,
-                ),
+                name=f"Mention Info",
+                value=f"Channel: {message.channel.mention} "
+                f"`(ID: {message.channel.id})`\n"
+                f"Guild: `{author.guild} (ID: {author.guild.id})`\n\n"
+                f"[`Jump message!`]({message.jump_url})",
             )
-            embed.set_footer(text="ID: {}".format(author.id))
+            embed.set_footer(text=f"ID: {author.id}")
 
             if message.attachments:
                 attachment_url = message.attachments[0].url
@@ -107,14 +75,12 @@ class Events(commands.Cog):
             return
 
         if message.guild is None:
-            channel = self.bot.get_channel(
-                self.c.getint("Channel", "DM_LOG_CHANNEL_ID")
-            )
+            self.bot.get_channel(self.config["channel"]["dm_mention"])
 
             embed = discord.Embed(color=self.bot.color)
             embed.description = message.content
             embed.set_author(name=author, icon_url=author.avatar.url)
-            embed.set_footer(text="ID: {}".format(author.id))
+            embed.set_footer(text=f"ID: {author.id}")
 
             if message.attachments:
                 attachment_url = message.attachments[0].url
@@ -190,16 +156,6 @@ class Events(commands.Cog):
             return
 
         avatar_url = user.avatar.url[: user.avatar.url.find("?")]
-        channel = self.bot.get_channel(
-            self.c.getint("Channel", "AVATAR_LOG_CHANNEL_ID")
-        )
-
-        embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=user)
-        embed.set_image(url=avatar_url)
-        embed.set_footer(text="ID: {}".format(user.id))
-
-        await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -217,9 +173,7 @@ class Events(commands.Cog):
 
         if isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(
-                "Please wait `{}` second to use this command again.".format(
-                    round(error.retry_after)
-                )
+                f"Please wait `{round(error.retry_after)}` second to use this command again."
             )
 
         if isinstance(error, commands.errors.MissingRequiredArgument):
@@ -230,12 +184,7 @@ class Events(commands.Cog):
             return await ctx.send(str(error).replace('"', "`"))
 
         if isinstance(error, commands.CheckFailure):
-            # Smiling imp reaction
             return await ctx.message.add_reaction("\U0001f608")
-
-        channel = self.bot.get_channel(
-            self.c.getint("Channel", "ERROR_LOG_CHANNEL_ID")
-        )
 
         error = error.original
         exc = "".join(
@@ -244,14 +193,12 @@ class Events(commands.Cog):
             )
         )
 
-        # Interrobang reaction
+        channel = self.bot.get_channel(self.bot.config["channel"]["error"])
+
         await ctx.message.add_reaction("\U00002049")
         await channel.send(
-            content="In `{}`: `{}`: `{}`".format(
-                ctx.command.qualified_name,
-                error.__class__.__name__,
-                error,
-            ),
+            content=f"In `{ctx.command.qualified_name}`: "
+            f"`{error.__class__.__name__}`: `{error}`",
             file=discord.File(
                 StringIO(exc),
                 filename="traceback.txt",

@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-
 import json
 import string
 import random
-import discord
-import feedparser
 from io import StringIO
 from datetime import datetime
+
+import discord
+import feedparser
 from discord.ext import commands, tasks, menus
 from tortoise import exceptions as tortoise_exceptions
+
 from utils import paginator, models, functions, time as util_time
 
 

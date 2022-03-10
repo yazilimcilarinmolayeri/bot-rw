@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
-
 import os
 import time
 import random
 import inspect
 import platform
-
-import discord
-from discord.ext import commands
+from datetime import datetime
 
 import arrow
 import psutil
+import discord
+from discord.ext import commands
 
 from utils import lists, functions, time as util_time
 
@@ -37,9 +35,7 @@ class HelpCommand(commands.HelpCommand):
         owners = ctx.bot.owners
 
         for extension in ctx.bot.cogs.values():
-            commands = [
-                "`{}`".format(c.qualified_name) for c in mapping[extension]
-            ]
+            commands = ["`{}`".format(c.qualified_name) for c in mapping[extension]]
             total += len(commands)
 
             if len(commands) == 0:
@@ -91,11 +87,7 @@ class HelpCommand(commands.HelpCommand):
 
             alias = fmt
         else:
-            alias = (
-                command.name
-                if not parent
-                else "{} {}".format(parent, command.name)
-            )
+            alias = command.name if not parent else "{} {}".format(parent, command.name)
 
         return "{} {}".format(alias, command.signature).strip()
 
@@ -151,7 +143,6 @@ class HelpCommand(commands.HelpCommand):
 class Utility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.c = bot.config
         self.process = psutil.Process()
 
         self._original_help_command = bot.help_command
@@ -165,9 +156,12 @@ class Utility(commands.Cog):
     async def uptime(self, ctx):
         """Tells you how long the bot has been up for."""
 
-        await ctx.send(
-            "Uptime: {}".format(ctx.format_relative(self.bot.uptime))
-        )
+        delta_uptime = datetime.utcnow() - self.bot.launch_time
+        hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        days, hours = divmod(hours, 24)
+        
+        await ctx.send(f"Uptime: `{days}d, {hours}h, {minutes}m, {seconds}s`")
 
     @commands.command(aliases=["p"])
     async def ping(self, ctx, member: discord.Member = None):
@@ -203,45 +197,7 @@ class Utility(commands.Cog):
     async def lmddgtfy(self, ctx, *, keywords: str):
         """Let me DuckDuckGo that for you."""
 
-        await ctx.send(
-            "https://lmddgtfy.net/?q={}".format(keywords.replace(" ", "+"))
-        )
-
-    @commands.command()
-    @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
-    async def feedback(self, ctx, *, content):
-        """Gives feedback about the bot."""
-
-        author = ctx.author
-        channel = self.bot.get_channel(
-            self.c.getint("Channel", "FEEDBACK_CHANNEL_ID")
-        )
-
-        if channel is None:
-            return
-
-        embed = discord.Embed(
-            color=self.bot.color, timestamp=ctx.message.created_at
-        )
-        embed.set_author(name=author, icon_url=author.avatar.url)
-        embed.description = content
-
-        if ctx.guild is not None:
-            embed.add_field(
-                name="Geri Bildirim Bilgisi",
-                value="Kanal: {} `(ID: {})`\n"
-                "Sunucu: `{} (ID: {})`".format(
-                    ctx.channel.mention,
-                    ctx.channel.id,
-                    ctx.guild,
-                    ctx.guild.id,
-                ),
-            )
-
-        embed.set_footer(text="ID: {}".format(author.id))
-
-        await channel.send(embed=embed)
-        await ctx.send("Geri bildirim gönderildi. Teşekkürler!")
+        await ctx.send("https://lmddgtfy.net/?q={}".format(keywords.replace(" ", "+")))
 
     async def say_permissions(self, ctx, member, channel):
         allowed, denied = [], []
@@ -386,7 +342,7 @@ class Utility(commands.Cog):
                     voice += 1
 
         cpu_usage = psutil.cpu_percent() / psutil.cpu_count()
-        memory_usage = self.process.memory_full_info().uss / 1024 ** 2
+        memory_usage = self.process.memory_full_info().uss / 1024**2
         commits = await self.get_last_commits(ctx)
 
         embed = discord.Embed(color=self.bot.color)

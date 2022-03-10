@@ -1,0 +1,13 @@
+{
+  "bot":{
+    "command_prefix":[
+    ],
+    "owner_ids":[
+    ],
+    "token":""
+  },
+  "channel":{
+    "error":0,
+    "dm_mention":0
+  }
+}

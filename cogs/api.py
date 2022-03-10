@@ -70,9 +70,7 @@ class API(commands.Cog):
             website, ctx.author.mention
         )
         embed.set_image(
-            url="https://image.thum.io/get/width/2000/crop/1200/png/{}".format(
-                website
-            )
+            url="https://image.thum.io/get/width/2000/crop/1200/png/{}".format(website)
         )
 
         await ctx.send("Please wait...", delete_after=3.0)
@@ -92,9 +90,7 @@ class API(commands.Cog):
         ) as resp:
             if resp.status != 200:
                 return await ctx.send(
-                    "API connection error! Status code: `{}`".format(
-                        resp.status
-                    )
+                    "API connection error! Status code: `{}`".format(resp.status)
                 )
             data = await resp.json()
 
@@ -138,10 +134,7 @@ class API(commands.Cog):
 
         try:
             project_urls = ", ".join(
-                [
-                    "[`{}`]({})".format(t, u)
-                    for t, u in data["project_urls"].items()
-                ]
+                ["[`{}`]({})".format(t, u) for t, u in data["project_urls"].items()]
             )
         except AttributeError:
             project_urls = "~"
@@ -150,10 +143,7 @@ class API(commands.Cog):
         embed.title = "{} | {}".format(data["name"], data["version"])
         embed.url = data["package_url"]
         embed.description = (
-            "{}\n\n"
-            "License: `{}`\n"
-            "Author(s): `{} ({})`\n"
-            "Project links: {}"
+            "{}\n\n" "License: `{}`\n" "Author(s): `{} ({})`\n" "Project links: {}"
         ).format(
             data["summary"] or " ",
             data["license"] or " ",
@@ -197,18 +187,14 @@ class API(commands.Cog):
         async with self.bot.session.get("{}/info.0.json".format(url)) as resp:
             if resp.status != 200:
                 return await ctx.send(
-                    "API connection error! Status code: `{}`".format(
-                        resp.status
-                    )
+                    "API connection error! Status code: `{}`".format(resp.status)
                 )
             data = await resp.json()
 
         if num == None:
             num = random.randint(1, data["num"])
 
-        async with self.bot.session.get(
-            "{}/{}/info.0.json".format(url, num)
-        ) as resp:
+        async with self.bot.session.get("{}/{}/info.0.json".format(url, num)) as resp:
             if resp.status != 200:
                 return await ctx.send("Invalid number.")
             data = await resp.json()
@@ -252,9 +238,7 @@ class API(commands.Cog):
         async with self.bot.session.get("{}/activity".format(url)) as resp:
             if resp.status != 200:
                 return await ctx.send(
-                    "API connection error! Status code: `{}`".format(
-                        resp.status
-                    )
+                    "API connection error! Status code: `{}`".format(resp.status)
                 )
             data = await resp.json()
 
@@ -290,9 +274,7 @@ class API(commands.Cog):
         ) as resp:
             if resp.status != 200:
                 return await ctx.send(
-                    "API connection error! Status code: `{}`".format(
-                        resp.status
-                    )
+                    "API connection error! Status code: `{}`".format(resp.status)
                 )
             data = await resp.json()
 
@@ -307,9 +289,7 @@ class API(commands.Cog):
         async with self.bot.session.get(url) as resp:
             if resp.status != 200:
                 return await ctx.send(
-                    "API connection error! Status code: `{}`".format(
-                        resp.status
-                    )
+                    "API connection error! Status code: `{}`".format(resp.status)
                 )
             data = await resp.json()
 
