@@ -1,45 +1,36 @@
 # ymybot-rw
+![](https://img.shields.io/badge/python-3.8%2B-blue) ![](https://img.shields.io/pypi/v/discord.py?label=discord.py) ![](https://img.shields.io/pypi/v/jishaku?label=jishaku) ![](https://img.shields.io/badge/code%20style-black-black)
 
-![](https://img.shields.io/badge/python-3.8%2B-blue) ![](https://img.shields.io/pypi/v/discord.py?label=discord.py) ![](https://img.shields.io/pypi/v/jishaku?label=jishaku) ![](https://img.shields.io/badge/code%20style-black-black) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/yazilimcilarinmolayeri/ymybot-rw/main.svg)](https://results.pre-commit.ci/latest/github/yazilimcilarinmolayeri/ymybot-rw/main)
-
-Hello! I am a multifunctional Discord bot (ymybot rewrite version). API's, Feed, Info, Owner, ReactionRole, Stats, Utility and more...
-
-## Installation and Configuration
-
+## Installation and Setup
 1. Clone the repository.
-```
+```shell
 git clone https://github.com/yazilimcilarinmolayeri/ymybot-rw
-cd ymybot-rw/
+cd ymybot-rw
 ```
 
-2. Create a virtual environment (optionally).
-```
-pip3 install -r dev-requirements.txt
-virtualenv .venv
-source .venv/bin/activate
+2. Install the ymybot-rw's dependencies.
+```shell
+pip3 install -U -r requirements.txt
 ```
 
-3. Install the ymybot-rw's dependencies.
-```
-pip3 install -r requirements.txt
-```
-
-4. Create a config.cfg file. Template: https://gist.github.com/ccctux/de1f8c8c94ab5efa754ac26ada6fca32
-```
-touch config.cfg
+3. Edit a config.json file.
+```shell
+mv config.json.sample config.json
 ```
 
-5. Setup the service file. Replace `user` with your custom username before.
-```
-[sudo] cp ymybot-rw.service /etc/systemd/system/
+4. Setup the service file. Replace `user` with your custom username before.
+```shell
+cp ymybot-rw.service /etc/systemd/system/
 ```
 
-6. Enable services (optionally) and start the bot.
+5. Enable services (optionally) and start the bot.
+```shell
+systemctl daemon-reload
+systemctl enable ymybot-rw.service
+systemctl start ymybot-rw.service
 ```
-[sudo] systemctl daemon-reload
-[sudo] systemctl enable ymybot-rw.service
-[sudo] systemctl start ymybot-rw.service
-# or
+or
+```shell
 python3 bot.py
 ```
 
