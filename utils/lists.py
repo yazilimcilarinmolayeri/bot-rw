@@ -1,31 +1,22 @@
-# -*- coding: utf-8 -*-
-
-badges = {
-    "administrator": "<:administrator_badge:868205132003823617>",
-    "moderator": "<:moderator_badge:868205132519723020>",
-    "supporter": "<:supporter_badge:868205132855279746>",
-    "oldmember": "<:oldmember_badge:868205132779765811>",
-}
-
 profile_titles = [
-    "İşletim Sistemi",
-    "Masaüstü Ortamı",
-    "Masaüstü Temaları",
-    "Web Tarayıcısı",
-    "Kod/Metin Editörleri",
-    "Terminal Yazılımı",
-    "Kabuk Yazılımı",
+    "Operating system",
+    "Desktop environment",
+    "Desktop theme(s)",
+    "Web browser",
+    "Code/Text editor(s)",
+    "Shell software",
+    "Terminal software",
 ]
 
 profile_questions = [
-    "Favori işletim sistemin nedir?",
-    "Favori masaüstü ortamın nedir?",
-    "Favori pencere/ikon/fare teman nedir?",
-    "Favori web tarayıcının nedir?",
-    "Favori kod/metin editörün nedir?",
-    "Favori terminal yazılımın nedir?",
-    "Favori kabuk yazılımın nedir?",
-    "Ekran görüntüsü? Bağlantı olarak ver.",
+    "What is your favorite operating system?",
+    "What is your favorite desktop environment?",
+    "What is your favorite window/icon/mouse theme?",
+    "What is your favorite web browser?",
+    "What is your favorite code/text editor(s)?",
+    "What is your favorite shell software?",
+    "What is your favorite terminal software",
+    "You give me link of your desktop screenshot?",
 ]
 
 never_gonna_give_you_up_lyrics = [
@@ -36,3 +27,10 @@ never_gonna_give_you_up_lyrics = [
     "Never gonna say goodbye",
     "Never gonna tell a lie and hurt you",
 ]
+
+badges = {
+    "administrator": "<:administrator_badge:868205132003823617>",
+    "moderator": "<:moderator_badge:868205132519723020>",
+    "supporter": "<:supporter_badge:868205132855279746>",
+    "oldmember": "<:oldmember_badge:868205132779765811>",
+}

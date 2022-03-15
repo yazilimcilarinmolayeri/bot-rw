@@ -1,4 +1,3 @@
-import re
 import sys
 import traceback
 from io import StringIO
@@ -84,6 +83,10 @@ class Events(commands.Cog):
 
     async def update_emoji_stats(self, guild, author, message):
         custom_emojis = functions.custom_emoji_counter(guild, message)
+
+        if not len(custom_emojis):
+            return
+
         data = await models.EmojiUsageStat.filter(guild_id=guild.id).values()
 
         # TODO: Design optimized and combine with 2nd for loop

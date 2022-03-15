@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from tortoise.models import Model
 from tortoise import Tortoise, fields, run_async
 

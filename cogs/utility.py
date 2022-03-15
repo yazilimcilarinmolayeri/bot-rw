@@ -35,7 +35,7 @@ class HelpCommand(commands.HelpCommand):
         owners = ctx.bot.owners
 
         for extension in ctx.bot.cogs.values():
-            commands = ["`{}`".format(c.qualified_name) for c in mapping[extension]]
+            commands = [f"`{c.qualified_name}`" for c in mapping[extension]]
             total += len(commands)
 
             if len(commands) == 0:
@@ -48,9 +48,7 @@ class HelpCommand(commands.HelpCommand):
             ):
                 continue
 
-            fields.append(
-                "{}: {}".format(extension.qualified_name, ", ".join(commands))
-            )
+            fields.append(f"{extension.qualified_name}: {''.join(commands)}")
 
         embed = discord.Embed(color=ctx.bot.color)
         embed.set_author(name="Help Page")
@@ -68,9 +66,7 @@ class HelpCommand(commands.HelpCommand):
             )
         )
         embed.set_footer(
-            text="Total cog: {} • Total command: {}".format(
-                len(ctx.bot.cogs.values()), total
-            )
+            text=f"Total cog: {len(ctx.bot.cogs.values())} • Total command: {total}"
         )
 
         await ctx.send(embed=embed)
@@ -80,38 +76,36 @@ class HelpCommand(commands.HelpCommand):
 
         if len(command.aliases) > 0:
             aliases = "|".join(command.aliases)
-            fmt = "[{}|{}]".format(command.name, aliases)
+            fmt = f"[{command.name}|{aliases}]"
 
             if parent:
-                fmt = "{} {}".format(parent, fmt)
+                fmt = f"{parent} {fmt}"
 
             alias = fmt
         else:
-            alias = command.name if not parent else "{} {}".format(parent, command.name)
+            alias = command.name if not parent else f"{parent} {command.name}"
 
-        return "{} {}".format(alias, command.signature).strip()
+        return f"{alias} {command.signature}".strip()
 
     def common_command_formatting(self, command):
         command_signature = self.get_command_signature(command)
 
-        description = "Usage: `{}`\nHelp: `{}`".format(
-            command_signature.strip(),
-            (command.help or "Help not found.").strip(),
+        description = (
+            f"Usage: `{command_signature.strip()}`\n"
+            f"Help: `{command.help or 'No help.'}`".strip()
         )
 
         cooldown = command._buckets._cooldown
 
         if cooldown:
-            description += "\nCooldown: `{} per {} second`".format(
-                cooldown.rate, cooldown.per
-            )
+            description += f"\nCooldown: `{cooldown.rate} per {cooldown.per} second`"
 
         return description
 
     async def send_command_help(self, command):
         embed = discord.Embed(color=self.context.bot.color)
         embed.description = self.common_command_formatting(command)
-        embed.set_footer(text="Cog: {}".format(command.cog_name))
+        embed.set_footer(text=f"Cog: {command.cog_name}")
 
         await self.context.send(embed=embed)
 
@@ -122,20 +116,22 @@ class HelpCommand(commands.HelpCommand):
             return await self.send_command_help(group)
 
         for command in group.commands:
+            command_signature = (
+                self.get_command_signature(command)
+                .replace(command.full_parent_name, "")
+                .strip()
+            )
             fields.append(
-                "`{}`: {}".format(
-                    self.get_command_signature(command)
-                    .replace(command.full_parent_name, "")
-                    .strip(),
-                    command.description or command.help,
-                )
+                f"`{command_signature}`: " f"{command.description or command.help}"
             )
 
         embed = discord.Embed(color=self.context.bot.color)
-        embed.description = "{}\n\nSubcommand:\n{}".format(
-            self.common_command_formatting(group), "\n".join(fields)
+        embed.description = (
+            f"{self.common_command_formatting(group)}\n\n"
+            f"Subcommand:\n"
+            "\n".join(fields)
         )
-        embed.set_footer(text="Cog: {}".format(command.cog_name))
+        embed.set_footer(text=f"Cog: {command.cog_name}")
 
         await self.context.send(embed=embed)
 

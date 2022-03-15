@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
 import random
 from io import BytesIO
 
+import aiowiki
 import discord
 from discord.ext import commands, menus
-
-import aiowiki
 from socialscan.util import Platforms as p
 from socialscan.util import execute_queries
 

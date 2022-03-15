@@ -4,9 +4,10 @@ import re
 import csv
 import string
 import random
-import discord
 import mimetypes
 from collections import Counter
+
+import discord
 
 
 def list_to_matrix(l, col=10):

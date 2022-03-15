@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import arrow
 
 
@@ -7,7 +5,7 @@ def day_month_year(value):
     return (value.day, value.month, value.year)
 
 
-def humanize(dt, l="tr", od=False, g="auto"):
+def humanize(dt, l="en", od=False, g="auto"):
     return arrow.get(dt).humanize(locale=l, only_distance=od, granularity=g)
 
 

@@ -23,9 +23,15 @@ class Info(commands.Cog):
         if member == None:
             member = ctx.author
 
+        url = member.display_avatar.url
+
+        # Why? See: https://i.imgur.com/tAb7KE8.png
+        if member.id == 233666257038213121:
+            url = "https://i.imgur.com/T28hKKH.jpg"
+
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=member)
-        embed.set_image(url=member.display_avatar.url)
+        embed.set_image(url=url)
 
         await ctx.send(embed=embed)
 
@@ -53,24 +59,17 @@ class Info(commands.Cog):
             badges.append(lists.badges["moderator"])
         if days(member.joined_at) >= days(ctx.guild.created_at) - 365:
             badges.append(lists.badges["oldmember"])
-        if member in ctx.guild.premium_subscribers:
-            badges.append(lists.badges["supporter"])
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=member)
         embed.description = (
-            "{}\n\n"
-            "Profil: {}\n"
-            "Giriş tarihi: {}\n"
-            "Oluşturma tarihi: {}".format(
-                " ".join(badges),
-                member.mention,
-                ctx.format_date(member.joined_at),
-                ctx.format_date(member.created_at),
-            )
+            f"{' '.join(badges)}\n\n"
+            f"Profile: {member.mention}\n"
+            f"Join date: {ctx.format_date(member.joined_at)}\n"
+            f"Create date: {ctx.format_date(member.created_at)}"
         )
         embed.set_thumbnail(url=member.avatar.url)
-        embed.set_footer(text="ID: {}".format(member.id))
+        embed.set_footer(text=f"ID: {member.id}")
 
         await ctx.send(embed=embed)
 
@@ -92,13 +91,13 @@ class Info(commands.Cog):
         embed.set_author(name=guild)
         embed.description = (
             "{}"
-            "Üye sayısı: `{}` "
-            "Rol sayısı: `{}`\n"
-            "Kanal sayısı: `{}` "
-            "Emoji sayısı: `{}`\n"
-            "Oluşturulma tarihi: {}\n\n"
-            "Seviye: `{} ({} takviye)`\n"
-            "Son takviyeler: {}".format(
+            "Members: `{}` "
+            "Roles: `{}`\n"
+            "Channels: `{}` "
+            "Emojis: `{}`\n"
+            "Created date: {}\n\n"
+            "Level: `{} ({} boost)`\n"
+            "Last boost: {}".format(
                 "{}\n\n".format(guild.description)
                 if guild.description != None
                 else " ",
@@ -118,7 +117,7 @@ class Info(commands.Cog):
             )
         )
         embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(text="Sahip: {} • ID: {}".format(guild.owner, guild.id))
+        embed.set_footer(text="Owner: {guild.owner}")
 
         await ctx.send(embed=embed)
 

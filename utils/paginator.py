@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import discord
 from discord.ext import menus
 
@@ -13,7 +11,7 @@ class EmbedSource(menus.ListPageSource):
     async def format_page(self, menu, entry: discord.Embed):
         if self.footer and self.data_length > 1:
             entry.set_footer(
-                text=f"Sayfa {menu.current_page + 1}/{self.get_max_pages()}"
+                text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
             )
 
         return entry
