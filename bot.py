@@ -38,7 +38,7 @@ class MyBot(commands.Bot):
 
         self.config = config
         self.color = 0x2F3136
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = aiohttp.ClientSession()
 
         for cog in extensions:
             try:

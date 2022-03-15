@@ -64,27 +64,21 @@ class Feed(commands.Cog):
         total = sum([1 for d in data])
 
         if not len(data):
-            return await ctx.send("Kayıt bulunamadı!")
+            return await ctx.send("Feed not found!")
 
         for data in functions.list_to_matrix(data, col=5):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "{}\n{}".format(
-                "\n".join(
-                    [
-                        "ID: `{0}`\n"
-                        "Kanal: {1} `(En son: {2})`\n"
-                        "Adres: [`{3}`]({3})\n".format(
-                            d["feed_id"],
-                            guild.get_channel(d["channel_id"]).mention,
-                            util_time.humanize(d["last_entry"]),
-                            d["feed_url"],
-                        )
-                        for d in data
-                    ]
-                ),
-                "Toplam: `{}`".format(total),
+            feed_desc = "\n".join(
+                [
+                    f"ID: `{feed.id}`\n"
+                    f"Channel: {guild.get_channel(feed.channel.id).mention}\n"
+                    f"Link: {feed.url}\n"
+                    for feed in data
+                ]
             )
+            embed.description = f"{feed_desc}\n" f"Total: `{total}`"
+
             embeds.append(embed)
 
         menu = menus.MenuPages(
@@ -107,14 +101,14 @@ class Feed(commands.Cog):
         """Adds a feed to the channel."""
 
         guild = ctx.guild
-        message = await ctx.send("RSS/Feed ekleniyor...")
+        message = await ctx.send("Feed has being added...")
         parse = feedparser.parse(url)
 
         try:
             if parse.status != 200 and parse.status != 301:
-                return await message.edit(content="Geçersiz bağlantı!")
+                return await message.edit(content="Invalid link!")
         except AttributeError:
-            return await message.edit(content="Geçersiz bağlantı!")
+            return await message.edit(content="Invalid link!")
 
         last_entry = parse.entries[0]
 
@@ -128,7 +122,7 @@ class Feed(commands.Cog):
             last_entry_url=last_entry.link,
             last_entry=datetime.utcnow(),
         )
-        await message.edit(content="RSS/Feed eklendi.")
+        await message.edit(content="Added.")
         await self.send_entry(guild.id, channel.id, last_entry)
 
     @feedmanager.command(name="remove")
@@ -137,7 +131,7 @@ class Feed(commands.Cog):
         """Removes the feed from the channel."""
 
         await models.Feed.get(pk=feed_id).delete()
-        await ctx.send("RSS/Feed kaldırıldı.")
+        await ctx.send("Feed has been removed.")
 
     @feedmanager.command(name="backup")
     async def feedmanager_backup(self, ctx):
