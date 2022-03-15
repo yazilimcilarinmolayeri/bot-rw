@@ -42,10 +42,7 @@ class MyBot(commands.Bot):
         self.session = aiohttp.ClientSession()
 
         for ext in self.initial_extensions:
-            try:
-                await self.load_extension(ext)
-            except Exception as exc:
-                print(f"{cog} {exc.__class__.__name__}: {exc}")
+            await self.load_extension(ext)
 
     @property
     def owners(self):
