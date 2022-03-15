@@ -38,7 +38,6 @@ class MyBot(commands.Bot):
 
         self.config = config
         self.color = 0x2F3136
-        self.session = aiohttp.ClientSession()
 
         for cog in extensions:
             try:
@@ -93,4 +92,5 @@ if __name__ == "__main__":
         command_prefix=config["bot"]["command_prefix"],
         owner_ids=set(config["bot"]["owner_ids"]),
     )
+    bot.session = aiohttp.ClientSession()
     bot.run()
