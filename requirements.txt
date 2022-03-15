@@ -1,6 +1,6 @@
 pip
 arrow==1.2.2
-psutil==5.9.1
+psutil==5.9.0
 socialscan==1.4.2
 feedparser==6.0.2
 tortoise-orm==0.17.7
