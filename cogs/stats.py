@@ -8,7 +8,7 @@ from utils import paginator, models, functions, time as util_time
 
 
 async def setup(bot):
-    awiat bot.add_cog(Stats(bot))
+    await bot.add_cog(Stats(bot))
 
 
 class Stats(commands.Cog):
