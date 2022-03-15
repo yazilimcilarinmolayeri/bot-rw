@@ -13,8 +13,8 @@ from discord.ext import commands
 from utils import lists, functions, time as util_time
 
 
-def setup(bot):
-    bot.add_cog(Utility(bot))
+async def setup(bot):
+    await bot.add_cog(Utility(bot))
 
 
 class HelpCommand(commands.HelpCommand):

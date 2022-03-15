@@ -12,8 +12,8 @@ from tortoise import exceptions as tortoise_exceptions
 from utils import paginator, models, functions, time as util_time
 
 
-def setup(bot):
-    bot.add_cog(Feed(bot))
+async def setup(bot):
+    await bot.add_cog(Feed(bot))
 
 
 class Feed(commands.Cog):

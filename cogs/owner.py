@@ -5,8 +5,8 @@ from discord.ext import commands
 from jishaku.codeblocks import codeblock_converter
 
 
-def setup(bot):
-    bot.add_cog(Owner(bot))
+async def setup(bot):
+    await bot.add_cog(Owner(bot))
 
 
 class Owner(commands.Cog):

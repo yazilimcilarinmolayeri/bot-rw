@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.9
 
 #
 # Copyright (C) 2020-2022 yazilimcilarinmolayeri
@@ -16,18 +16,6 @@ from discord.ext import commands
 from utils import context
 
 
-extensions = (
-    "jishaku",
-    "cogs.api",
-    "cogs.events",
-    "cogs.feed",
-    "cogs.info",
-    "cogs.owner",
-    "cogs.reactionrole",
-    "cogs.stats",
-    "cogs.utility",
-)
-
 os.environ["JISHAKU_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 
@@ -35,13 +23,27 @@ os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.initial_extensions = [
+            "jishaku",
+            "cogs.api",
+            "cogs.events",
+            "cogs.feed",
+            "cogs.info",
+            "cogs.owner",
+            "cogs.reactionrole",
+            "cogs.stats",
+            "cogs.utility",
+        ]
         self.config = config
         self.color = 0x2F3136
 
-        for cog in extensions:
+    async def setup_hook(self):
+        print(f"Logging in as: {self.user}")
+        self.session = aiohttp.ClientSession()
+
+        for ext in self.initial_extensions:
             try:
-                self.load_extension(cog)
+                await self.load_extension(ext)
             except Exception as exc:
                 print(f"{cog} {exc.__class__.__name__}: {exc}")
 
@@ -92,5 +94,4 @@ if __name__ == "__main__":
         command_prefix=config["bot"]["command_prefix"],
         owner_ids=set(config["bot"]["owner_ids"]),
     )
-    bot.session = aiohttp.ClientSession()
     bot.run()

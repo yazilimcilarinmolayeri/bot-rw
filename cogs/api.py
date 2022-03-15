@@ -10,8 +10,8 @@ from socialscan.util import execute_queries
 from utils import paginator
 
 
-def setup(bot):
-    bot.add_cog(API(bot))
+async def setup(bot):
+    await bot.add_cog(API(bot))
 
 
 class API(commands.Cog):

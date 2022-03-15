@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 from utils import lists, paginator, models, functions, time as util_time
 
 
-def setup(bot):
-    bot.add_cog(Info(bot))
+async def setup(bot):
+    await bot.add_cog(Info(bot))
 
 
 class Info(commands.Cog):

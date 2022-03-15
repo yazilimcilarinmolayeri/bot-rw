@@ -12,8 +12,8 @@ from tortoise import exceptions as tortoise_exceptions
 from utils import models, functions
 
 
-def setup(bot):
-    bot.add_cog(ReactionRole(bot))
+async def setup(bot):
+    await bot.add_cog(ReactionRole(bot))
 
 
 class ReactionRole(commands.Cog):

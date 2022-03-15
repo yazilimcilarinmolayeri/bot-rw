@@ -7,8 +7,8 @@ from discord.ext import commands, menus
 from utils import paginator, models, functions, time as util_time
 
 
-def setup(bot):
-    bot.add_cog(Stats(bot))
+async def setup(bot):
+    awiat bot.add_cog(Stats(bot))
 
 
 class Stats(commands.Cog):

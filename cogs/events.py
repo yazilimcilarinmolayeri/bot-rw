@@ -11,8 +11,8 @@ from discord.ext import commands, menus, tasks
 from utils import models, functions
 
 
-def setup(bot):
-    bot.add_cog(Events(bot))
+async def setup(bot):
+    await bot.add_cog(Events(bot))
 
 
 class Events(commands.Cog):
