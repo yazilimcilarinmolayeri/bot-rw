@@ -1,6 +1,6 @@
 [Unit]
 After = network.target
-Description = ymybot-rw service
+Description = bot-rw service
 
 [Service]
 Type = simple
@@ -10,8 +10,8 @@ TimeoutStartSec = infinity
 
 User = user
 Group = user
-WorkingDirectory = /home/user/ymybot-rw
-ExecStart = /home/user/ymybot-rw/bot.py
+WorkingDirectory = /home/user/bot-rw
+ExecStart = /home/user/bot-rw/bot.py
 
 [Install]
 WantedBy = multi-user.target
