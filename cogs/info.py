@@ -277,7 +277,7 @@ class Info(commands.Cog):
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(
-            url=screenshot_url if screenshot_url != "?" else discord.Embed.Empty
+            url=screenshot_url if screenshot_url != "?" else None
         )
 
         await ctx.send(embed=embed)
