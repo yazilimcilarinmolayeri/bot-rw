@@ -52,6 +52,10 @@ class Info(commands.Cog):
         perms = member.guild_permissions
         days = lambda date: (datetime.now(timezone.utc) - date).days
         is_role = lambda role: True if role in member.roles else False
+        join_position = (
+            sorted(ctx.guild.members, key=lambda member: member.joined_at).index(member)
+            + 1
+        )
 
         if perms.administrator:
             badges.append(lists.badges["administrator"])
@@ -65,10 +69,11 @@ class Info(commands.Cog):
         embed.description = (
             f"{' '.join(badges)}\n\n"
             f"Profile: {member.mention}\n"
-            f"Join date: {ctx.format_date(member.joined_at)}\n"
-            f"Create date: {ctx.format_date(member.created_at)}"
+            f"Create: {ctx.format_date(member.created_at)}\n"
+            f"Join: {ctx.format_date(member.joined_at)}\n"
+            f"Join position: `{join_position}/{len(ctx.guild.members)}`"
         )
-        embed.set_thumbnail(url=member.avatar.url)
+        embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_footer(text=f"ID: {member.id}")
 
         await ctx.send(embed=embed)
@@ -81,43 +86,36 @@ class Info(commands.Cog):
             guild = self.bot.get_guild(guild_id)
 
             if guild is None:
-                return await ctx.send("Sunucu bulunamadı!")
+                return await ctx.send("Guild not found!")
         else:
             guild = ctx.guild
 
-        subs = guild.premium_subscribers
+        description = (
+            "{}\n\n".format(guild.description) if guild.description != None else " "
+        )
+        last_boosts = (
+            ", ".join(
+                "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
+                for i, m in enumerate(guild.premium_subscribers)
+            )
+            if len(guild.premium_subscribers)
+            else "`?`"
+        )
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=guild)
         embed.description = (
-            "{}"
-            "Members: `{}` "
-            "Roles: `{}`\n"
-            "Channels: `{}` "
-            "Emojis: `{}`\n"
-            "Created date: {}\n\n"
-            "Level: `{} ({} boost)`\n"
-            "Last boost: {}".format(
-                "{}\n\n".format(guild.description)
-                if guild.description != None
-                else " ",
-                guild.member_count,
-                len(guild.roles),
-                len(guild.text_channels) + len(guild.voice_channels),
-                len(guild.emojis),
-                ctx.format_date(guild.created_at),
-                guild.premium_tier,
-                guild.premium_subscription_count,
-                ", ".join(
-                    "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
-                    for i, m in enumerate(subs)
-                )
-                if len(subs)
-                else "`?`",
-            )
+            f"{description}"
+            f"Members: `{guild.member_count}` "
+            f"Roles: `{len(guild.roles)}`\n"
+            f"Channels: `{len(guild.text_channels) + len(guild.voice_channels)}` "
+            f"Emojis: `{len(guild.emojis)}`\n"
+            f"Created: {ctx.format_date(guild.created_at)}\n\n"
+            f"Level: `{guild.premium_tier} ({guild.premium_subscription_count} boost)`\n"
+            f"Last boost(s): {last_boosts}"
         )
         embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(text="Owner: {guild.owner}")
+        embed.set_footer(text=f"Owner: {guild.owner}")
 
         await ctx.send(embed=embed)
 
@@ -125,47 +123,17 @@ class Info(commands.Cog):
     async def channel(self, ctx, channel: discord.TextChannel = None):
         """Shows info about the text channel."""
 
-        if channel == None:
-            channel = ctx.channel
-            last_message = channel.last_message
-        else:
-            messages = await channel.history(limit=2).flatten()
-            last_message = messages[-1]
-
-        embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon.url)
-        embed.description = (
-            "Kanal: {}\n"
-            "Kategori: `{}`\n"
-            "Oluşturma tarihi: `{}`\n\n"
-            "Sabitli mesaj: `{}`\n"
-            "En son: {} `({})`".format(
-                channel.mention,
-                channel.category,
-                "{}/{}/{} ({})".format(
-                    *util_time.day_month_year(channel.created_at),
-                    util_time.humanize(channel.created_at, g=["day"]),
-                ),
-                len(await channel.pins()),
-                last_message.author.mention,
-                util_time.humanize(last_message.created_at),
-            )
-        )
-        embed.set_footer(text="ID: {}".format(ctx.channel.id))
-
-        await ctx.send(embed=embed)
+        pass
 
     @commands.command()
     async def roles(self, ctx):
         """Lists roles in the server."""
 
+        roles = ", ".join([r.mention for r in ctx.guild.roles[1:]])
+
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon.url)
-        embed.description = "{}\n\nToplam: `{}`".format(
-            ", ".join([r.mention for r in ctx.guild.roles[1:]]),
-            len(ctx.guild.roles),
-        )
-        embed.set_footer(text="ID: {}".format(ctx.guild.id))
+        embed.description = f"Total: `{len(ctx.guild.roles)}`\n\n{roles}"
 
         await ctx.send(embed=embed)
 
@@ -179,7 +147,7 @@ class Info(commands.Cog):
             guild = self.bot.get_guild(guild_id)
 
             if guild is None:
-                return await ctx.send("Sunucu bulunamadı!")
+                return await ctx.send("Server not found!")
         else:
             guild = ctx.guild
 
@@ -187,16 +155,14 @@ class Info(commands.Cog):
             embed = discord.Embed(color=self.bot.color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
 
-            embed.description = "\n".join(
+            emojis = "\n".join(
                 [
-                    "{} `{} (Eklendi: {})`".format(
-                        ctx.get_emoji(guild, e.id),
-                        ctx.get_emoji(guild, e.id),
-                        util_time.humanize(e.created_at, g=["day"]),
-                    )
+                    f"{ctx.get_emoji(guild, e.id)} " f"`{ctx.get_emoji(guild, e.id)}`"
                     for e in emojis
                 ]
-            ) + "\n\nToplam: `{}`".format(len(guild.emojis))
+            )
+
+            embed.description = f"Total: `{len(guild.emojis)}`\n\n{emojis}"
             embeds.append(embed)
 
         menu = menus.MenuPages(
@@ -206,47 +172,45 @@ class Info(commands.Cog):
         )
         await menu.start(ctx)
 
-    @commands.command(aliases=["getir"])
-    async def get(
+    @commands.command(aliases=["f"])
+    async def fetch(
         self,
         ctx,
         channel: discord.TextChannel = None,
         author: discord.Member = None,
     ):
         """Brings a message from the past (1 year ago)."""
-
+        
+        # TODO: Fix
+        
         if channel == None:
             channel = ctx
         else:
             perms = channel.permissions_for(ctx.author)
 
             if not perms.view_channel:
-                return await ctx.send("Bu kanalı görme yetkisine sahip değilsin!")
+                return await ctx.send("You are not perm to view this channel!")
 
-        messages = await channel.history(
-            around=datetime.today() - timedelta(days=365)
-        ).flatten()
+        messages = [
+            m
+            async for m in channel.history(
+                around=datetime.today() - timedelta(days=365)
+            )
+        ]
 
         if author != None:
             messages = [m for m in messages if author.id == m.author.id]
 
         if not len(messages):
-            return await ctx.send("Mesaj bulunamadı!")
+            return await ctx.send("Message not found!")
 
         message = random.choice(messages)
         author = message.author
 
         embed = discord.Embed(color=self.bot.color)
         embed.set_author(name=author, icon_url=author.avatar.url)
-        embed.description = "{}\n\n[`Mesaja zıpla!`]({})".format(
-            message.content, message.jump_url
-        )
-        embed.set_footer(
-            text="{}/{}/{} {}".format(
-                *util_time.day_month_year(message.created_at),
-                "• Bot" if author.bot else " ",
-            )
-        )
+        embed.description = f"{message.content}\n\n[`Jump!`]({message.jump_url})"
+        # embed.set_footer(text=f"{}/{}/{}:*util_time.day_month_year(message.created_at)")
 
         await ctx.send(embed=embed)
 
@@ -276,9 +240,7 @@ class Info(commands.Cog):
             ["{}: `{}`".format(lists.profile_titles[i], j) for i, j in enumerate(data)]
         )
         embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_image(
-            url=screenshot_url if screenshot_url != "?" else None
-        )
+        embed.set_image(url=screenshot_url if screenshot_url != "?" else None)
 
         await ctx.send(embed=embed)
 
@@ -317,7 +279,7 @@ class Info(commands.Cog):
         question_embed = await ctx.send(embed=embed)
 
         for i, question in enumerate(lists.profile_questions):
-            embed.description = "{} {}".format(author.mention, question)
+            embed.description = f"{author.mention} {question}"
             await question_embed.edit(embed=embed)
             answer = await self.bot.wait_for("message", check=check)
 
@@ -343,7 +305,7 @@ class Info(commands.Cog):
         profile_channel = self.bot.get_channel(
             self.c.get("Channel", "PROFILE_CHANNEL_ID")
         )
-        embed.description = "{} setup complete!".format(author.mention)
+        embed.description = f"{author.mention} setup complete!"
         embed.set_footer(text=discord.Embed.Empty)
 
         await question_embed.edit(embed=embed)
@@ -355,18 +317,17 @@ class Info(commands.Cog):
         """Remove a user profile."""
 
         await models.Profile.get(pk=member.id).delete()
-        await ctx.send("`{}`s profile has been removed.".format(member))
+        await ctx.send(f"`{member}`s profile has been removed.")
 
     @profile.group(name="edit")
     async def profile_edit(self, ctx):
         """Edit a user profile."""
 
         commands = ctx.command.commands
-
+        sub_commands = ", ".join([f"`{c.aliases[0]}`" for c in commands])
+        
         embed = discord.Embed(color=self.bot.color)
-        embed.description = "Arguments for profile edit:\n" + ", ".join(
-            "`{}`".format(c.aliases[0]) for c in commands
-        )
+        embed.description = f"Sub commands for profile edit:\n{sub_commands}"
 
         if not ctx.invoked_subcommand:
             await ctx.send(embed=embed)

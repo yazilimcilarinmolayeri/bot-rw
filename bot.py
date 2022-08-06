@@ -1,4 +1,4 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3
 
 #
 # Copyright (C) 2020-2022 yazilimcilarinmolayeri
@@ -7,13 +7,11 @@
 import os
 import json
 import logging
-import warnings
-
 import discord
 import aiohttp
-from discord.ext import commands
-
+import warnings
 from utils import context
+from discord.ext import commands
 
 
 os.environ["JISHAKU_UNDERSCORE"] = "True"
@@ -38,7 +36,6 @@ class MyBot(commands.Bot):
         self.color = 0x2F3136
 
     async def setup_hook(self):
-        print(f"Logging in as: {self.user}")
         self.session = aiohttp.ClientSession()
 
         for ext in self.initial_extensions:

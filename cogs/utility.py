@@ -35,7 +35,7 @@ class HelpCommand(commands.HelpCommand):
         owners = ctx.bot.owners
 
         for extension in ctx.bot.cogs.values():
-            commands = [f"`{c.qualified_name}`" for c in mapping[extension]]
+            commands = [f"`{c.qualified_name}` " for c in mapping[extension]]
             total += len(commands)
 
             if len(commands) == 0:

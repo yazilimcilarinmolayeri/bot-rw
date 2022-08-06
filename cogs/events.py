@@ -24,12 +24,9 @@ class Events(commands.Cog):
         self.bot.launch_time = datetime.utcnow()
 
         print(
-            "┬ ┬┌┬┐┬ ┬┌┐ ┌─┐┌┬┐  ┬─┐┬ ┬\n"
-            "└┬┘│││└┬┘├┴┐│ │ │───├┬┘│││\n"
-            " ┴ ┴ ┴ ┴ └─┘└─┘ ┴   ┴└─└┴┘\n"
-            f"Bot name: {self.bot.user}\n"
+            f"Bot: {self.bot.user}\n"
             f"ID: {self.bot.user.id}\n"
-            f"Library version: {discord.__version__}"
+            f"Library: v{discord.__version__}"
         )
 
         await models.init()  # Database init
