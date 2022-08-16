@@ -8,9 +8,9 @@ from datetime import datetime
 import arrow
 import psutil
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 
-from utils import lists, functions, time as util_time
+from utils import lists, functions, paginator
 
 
 async def setup(bot):
@@ -29,44 +29,41 @@ class HelpCommand(commands.HelpCommand):
         self.ignore_cogs = ["Events", "Jishaku"]
 
     async def send_bot_help(self, mapping):
-        total = 0
         fields = []
+        total_command = 0
         ctx = self.context
-        owners = ctx.bot.owners
 
         for extension in ctx.bot.cogs.values():
-            commands = [f"`{c.qualified_name}` " for c in mapping[extension]]
-            total += len(commands)
+            commands = [f"`{c.qualified_name}`" for c in mapping[extension]]
+            total_command += len(commands)
 
             if len(commands) == 0:
                 continue
             if extension.qualified_name in self.ignore_cogs:
                 continue
             if (
-                not (ctx.author in owners)
+                not (await ctx.bot.is_owner(ctx.author))
                 and extension.qualified_name in self.owner_cogs
             ):
                 continue
 
-            fields.append(f"{extension.qualified_name}: {''.join(commands)}")
+            fields.append(f"{extension.qualified_name}: {', '.join(commands)}")
 
-        embed = discord.Embed(color=ctx.bot.color)
+        embed = discord.Embed(color=ctx.bot.embed_color)
         embed.set_author(name="Help Page")
         embed.description = (
-            "Hello! Welcome to the help page.\n"
-            "Use `{}{}` for more info on a command.\n\n"
+            f"Use `{ctx.prefix}help [command=None]` for more info on a command.\n"
             "`<argument>`: This means the argument is required.\n"
             "`[argument]`: This means the argument is optional.\n"
             "`[A|B]`: This means that it can be either A or B.\n"
             "`[argument...]`: This means you can have multiple arguments.\n\n"
-            "Commands:\n{}".format(
-                ctx.prefix,
-                self.get_command_signature(ctx.bot.get_command("help")),
-                "\n".join(fields),
-            )
         )
+        embed.add_field(name="Commands", value="\n".join(fields))
         embed.set_footer(
-            text=f"Total cog: {len(ctx.bot.cogs.values())} • Total command: {total}"
+            text=(
+                f"Total cog: {len(ctx.bot.cogs.values())} - "
+                f"Total command: {total_command}"
+            )
         )
 
         await ctx.send(embed=embed)
@@ -92,25 +89,25 @@ class HelpCommand(commands.HelpCommand):
 
         description = (
             f"Usage: `{command_signature.strip()}`\n"
-            f"Help: `{command.help or 'No help.'}`".strip()
+            f"Help: {command.help or 'No help.'}".strip()
         )
 
         cooldown = command._buckets._cooldown
 
         if cooldown:
-            description += f"\nCooldown: `{cooldown.rate} per {cooldown.per} second`"
+            description += f"\nCooldown: `{cooldown.rate}` per `{cooldown.per}` second."
 
         return description
 
     async def send_command_help(self, command):
-        embed = discord.Embed(color=self.context.bot.color)
+        embed = discord.Embed(color=self.context.bot.embed_color)
         embed.description = self.common_command_formatting(command)
-        embed.set_footer(text=f"Cog: {command.cog_name}")
 
         await self.context.send(embed=embed)
 
     async def send_group_help(self, group):
         fields = []
+        embeds = []
 
         if len(group.commands) == 0:
             return await self.send_command_help(group)
@@ -122,18 +119,22 @@ class HelpCommand(commands.HelpCommand):
                 .strip()
             )
             fields.append(
-                f"`{command_signature}`: " f"{command.description or command.help}"
+                f"Usage: `{command_signature}`\n"
+                f"Help: {command.description or command.help}\n"
             )
 
-        embed = discord.Embed(color=self.context.bot.color)
-        embed.description = (
-            f"{self.common_command_formatting(group)}\n\n"
-            f"Subcommand:\n"
-            "\n".join(fields)
-        )
-        embed.set_footer(text=f"Cog: {command.cog_name}")
+        for fields in functions.list_to_matrix(fields, col=3):
+            embed = discord.Embed(color=self.context.bot.embed_color)
+            embed.description = f"{self.common_command_formatting(group)}\n\n"
+            embed.add_field(name="Subcommand", value="\n".join(fields))
+            embeds.append(embed)
 
-        await self.context.send(embed=embed)
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
+        )
+        await menu.start(self.context)
 
 
 class Utility(commands.Cog):
@@ -199,8 +200,8 @@ class Utility(commands.Cog):
         allowed, denied = [], []
         permissions = channel.permissions_for(member)
 
-        embed = discord.Embed(colour=self.bot.color)
-        embed.set_author(name=member, icon_url=member.avatar.url)
+        embed = discord.Embed(colour=self.bot.embed_color)
+        embed.set_author(name=member)
 
         for name, value in permissions:
             name = name.replace("_", " ").replace("guild", "server").title()
@@ -244,7 +245,7 @@ class Utility(commands.Cog):
 
         await self.say_permissions(ctx, member, channel)
 
-    @commands.command(aliases=["kaynak"])
+    @commands.command()
     async def source(self, ctx, *, command=None):
         """Displays my full source code or for a specific command."""
 
@@ -296,7 +297,7 @@ class Utility(commands.Cog):
             repo, per_page
         )
 
-        async with self.bot.session.get(url) as resp:
+        async with self.bot.web_client.get(url) as resp:
             if resp.status != 200:
                 return await ctx.send("Bağlantı hatası!")
             data = await resp.json()
@@ -341,7 +342,7 @@ class Utility(commands.Cog):
         memory_usage = self.process.memory_full_info().uss / 1024**2
         commits = await self.get_last_commits(ctx)
 
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
         embed.description = (
             "{}\n\n"
@@ -365,7 +366,7 @@ class Utility(commands.Cog):
                 functions.dist()["PRETTY_NAME"],
                 "\n".join(
                     [
-                        "[`{}`]({}) {} ({})".format(
+                        "[{}]({}) - {} ({})".format(
                             c["sha"][:6],
                             c["html_url"],
                             c["message"],

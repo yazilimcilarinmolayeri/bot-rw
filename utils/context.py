@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from utils import lists, time as util_time
+from utils import time as util_time
 
 
 class Context(commands.Context):

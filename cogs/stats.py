@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import discord
 from tortoise.query_utils import Q
 from tortoise.functions import Sum
 from discord.ext import commands, menus
+
 from utils import paginator, models, functions, time as util_time
 
 

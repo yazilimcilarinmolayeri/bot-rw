@@ -1,5 +1,5 @@
 from tortoise.models import Model
-from tortoise import Tortoise, fields, run_async
+from tortoise import Tortoise, fields
 
 
 class EmojiUsageStat(Model):

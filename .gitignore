@@ -1,5 +1,5 @@
 # Config file
-*.json
+*.ini
 
 # Database files
 *.db

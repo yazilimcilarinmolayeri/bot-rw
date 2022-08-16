@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import discord
 from discord.utils import get
 from discord.ext import commands
-
 from tortoise.query_utils import Q
-from tortoise.expressions import F
-from tortoise.functions import Count
 from tortoise import exceptions as tortoise_exceptions
 
 from utils import models, functions
@@ -97,7 +92,7 @@ class ReactionRole(commands.Cog):
         """Shows the list of templates on the server."""
 
         command = self.bot.get_command("rrmanager list")
-        await command.__call__(ctx=ctx)
+        await command.__call__(ctx)
 
     @commands.group(invoke_without_command=True, aliases=["rrm"])
     @commands.has_permissions(manage_roles=True)
@@ -125,7 +120,7 @@ class ReactionRole(commands.Cog):
 
         templates = await models.Templates.filter(Q(guild_id=ctx.guild.id))
 
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name="Reaction Role Templates")
         embed.description = (
             "{}\n\nAll: `{}`".format(
@@ -151,7 +146,7 @@ class ReactionRole(commands.Cog):
         else:
             jump_message = "`None`"
 
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name="ID: {}".format(template.id))
         embed.description = (
             "Title: `{}`\n"

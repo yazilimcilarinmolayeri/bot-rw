@@ -1,0 +1,11 @@
+[bot]
+command_prefix=!
+owner_ids=
+token=
+
+[log]
+error_channel_id=
+dm_and_mention_channel_id=
+
+[channels]
+profile_channel_id=

@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-
 import random
+from datetime import datetime, timedelta, timezone
+
 import discord
 from discord.ext import commands, menus
-from datetime import datetime, timedelta, timezone
-from utils import lists, paginator, models, functions, time as util_time
+
+from utils import lists, paginator, models, functions
 
 
 async def setup(bot):
@@ -14,44 +14,31 @@ async def setup(bot):
 class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.c = bot.config
 
-    @commands.group(invoke_without_command=True, aliases=["a"])
+    @commands.group(aliases=["a"])
     async def avatar(self, ctx, member: discord.Member = None):
         """Shows a user's avatar."""
 
-        if member == None:
+        if member is None:
             member = ctx.author
 
-        url = member.display_avatar.url
-
-        # Why? See: https://i.imgur.com/tAb7KE8.png
-        if member.id == 233666257038213121:
-            url = "https://i.imgur.com/T28hKKH.jpg"
-
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member)
-        embed.set_image(url=url)
+        embed.set_image(url=member.display_avatar.url)
+        embed.set_footer(text=f"ID: {member.id}")
 
         await ctx.send(embed=embed)
-
-    @avatar.command(name="history", aliases=["h"])
-    async def avatar_history(self, ctx, member: discord.Member = None):
-        """Shows a user's avatar history."""
-
-        pass
 
     @commands.command(aliases=["ui"])
     async def userinfo(self, ctx, member: discord.Member = None):
         """Shows info about a user."""
 
-        if member == None:
+        if member is None:
             member = ctx.author
 
         badges = []
         perms = member.guild_permissions
         days = lambda date: (datetime.now(timezone.utc) - date).days
-        is_role = lambda role: True if role in member.roles else False
         join_position = (
             sorted(ctx.guild.members, key=lambda member: member.joined_at).index(member)
             + 1
@@ -64,14 +51,13 @@ class Info(commands.Cog):
         if days(member.joined_at) >= days(ctx.guild.created_at) - 365:
             badges.append(lists.badges["oldmember"])
 
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member)
         embed.description = (
-            f"{' '.join(badges)}\n\n"
-            f"Profile: {member.mention}\n"
+            f"Profile: {member.mention} ({' '.join(badges)})\n"
             f"Create: {ctx.format_date(member.created_at)}\n"
             f"Join: {ctx.format_date(member.joined_at)}\n"
-            f"Join position: `{join_position}/{len(ctx.guild.members)}`"
+            f"Server join position: `{join_position}/{len(ctx.guild.members)}`"
         )
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_footer(text=f"ID: {member.id}")
@@ -91,31 +77,40 @@ class Info(commands.Cog):
             guild = ctx.guild
 
         description = (
-            "{}\n\n".format(guild.description) if guild.description != None else " "
+            f"{guild.description}\n\n" if guild.description is not None else " "
         )
-        last_boosts = (
-            ", ".join(
-                "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
-                for i, m in enumerate(guild.premium_subscribers)
-            )
-            if len(guild.premium_subscribers)
-            else "`?`"
-        )
+        channel_count = len(guild.text_channels) + len(guild.voice_channels)
 
-        embed = discord.Embed(color=self.bot.color)
+        if guild.premium_tier > 0:
+            last_boosts = (
+                ", ".join(
+                    "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
+                    for i, m in enumerate(guild.premium_subscribers)
+                )
+                if len(guild.premium_subscribers)
+                else "`?`"
+            )
+            boosts_info = (
+                f"Level: `{guild.premium_tier} "
+                f"({guild.premium_subscription_count} boost)`\n"
+                f"Last boost(s): {last_boosts}"
+            )
+        else:
+            boosts_info = ""
+
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=guild)
         embed.description = (
             f"{description}"
-            f"Members: `{guild.member_count}` "
-            f"Roles: `{len(guild.roles)}`\n"
-            f"Channels: `{len(guild.text_channels) + len(guild.voice_channels)}` "
-            f"Emojis: `{len(guild.emojis)}`\n"
-            f"Created: {ctx.format_date(guild.created_at)}\n\n"
-            f"Level: `{guild.premium_tier} ({guild.premium_subscription_count} boost)`\n"
-            f"Last boost(s): {last_boosts}"
+            f"Total member: `{guild.member_count}`\n"
+            f"Role count: `{len(guild.roles)}`\n"
+            f"Channel count: `{channel_count}`\n"
+            f"Emoji count: `{len(guild.emojis)}`\n"
+            f"Owner: {guild.owner.mention}\n"
+            f"Created: {ctx.format_date(guild.created_at)}\n\n{boosts_info}"
         )
         embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(text=f"Owner: {guild.owner}")
+        embed.set_footer(text=f"ID: {guild.id}")
 
         await ctx.send(embed=embed)
 
@@ -131,8 +126,8 @@ class Info(commands.Cog):
 
         roles = ", ".join([r.mention for r in ctx.guild.roles[1:]])
 
-        embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=ctx.guild, icon_url=ctx.guild.icon.url)
+        embed = discord.Embed(color=self.bot.embed_color)
+        embed.set_author(name=ctx.guild)
         embed.description = f"Total: `{len(ctx.guild.roles)}`\n\n{roles}"
 
         await ctx.send(embed=embed)
@@ -152,8 +147,8 @@ class Info(commands.Cog):
             guild = ctx.guild
 
         for emojis in functions.list_to_matrix(guild.emojis):
-            embed = discord.Embed(color=self.bot.color)
-            embed.set_author(name=guild, icon_url=guild.icon.url)
+            embed = discord.Embed(color=self.bot.embed_color)
+            embed.set_author(name=guild)
 
             emojis = "\n".join(
                 [
@@ -172,7 +167,7 @@ class Info(commands.Cog):
         )
         await menu.start(ctx)
 
-    @commands.command(aliases=["f"])
+    @commands.command()
     async def fetch(
         self,
         ctx,
@@ -180,10 +175,8 @@ class Info(commands.Cog):
         author: discord.Member = None,
     ):
         """Brings a message from the past (1 year ago)."""
-        
-        # TODO: Fix
-        
-        if channel == None:
+
+        if channel is None:
             channel = ctx
         else:
             perms = channel.permissions_for(ctx.author)
@@ -192,13 +185,13 @@ class Info(commands.Cog):
                 return await ctx.send("You are not perm to view this channel!")
 
         messages = [
-            m
-            async for m in channel.history(
-                around=datetime.today() - timedelta(days=365)
+            message
+            async for message in channel.history(
+                before=datetime.today() - timedelta(days=365)
             )
         ]
 
-        if author != None:
+        if author is not None:
             messages = [m for m in messages if author.id == m.author.id]
 
         if not len(messages):
@@ -207,18 +200,21 @@ class Info(commands.Cog):
         message = random.choice(messages)
         author = message.author
 
-        embed = discord.Embed(color=self.bot.color)
-        embed.set_author(name=author, icon_url=author.avatar.url)
-        embed.description = f"{message.content}\n\n[`Jump!`]({message.jump_url})"
-        # embed.set_footer(text=f"{}/{}/{}:*util_time.day_month_year(message.created_at)")
+        embed = discord.Embed(color=self.bot.embed_color)
+        embed.set_author(name=author, icon_url=author.display_avatar.url)
+        embed.description = (
+            f"{message.content}\n\nOriginal: [Jump!]({message.jump_url})\n"
+            f"Created: {ctx.format_date(message.created_at)}"
+        )
 
         await ctx.send(embed=embed)
 
     async def send_profile_message(self, author):
-        channel = self.bot.get_channel(self.c.getint("Channel", "PROFILE_CHANNEL_ID"))
+        channel = self.bot.get_channel(
+            self.bot.config.getint("channels", "profile_channel_id")
+        )
         command = self.bot.get_command("profile")
-
-        await command.__call__(context=channel, member=author)
+        await command.__call__(channel, member=author)
 
     @commands.group(invoke_without_command=True)
     async def profile(self, ctx, member: discord.Member = None):
@@ -230,16 +226,17 @@ class Info(commands.Cog):
         data = await models.Profile.values_list(pk=member.id)
 
         if not len(data):
-            return await ctx.send("Profile is none!")
+            return await ctx.send("Profile not found!")
 
-        member_id, screenshot_url = data[1], data[-1]
+        screenshot_url = data[-1]
         data = data[1:-1]
 
-        embed = discord.Embed(color=self.bot.color, timestamp=datetime.utcnow())
-        embed.description = "{} **{}**\n\n".format(member.mention, member) + "\n".join(
-            ["{}: `{}`".format(lists.profile_titles[i], j) for i, j in enumerate(data)]
+        embed = discord.Embed(color=self.bot.embed_color, timestamp=datetime.utcnow())
+        embed.set_author(name=member, icon_url=member.display_avatar.url)
+        embed.description = "\n".join(
+            [f"{lists.profile_titles[i]}: `{j}`" for i, j in enumerate(data)]
         )
-        embed.set_thumbnail(url=member.display_avatar.url)
+        # embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(url=screenshot_url if screenshot_url != "?" else None)
 
         await ctx.send(embed=embed)
@@ -274,7 +271,7 @@ class Info(commands.Cog):
             except:
                 return False
 
-        embed = discord.Embed(color=self.bot.color)
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_footer(text="'s' for skip question, 'c' for cancel setup")
         question_embed = await ctx.send(embed=embed)
 
@@ -302,14 +299,11 @@ class Info(commands.Cog):
 
         await models.Profile.create(**answers)
 
-        profile_channel = self.bot.get_channel(
-            self.c.get("Channel", "PROFILE_CHANNEL_ID")
-        )
         embed.description = f"{author.mention} setup complete!"
-        embed.set_footer(text=discord.Embed.Empty)
-
+        embed.set_footer(text=None)
         await question_embed.edit(embed=embed)
-        await self.send_profile_message(ctx.message.author)
+
+        await self.send_profile_message(author)
 
     @profile.group(name="remove")
     @commands.has_permissions(manage_messages=True)
@@ -325,8 +319,8 @@ class Info(commands.Cog):
 
         commands = ctx.command.commands
         sub_commands = ", ".join([f"`{c.aliases[0]}`" for c in commands])
-        
-        embed = discord.Embed(color=self.bot.color)
+
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.description = f"Sub commands for profile edit:\n{sub_commands}"
 
         if not ctx.invoked_subcommand:
@@ -338,7 +332,7 @@ class Info(commands.Cog):
         await models.Profile.get(pk=ctx.author.id).update(
             operation_system=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["de"])
@@ -347,7 +341,7 @@ class Info(commands.Cog):
         await models.Profile.get(pk=ctx.author.id).update(
             desktop_environment=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["themes"])
@@ -356,21 +350,21 @@ class Info(commands.Cog):
         await models.Profile.get(pk=ctx.author.id).update(
             desktop_themes=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["browser"])
     @commands.cooldown(1, 120, commands.BucketType.user)
     async def web_browser(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(web_browser=new_profile_item)
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["editors"])
     @commands.cooldown(1, 120, commands.BucketType.user)
     async def code_editors(self, ctx, *, new_profile_item):
         await models.Profile.get(pk=ctx.author.id).update(code_editors=new_profile_item)
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["terminal"])
@@ -379,7 +373,7 @@ class Info(commands.Cog):
         await models.Profile.get(pk=ctx.author.id).update(
             terminal_software=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["shell"])
@@ -388,17 +382,17 @@ class Info(commands.Cog):
         await models.Profile.get(pk=ctx.author.id).update(
             shell_software=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)
 
     @profile_edit.command(aliases=["ss"])
     @commands.cooldown(1, 120, commands.BucketType.user)
     async def screenshot_url(self, ctx, new_profile_item):
         if not functions.is_url_image(new_profile_item):
-            return await ctx.message.add_reaction("\U0000203c")
+            return await ctx.message.add_reaction("\N{DOUBLE EXCLAMATION MARK}")
 
         await models.Profile.get(pk=ctx.author.id).update(
             screenshot_url=new_profile_item
         )
-        await ctx.message.add_reaction("\U00002705")
+        await ctx.message.add_reaction("N{WHITE HEAVY CHECK MARK}")
         await self.send_profile_message(ctx.author)

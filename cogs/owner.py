@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-
 import copy
+
 from discord.ext import commands
 from jishaku.codeblocks import codeblock_converter
 
