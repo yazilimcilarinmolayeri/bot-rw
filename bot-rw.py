@@ -87,9 +87,9 @@ async def main():
         config.read("config.ini")
 
         token = config.get("bot", "token")
-        owner_ids = config.getint("bot", "owner_ids")
-        command_prefix = config.get("bot", "command_prefix")
-
+        owner_ids = set(config.get("bot", "owner_ids").split(","))
+        command_prefix = config.get("bot", "command_prefix").split(",")
+        
         async with Bot(
             config=config,
             embed_color=embed_color,
