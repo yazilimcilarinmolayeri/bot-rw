@@ -12,12 +12,12 @@ cd bot-rw
 
 2. Install the bot-rw's dependencies.
 ```shell
-pip3 install -U -r requirements.txt
+pip3 install --user -r requirements.txt
 ```
 
 3. Edit a config.ini file.
 ```shell
-cp config.ini.sample config.json
+cp config.ini.sample config.ini
 ```
 
 4. Setup the service file. Replace `user` with your custom username before.
