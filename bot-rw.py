@@ -87,17 +87,19 @@ async def main():
         config.read("config.ini")
 
         token = config.get("bot", "token")
-        owner_ids = set(config.get("bot", "owner_ids").split(","))
         command_prefix = config.get("bot", "command_prefix").split(",")
-        
+        owner_ids = set([int(id) for id in config.get("bot", "owner_ids").split(",")])
+
+        print(owner_ids)
+
         async with Bot(
             config=config,
             embed_color=embed_color,
             web_client=our_client,
             initial_extensions=initial_extensions,
             intents=intents,
-            owner_id=owner_ids,
             command_prefix=command_prefix,
+            owner_ids=owner_ids,
         ) as bot:
             await bot.start(token=token)
 
