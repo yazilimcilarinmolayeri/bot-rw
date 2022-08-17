@@ -19,7 +19,7 @@ class Stats(commands.Cog):
 
         stats = "\n".join(
             [
-                "{} `{} (En son: {})`".format(
+                "{} `{} (Last: {})`".format(
                     check_emoji(ctx.get_emoji(ctx.guild, d["emoji_id"])),
                     d[key],
                     util_time.humanize(d["last_usage"]),
@@ -54,7 +54,7 @@ class Stats(commands.Cog):
             embed.set_author(name=member, icon_url=member.avatar.url)
             embed.description = "{}\n\n{}".format(
                 self.get_emoji_stats(ctx, data),
-                "Toplam: `{}`".format(total),
+                "Total: `{}`".format(total),
             )
             embeds.append(embed)
 
@@ -66,7 +66,7 @@ class Stats(commands.Cog):
         try:
             await menu.start(ctx)
         except IndexError:
-            await ctx.send("Kayıt bulunamadı!")
+            await ctx.send("Data not found!")
 
     @emojistats.command(name="server", aliases=["s"])
     async def emojistats_server(self, ctx):
@@ -101,7 +101,7 @@ class Stats(commands.Cog):
 
             embed = discord.Embed(color=self.bot.embed_color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
-            embed.description = "{}\n\nEn son: {}".format(
+            embed.description = "{}\n\nLast: {}".format(
                 self.get_emoji_stats(ctx, data, key="sum"),
                 "{} {} `({})`".format(
                     emoji,
@@ -119,4 +119,4 @@ class Stats(commands.Cog):
         try:
             await menu.start(ctx)
         except IndexError:
-            await ctx.send("Kayıt bulunamadı!")
+            await ctx.send("Data not found!")
