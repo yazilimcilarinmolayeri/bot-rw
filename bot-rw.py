@@ -88,9 +88,7 @@ async def main():
 
         token = config.get("bot", "token")
         command_prefix = config.get("bot", "command_prefix").split(",")
-        owner_ids = set([int(id) for id in config.get("bot", "owner_ids").split(",")])
-
-        print(owner_ids)
+        owner_ids = set([int(_id) for _id in config.get("bot", "owner_ids").split(",")])
 
         async with Bot(
             config=config,
