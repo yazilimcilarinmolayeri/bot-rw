@@ -26,7 +26,7 @@ class Events(commands.Cog):
             f"Library: v{discord.__version__}"
         )
 
-        await models.init()  # Database init
+        await models.init()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -44,7 +44,7 @@ class Events(commands.Cog):
 
         if isinstance(error, commands.errors.CommandOnCooldown):
             return await ctx.send(
-                "fWait `{round(error.retry_after)}` seconds to use it again."
+                f"Wait `{round(error.retry_after)}` seconds to use it again."
             )
 
         if isinstance(error, commands.errors.MissingRequiredArgument):
@@ -105,7 +105,7 @@ class Events(commands.Cog):
         if self.bot.user.mentioned_in(message) and message.mention_everyone is False:
             embed = discord.Embed(color=self.bot.embed_color)
             embed.description = (
-                f"{message.content}\n\n" f"Original: [Jump!]({message.jump_url})"
+                f"{message.content}\n\nOriginal: [Jump!]({message.jump_url})"
             )
             embed.set_author(name=author, icon_url=author.display_avatar.url)
             embed.set_footer(text=f"ID: {author.id} - Mention")
