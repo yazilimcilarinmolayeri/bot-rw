@@ -346,12 +346,12 @@ class Utility(commands.Cog):
         embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
         embed.description = (
             "{}\n\n"
-            "Total guild(s): `{}` Channel: `{}`\n"
+            "Total guild(s): `{}`\nTotal channel(s): `{}`\n"
             "Text channel: `{}` Voice channel: `{}`\n"
             "Total member(s): `{}` Unique: `{}`\n\n"
-            "Usage: CPU: `{} %` Memory: `{} MiB`\n"
-            "Lang: `python {}` Lib: `discord.py {}`\nPlatform: `{}`\n\n"
-            "Last changes:\n{}".format(
+            "**Server States**\nCPU: `{} %` Memory: `{} MiB`\n"
+            "Platform: `{}`\nLang: `Python {}` Lib: `discord.py {}`\n\n"
+            "**Last Changes**\n{}".format(
                 self.bot.description,
                 guilds,
                 text + voice,
@@ -361,15 +361,14 @@ class Utility(commands.Cog):
                 total_unique,
                 round(cpu_usage, 1),
                 round(memory_usage, 1),
+                functions.dist()["PRETTY_NAME"],
                 platform.python_version(),
                 discord.__version__,
-                functions.dist()["PRETTY_NAME"],
                 "\n".join(
                     [
-                        "[{}]({}) - {} ({})".format(
-                            c["sha"][:6],
-                            c["html_url"],
+                        "- [{}]({}) ({})".format(
                             c["message"],
+                            c["html_url"],
                             c["date"],
                         )
                         for c in commits
