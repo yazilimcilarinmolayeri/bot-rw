@@ -50,7 +50,7 @@ class Stats(commands.Cog):
         total = sum([d["amount"] for d in data])
 
         for data in functions.list_to_matrix(data):
-            embed = discord.Embed(color=self.bot.color)
+            embed = discord.Embed(color=self.bot.embed_color)
             embed.set_author(name=member, icon_url=member.avatar.url)
             embed.description = "{}\n\n{}".format(
                 self.get_emoji_stats(ctx, data),
@@ -99,7 +99,7 @@ class Stats(commands.Cog):
             if not emoji:
                 emoji = "\U0001f5d1"
 
-            embed = discord.Embed(color=self.bot.color)
+            embed = discord.Embed(color=self.bot.embed_color)
             embed.set_author(name=guild, icon_url=guild.icon.url)
             embed.description = "{}\n\nEn son: {}".format(
                 self.get_emoji_stats(ctx, data, key="sum"),
