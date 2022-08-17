@@ -54,7 +54,7 @@ class Info(commands.Cog):
         embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member)
         embed.description = (
-            f"Profile: {member.mention} ({' '.join(badges)})\n"
+            f"Profile: {member.mention} {' '.join(badges)}\n"
             f"Create: {ctx.format_date(member.created_at)}\n"
             f"Join: {ctx.format_date(member.joined_at)}\n"
             f"Server join position: `{join_position}/{len(ctx.guild.members)}`"
@@ -85,7 +85,7 @@ class Info(commands.Cog):
             last_boosts = (
                 ", ".join(
                     "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
-                    for i, m in enumerate(guild.premium_subscribers)
+                    for i, m in enumerate(guild.premium_subscribers[:10])
                 )
                 if len(guild.premium_subscribers)
                 else "`?`"
