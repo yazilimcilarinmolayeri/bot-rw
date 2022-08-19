@@ -1,10 +1,8 @@
 import discord
-from discord.utils import get
-from discord.ext import commands
-from tortoise.query_utils import Q
+from discord.ext import commands, menus
 from tortoise import exceptions as tortoise_exceptions
 
-from utils import models, functions
+from utils import models, paginator
 
 
 async def setup(bot):
@@ -16,278 +14,252 @@ class ReactionRole(commands.Cog):
         self.bot = bot
         self.MAX_ROLE = 15
 
-    async def _clear_reaction(self, payload, member):
+    async def _clear_reaction(self, payload, member: discord.Member):
         channel = self.bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        await message.remove_reaction(emoji=payload.emoji, member=member)
 
-    async def _send_message(self, payload, member, message):
-        channel = self.bot.get_channel(payload.channel_id)
+        await message.remove_reaction(member=member, emoji=payload.emoji)
 
+    async def _send_notification(
+        self, channel_id: int, member: discord.Member, content: str
+    ):
         try:
-            await member.send(message)
+            await member.send(content)
         except discord.Forbidden:
-            await channel.send(content=message, delete_after=3.0)
+            channel = self.bot.get_channel(channel_id)
+            await channel.send(content, delete_after=3.0)
 
-    async def add_or_remove_role(self, payload, template):
+    async def _add_or_remove_role(self, payload, bindings: list):
         guild = self.bot.get_guild(payload.guild_id)
         member = await guild.fetch_member(payload.user_id)
+        role = discord.utils.get(
+            guild.roles,
+            id=bindings.get(payload.emoji.name),
+        )
 
         if member.bot:
             return
 
-        rr = await models.ReactionRoles.get(emoji=payload.emoji)
-        role = get(guild.roles, id=rr.role_id)
-
-        if role.id in [r.id for r in member.roles]:
-            await member.remove_roles(role)
+        if len(member.roles) >= self.MAX_ROLE:
             await self._clear_reaction(payload, member)
-            return await self._send_message(
-                payload,
+            return await self._send_notification(
+                payload.channel_id, member, "Hey {member.mention}, role limit alert!"
+            )
+
+        if member.get_role(role.id) is not None:
+            await self._clear_reaction(payload, member)
+            await member.remove_roles(role)
+            return await self._send_notification(
+                payload.channel_id,
                 member,
-                "`{}`, `{}` role has been __removed__.".format(member, role.name),
+                f"Hey {member.mention}, `{role.name}` role has been removed.",
             )
         else:
-            if len(member.roles) - 1 >= self.MAX_ROLE:
-                await self._clear_reaction(payload, member)
-                return await self._send_message(
-                    payload,
-                    member,
-                    "{}, you can take a max of `{}` roles.".format(
-                        member.mention, self.MAX_ROLE
-                    ),
-                )
-            else:
-                await member.add_roles(role)
-                await self._clear_reaction(payload, member)
-                return await self._send_message(
-                    payload,
-                    member,
-                    "`{}`, `{}` role has been __added__.".format(member, role.name),
-                )
+            await self._clear_reaction(payload, member)
+            await member.add_roles(role)
+            return await self._send_notification(
+                payload.channel_id,
+                member,
+                f"Hey {member.mention}, `{role.name}` role has been added.",
+            )
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        guild_id = payload.guild_id
-        channel_id = payload.channel_id
-        message_id = payload.message_id
-
         try:
-            template = await models.Templates.get(
-                guild_id=guild_id, channel_id=channel_id, message_id=message_id
+            template = await models.ReactionRoleTemplate.get(
+                guild_id=payload.guild_id,
+                channel_id=payload.channel_id,
+                message_id=payload.message_id,
             )
         except tortoise_exceptions.DoesNotExist:
             return
 
-        if template.status:
-            await self.add_or_remove_role(payload, template)
+        if template.is_active:
+            await self._add_or_remove_role(payload, template.emoji_and_role_bindings)
 
-    @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload):
-        pass
-
-    @commands.command(aliases=["temps"])
+    @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def templates(self, ctx):
         """Shows the list of templates on the server."""
 
-        command = self.bot.get_command("rrmanager list")
-        await command.__call__(ctx)
+        await self.bot.get_command("template list").__call__(ctx)
 
-    @commands.group(invoke_without_command=True, aliases=["rrm"])
+    @commands.group(invoke_without_command=True, aliases=["t"])
     @commands.has_permissions(manage_roles=True)
-    async def rrmanager(self, ctx):
-        """Manage the reaction role on the server."""
+    async def template(self, ctx):
+        """Manage the reaction role templates on the server."""
 
         pass
 
-    @rrmanager.command(name="new")
-    async def rrmanager_new(self, ctx):
+    @template.command(name="new", aliases=["n"])
+    async def template_new(self, ctx):
         """Create a new reaction role template."""
 
-        template_id = functions.random_id()
+        template = await models.ReactionRoleTemplate.create(guild_id=ctx.guild.id)
+        await ctx.send(f"New reaction role template has created. ID: `{template.pk}`")
 
-        await models.Templates.create(id=template_id, guild_id=ctx.guild.id)
-        await ctx.send(
-            "New reaction role template has created. ID: `{}`".format(
-                template_id,
-            )
-        )
-
-    @rrmanager.command(name="list")
-    async def rrmanager_list(self, ctx):
+    @template.command(name="list", aliases=["l"])
+    async def template_list(self, ctx):
         """Shows the list of templates on the server."""
 
-        templates = await models.Templates.filter(Q(guild_id=ctx.guild.id))
+        embeds = []
+        templates = await models.ReactionRoleTemplate.filter(guild_id=ctx.guild.id)
 
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name="Reaction Role Templates")
-        embed.description = (
-            "{}\n\nAll: `{}`".format(
-                ", ".join(["`{}`".format(t.id) for t in templates]),
-                len(templates),
+        if not len(templates):
+            return await ctx.send("Template note found!")
+
+        for template in templates:
+            if template.channel_id:
+                channel = self.bot.get_channel(template.channel_id)
+                template_message = await channel.fetch_message(template.message_id)
+                jump_message = f"Original: [Jump!]({template_message.jump_url})"
+            else:
+                jump_message = ""
+
+            embed = discord.Embed(color=self.bot.embed_color)
+            embed.description = (
+                f"Title: `{template.embed_title}`\n"
+                f"UUID: `{template.pk}`\n\n"
+                f"{jump_message}"
             )
-            if len(templates)
-            else "None"
+            embeds.append(embed)
+
+        menu = menus.MenuPages(
+            timeout=30,
+            clear_reactions_after=True,
+            source=paginator.EmbedSource(data=embeds),
         )
+        await menu.start(ctx)
 
-        await ctx.send(embed=embed)
-
-    @rrmanager.command(name="info")
-    async def rrmanager_info(self, ctx, template_id):
-        """Shows info about a template."""
-
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
-
-        if template.channel_id:
-            channel = self.bot.get_channel(template.channel_id)
-            message = await channel.fetch_message(template.message_id)
-            jump_message = "[`Jump`]({})".format(message.jump_url)
-        else:
-            jump_message = "`None`"
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name="ID: {}".format(template.id))
-        embed.description = (
-            "Title: `{}`\n"
-            "Color: `{}`\n"
-            "Binding: `{}`\n"
-            "Message: {}".format(
-                template.title,
-                template.color,
-                len(await template.reactionroles),
-                jump_message,
-            )
-        )
-        embed.set_footer(text="Status: {}".format(template.status))
-
-        await ctx.send(embed=embed)
-
-    @rrmanager.command(name="status")
-    async def rrmanager_status(self, ctx, template_id):
+    @template.command(name="status")
+    async def template_status(self, ctx, uuid: str):
         """Change a template status. On or off."""
 
-        pass
+        template = await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id)
 
-    @rrmanager.command(name="title")
-    async def rrmanager_title(self, ctx, template_id, *, title):
+        if template.is_active:
+            template.is_active = False
+        else:
+            template.is_active = True
+
+        await template.save()
+        await ctx.send(f"Template status updated to `{template.is_active}`.")
+
+    @template.command(name="title")
+    async def template_title(self, ctx, uuid: str, *, embed_title: str):
         """Template title update."""
 
-        await models.Templates.get(id=template_id, guild_id=ctx.guild.id).update(
-            title=title,
+        await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id).update(
+            embed_title=embed_title,
         )
         await ctx.send("Title updated.")
 
-    @rrmanager.command(name="color")
-    async def rrmanager_color(self, ctx, template_id, color):
+    @template.command(name="color")
+    async def template_color(self, ctx, uuid: str, embed_color):
         """Template color update. It accepts in 0xff00ff format."""
 
-        await models.Templates.get(id=template_id, guild_id=ctx.guild.id).update(
-            color=self.bot.color if color.lower() == "default" else int(color, 16),
+        await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id).update(
+            embed_color=self.bot.embed_color
+            if embed_color.lower() == "default"
+            else int(embed_color, 16)
         )
+
         await ctx.send("Color updated.")
 
-    @rrmanager.command(name="add")
-    async def rrmanager_add(self, ctx, template_id, emoji, role: discord.Role):
+    async def _update_embed(self, ctx, template: str):
+        channel = self.bot.get_channel(template.channel_id)
+        template_message = await channel.fetch_message(template.message_id)
+
+        embed = discord.Embed(color=template.embed_color)
+        await self._generate_embed(ctx, embed, template)
+
+        await template_message.edit(embed=embed)
+        await template_message.clear_reactions()
+
+        async with ctx.typing():
+            for emoji in template.emoji_and_role_bindings.keys():
+                await template_message.add_reaction(emoji)
+
+    @template.command(name="add", aliases=["a"])
+    async def template_add(self, ctx, uuid: str, emoji: str, role: discord.Role):
         """Add reaction role binding to template."""
 
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
+        template = await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id)
 
-        # TODO: Skip if there are more than 20 binding
-        # TODO: Skip the same binding if it already exists
+        if len(template.emoji_and_role_bindings) >= 20:
+            return await ctx.send("Reaction limit warning!")
 
-        await models.ReactionRoles.create(
-            emoji=emoji,
-            role_id=role.id,
-            template=template,
-        )
-        await ctx.send("Emoji and bindig role added.")
+        template.emoji_and_role_bindings.update({emoji: role.id})
+        await template.save()
 
-    @rrmanager.command(name="remove")
+        if template.message_id:
+            await self._update_embed(ctx, template)
+
+        await ctx.send("Added reaction role and updated template message.")
+
+    @template.command(name="remove", aliases=["r"])
     @commands.has_permissions(manage_messages=True)
-    async def rrmanager_remove(self, ctx, template_id, emoji):
+    async def template_remove(self, ctx, uuid: str, emoji: str):
         """Remove reaction role binding to template."""
 
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
-        await models.ReactionRoles.get(emoji=emoji, template=template).delete()
-        await ctx.send("Emoji and binding role removed.")
+        template = await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id)
 
-    async def rr_embed(self, ctx, embed, template):
+        try:
+            template.emoji_and_role_bindings.pop(emoji)
+        except KeyError:
+            return await ctx.send("Emoji not found in template.")
+
+        await template.save()
+
+        if template.message_id:
+            await self._update_embed(ctx, template)
+
+        await ctx.send("Removed reaction role and updated template message.")
+
+    async def _generate_embed(self, ctx, embed: discord.Embed, template):
         description = []
-        embed.set_author(name=template.title)
+        embed.set_author(name=template.embed_title)
 
-        async for r in template.reactionroles:
-            description.append(
-                "{} : {}".format(
-                    r.emoji,
-                    ctx.guild.get_role(r.role_id).mention,
-                )
-            )
+        for emoji, role_id in template.emoji_and_role_bindings.items():
+            role = ctx.guild.get_role(role_id)
+            description.append(f"{emoji} **-** {role}")
 
         embed.description = "\n".join(description)
 
-    @rrmanager.command(name="show")
-    async def rrmanager_show(self, ctx, template_id):
+    @template.command(name="show")
+    async def template_show(self, ctx, uuid: str):
         """Show reaction role template message for test."""
 
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
+        template = await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id)
 
-        embed = discord.Embed(color=template.color)
-        await self.rr_embed(ctx, embed, template)
+        embed = discord.Embed(color=template.embed_color)
+        await self._generate_embed(ctx, embed, template)
 
         await ctx.send(embed=embed)
 
-    @rrmanager.command(name="send")
-    async def rrmanager_send(self, ctx, template_id, channel: discord.TextChannel):
+    @template.command(name="send")
+    async def template_send(self, ctx, uuid: str, channel: discord.TextChannel):
         """Send reaction role template message to channel."""
 
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
+        template = await models.ReactionRoleTemplate.get(pk=uuid, guild_id=ctx.guild.id)
 
-        embed = discord.Embed(color=template.color)
-        await self.rr_embed(ctx, embed, template)
-
-        message = await channel.send(embed=embed)
-        info_message = await ctx.send("Sending...")
+        embed = discord.Embed(color=template.embed_color)
+        await self._generate_embed(ctx, embed, template)
+        template_message = await channel.send(embed=embed)
 
         template.channel_id = channel.id
-        template.message_id = message.id
-        await template.save()
+        template.message_id = template_message.id
 
-        async for r in template.reactionroles:
-            await message.add_reaction(r.emoji)
+        async with ctx.typing():
+            for emoji in template.emoji_and_role_bindings.keys():
+                await template_message.add_reaction(emoji)
+            await template.save()
 
-        await info_message.edit(content="{} Done.".format(info_message.content))
+        await ctx.send("Done.")
 
-    @rrmanager.command(name="update")
-    async def rrmanager_update(self, ctx, template_id):
-        """Update reaction role template message."""
-
-        template = await models.Templates.get(id=template_id, guild_id=ctx.guild.id)
-
-        channel = self.bot.get_channel(template.channel_id)
-        message = await channel.fetch_message(template.message_id)
-        info_message = await ctx.send("Updating...")
-
-        embed = discord.Embed(color=template.color)
-        await self.rr_embed(ctx, embed, template)
-
-        for reaction in message.reactions:
-            await message.clear_reaction(reaction)
-
-        await message.edit(embed=embed)
-
-        async for r in template.reactionroles:
-            await message.add_reaction(r.emoji)
-
-        await info_message.edit(content="{} Done.".format(info_message.content))
-
-    @rrmanager.command(name="kill")
-    async def rrmanager_kill(self, ctx, *template_ids: commands.clean_content):
+    @template.command(name="kill")
+    async def template_kill(self, ctx, uuid: str):
         """Kill template on the server."""
 
-        # TODO: Get template message and delete.
-
-        for template_id in template_ids:
-            await models.Templates.get(id=template_id, guild_id=ctx.guild.id).delete()
-
-        await ctx.send("Template(s) killed.")
+        await models.ReactionRoleTemplate.get(pk=uuid).delete()
+        await ctx.send("Template killed.")
