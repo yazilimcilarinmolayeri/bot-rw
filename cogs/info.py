@@ -1,10 +1,11 @@
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands, menus
 
-from utils import lists, paginator, models, functions
+from utils import functions, lists, models
+from utils.paginator import PageSource
 
 
 async def setup(bot):
@@ -37,78 +38,72 @@ class Info(commands.Cog):
             member = ctx.author
 
         badges = []
-        perms = member.guild_permissions
-        days = lambda date: (datetime.now(timezone.utc) - date).days
         join_position = (
-            sorted(ctx.guild.members, key=lambda member: member.joined_at).index(member)
-            + 1
+            sorted(
+                ctx.guild.members,
+                key=lambda member: member.joined_at
+            ).index(member) + 1
         )
 
-        if perms.administrator:
-            badges.append(lists.badges["administrator"])
-        if perms.manage_messages:
-            badges.append(lists.badges["moderator"])
-        if days(member.joined_at) >= days(ctx.guild.created_at) - 365:
-            badges.append(lists.badges["oldmember"])
+        if member.guild_permissions.administrator:
+            badges.append(lists.Badge.administrator)
+        if member.guild_permissions.manage_messages:
+            badges.append(lists.Badge.moderator)
+        if join_position <= round(ctx.guild.member_count / 3):  # TODO:
+            badges.append(lists.Badge.oldmember)
 
         embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member)
         embed.description = (
-            f"Profile: {member.mention} {' '.join(badges)}\n"
-            f"Create: {ctx.format_date(member.created_at)}\n"
-            f"Join: {ctx.format_date(member.joined_at)}\n"
-            f"Server join position: `{join_position}/{len(ctx.guild.members)}`"
+            f"{' '.join(badges)}\n\n"
+            f"Profile: {member.mention}\n"
+            f"Created: {ctx.format_date(member.created_at)}\n"
+            f"Joined: {ctx.format_date(member.joined_at)}\n"
+            f"Server join position: `{join_position}/{ctx.guild.member_count}`"
         )
+        embed.set_author(name=member)
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_footer(text=f"ID: {member.id}")
 
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["si"])
-    async def serverinfo(self, ctx, guild_id=None):
+    async def serverinfo(self, ctx, *, guild_id: int = None):
         """Shows info about the current server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
             guild = self.bot.get_guild(guild_id)
 
             if guild is None:
-                return await ctx.send("Guild not found!")
+                return await ctx.send("Invalid guild ID given.")
         else:
             guild = ctx.guild
 
-        description = (
-            f"{guild.description}\n\n" if guild.description is not None else " "
-        )
-        channel_count = len(guild.text_channels) + len(guild.voice_channels)
-
-        if guild.premium_tier > 0:
-            last_boosts = (
-                ", ".join(
-                    "{} ({})".format(m.mention, ctx.format_relative(m.premium_since))
-                    for i, m in enumerate(guild.premium_subscribers[:10])
-                )
-                if len(guild.premium_subscribers)
-                else "`?`"
-            )
-            boosts_info = (
+        if guild.premium_tier:
+            last_boosts = [
+                f"{member.mention} ({ctx.format_relative(member.premium_since)})"
+                for member in guild.premium_subscribers
+            ]
+            boosts_information = (
                 f"Level: `{guild.premium_tier} "
-                f"({guild.premium_subscription_count} boost)`\n"
-                f"Last boost(s): {last_boosts}"
+                f"Total boost: `{guild.premium_subscription_count}`\n"
+                f"Last boost(s): {', '.join(last_boosts)}"
             )
         else:
-            boosts_info = ""
+            boosts_information = None
 
         embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=guild)
         embed.description = (
-            f"{description}"
-            f"Total member: `{guild.member_count}`\n"
-            f"Role count: `{len(guild.roles)}`\n"
-            f"Channel count: `{channel_count}`\n"
-            f"Emoji count: `{len(guild.emojis)}`\n"
+            f"{guild.description or ''}\n\n"
             f"Owner: {guild.owner.mention}\n"
-            f"Created: {ctx.format_date(guild.created_at)}\n\n{boosts_info}"
+            f"Created: {ctx.format_date(guild.created_at)}\n"
+            f"Channel: `{len(guild.channels)}` "
+            f"Role: `{len(guild.roles)}` "
+            f"Member: `{guild.member_count}` "
+            f"Emoji: `{len(guild.emojis)}`\n\n"
+            f"{boosts_information or ''}"
         )
+        embed.set_author(name=guild.name)
         embed.set_thumbnail(url=guild.icon.url)
         embed.set_footer(text=f"ID: {guild.id}")
 
@@ -121,53 +116,50 @@ class Info(commands.Cog):
         pass
 
     @commands.command()
-    async def roles(self, ctx):
+    async def roles(self, ctx, *, guild_id: int = None):
         """Lists roles in the server."""
-
-        roles = ", ".join([r.mention for r in ctx.guild.roles[1:]])
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=ctx.guild)
-        embed.description = f"Total: `{len(ctx.guild.roles)}`\n\n{roles}"
-
-        await ctx.send(embed=embed)
-
-    @commands.command(aliases=["e"])
-    async def emojis(self, ctx, guild_id=None):
-        """Shows you about the emoji info int the server."""
-
-        embeds = []
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
             guild = self.bot.get_guild(guild_id)
 
             if guild is None:
-                return await ctx.send("Server not found!")
+                return await ctx.send("Invalid guild ID given.")
         else:
             guild = ctx.guild
 
-        for emojis in functions.list_to_matrix(guild.emojis):
-            embed = discord.Embed(color=self.bot.embed_color)
-            embed.set_author(name=guild)
+        role_name_list = [f"`{role.name}`" for role in guild.roles]
+        # role_name_list.pop(0)  # @everyone
+        role_name_list.reverse()
 
-            emojis = "\n".join(
-                [
-                    f"{ctx.get_emoji(guild, e.id)} " f"`{ctx.get_emoji(guild, e.id)}`"
-                    for e in emojis
-                ]
-            )
+        embed = discord.Embed(color=self.bot.embed_color)
+        embed.description = ", ".join(role_name_list)
 
-            embed.description = f"Total: `{len(guild.emojis)}`\n\n{emojis}"
-            embeds.append(embed)
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["e"])
+    async def emojis(self, ctx, *, guild_id: int = None):
+        """Shows you about the emoji info int the server."""
+
+        if guild_id is not None and await self.bot.is_owner(ctx.author):
+            guild = self.bot.get_guild(guild_id)
+
+            if guild is None:
+                return await ctx.send("Invalid guild ID given.")
+        else:
+            guild = ctx.guild
+
+        if not len(guild.emojis):
+            return await ctx.send("Custom emoji not found.")
+
+        entries = [f"{emoji} - `{emoji}`\n" for emoji in guild.emojis]
 
         menu = menus.MenuPages(
-            timeout=30,
+            PageSource(entries, per_page=10),
             clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
         )
         await menu.start(ctx)
 
-    @commands.command()
+    # @commands.command()
     async def fetch(
         self,
         ctx,
@@ -231,7 +223,7 @@ class Info(commands.Cog):
         screenshot_url = data[-1]
         data = data[1:-1]
 
-        embed = discord.Embed(color=self.bot.embed_color, timestamp=datetime.utcnow())
+        embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member, icon_url=member.display_avatar.url)
         embed.description = "\n".join(
             [f"{lists.profile_titles[i]}: `{j}`" for i, j in enumerate(data)]

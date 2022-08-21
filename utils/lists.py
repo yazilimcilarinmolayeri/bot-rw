@@ -28,9 +28,9 @@ never_gonna_give_you_up_lyrics = [
     "Never gonna tell a lie and hurt you",
 ]
 
-badges = {
-    "administrator": "<:administrator_badge:868205132003823617>",
-    "moderator": "<:moderator_badge:868205132519723020>",
-    "supporter": "<:supporter_badge:868205132855279746>",
-    "oldmember": "<:oldmember_badge:868205132779765811>",
-}
+
+class Badge:
+    administrator = "<:administrator_badge:868205132003823617>"
+    moderator = "<:moderator_badge:868205132519723020>"
+    supporter = "<:supporter_badge:868205132855279746>"
+    oldmember = "<:oldmember_badge:868205132779765811>"
