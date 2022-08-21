@@ -85,7 +85,7 @@ class Info(commands.Cog):
                 for member in guild.premium_subscribers
             ]
             boosts_information = (
-                f"Level: `{guild.premium_tier} "
+                f"Level: `{guild.premium_tier}` "
                 f"Total boost: `{guild.premium_subscription_count}`\n"
                 f"Last boost(s): {', '.join(last_boosts)}"
             )
