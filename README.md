@@ -19,18 +19,20 @@ pip3 install --user -r requirements.txt --upgrade
 cp config.ini.sample config.ini
 ```
 
-4. Setup the service file. Replace `user` with your custom username before.
-```shell
-mv bot-rw.service.example bot-rw.service
-cp bot-rw.service /etc/systemd/system/
-```
-
 5. Run the bot.
 ```shell
 python3 run.py
 ```
 
-Or enable services and start (optionally).
+### Optionally
+
+1. Or setup the service file. Replace `user` with your custom username before.
+```shell
+mv bot-rw.service.example bot-rw.service
+cp bot-rw.service /etc/systemd/system/
+```
+
+2. And enable services and start. 
 ```shell
 systemctl daemon-reload
 systemctl enable bot-rw.service
