@@ -7,6 +7,10 @@ Description = Discord bot service
 Type = simple
 Restart = always
 Restart = on-failure
+
+Group = user
+User = user
+WorkingDirectory = /home/user/bot-rw
 ExecStart = /usr/bin/python3 /home/user/bot-rw/run.py
 
 [Install]
