@@ -6,13 +6,12 @@ Customizable and multifunctional rewritten Discord bot for YMY. Invite: https://
 ## Installation and Setup
 1. Clone the repository.
 ```shell
-git clone https://github.com/yazilimcilarinmolayeri/bot-rw
-cd bot-rw
+git clone https://github.com/yazilimcilarinmolayeri/bot-rw && cd bot-rw
 ```
 
 2. Install the bot-rw's dependencies.
 ```shell
-pip3 install --user -r requirements.txt
+pip3 install --user -r requirements.txt --upgrade
 ```
 
 3. Edit a config.ini file.
@@ -22,13 +21,17 @@ cp config.ini.sample config.ini
 
 4. Setup the service file. Replace `user` with your custom username before.
 ```shell
+mv bot-rw.service.example bot-rw.service
 cp bot-rw.service /etc/systemd/system/
 ```
 
-5. Enable services (optionally) and start the bot.
+5. Run the bot.
 ```shell
-python3 bot-rw.py
-# or
+python3 run.py
+```
+
+Or enable services and start (optionally).
+```shell
 systemctl daemon-reload
 systemctl enable bot-rw.service
 systemctl start bot-rw.service

@@ -2,7 +2,7 @@ import discord
 from discord.ext import menus
 
 
-class PageSource(menus.ListPageSource):
+class EmbedSource(menus.ListPageSource):
     async def format_page(self, menu, entries):
         embed = discord.Embed(color=0x2F3136)
         embed.description = "".join(e for e in entries)

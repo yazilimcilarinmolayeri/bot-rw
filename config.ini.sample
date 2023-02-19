@@ -1,11 +1,13 @@
 [bot]
-command_prefix=!
-owner_ids=
-token=
+command_prefix = !
+owner_ids =
+token =
+
+[reactionrole]
+max_role = 15
 
 [log]
-error_channel_id=
-dm_and_mention_channel_id=
+error_channel_id =
 
 [channels]
-profile_channel_id=
+profile_channel_id =

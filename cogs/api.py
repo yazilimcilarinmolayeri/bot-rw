@@ -7,7 +7,7 @@ from discord.ext import commands, menus
 from socialscan.util import Platforms as p
 from socialscan.util import execute_queries
 
-from utils import paginator
+from utils.paginator import EmbedSource
 
 
 async def setup(bot):
@@ -97,7 +97,7 @@ class API(commands.Cog):
         menu = menus.MenuPages(
             timeout=30,
             clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
+            source=EmbedSource(data=embeds),
         )
         await menu.start(ctx)
 
@@ -154,7 +154,7 @@ class API(commands.Cog):
         menu = menus.MenuPages(
             timeout=30,
             clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
+            source=EmbedSource(data=embeds),
         )
         await menu.start(ctx)
 

@@ -26,7 +26,7 @@ class Events(commands.Cog):
             f"Library: v{discord.__version__}"
         )
 
-        await models.init()
+        await models.database_init()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -79,39 +79,3 @@ class Events(commands.Cog):
                 filename="traceback.txt",
             ),
         )
-
-    @commands.Cog.listener(name="on_message")
-    async def on_bot_dm_and_mention(self, message):
-        author = message.author
-        channel = self.bot.get_channel(
-            self.bot.config.getint("log", "dm_and_mention_channel_id")
-        )
-
-        if author.bot:
-            return
-
-        if message.guild is None:
-            embed = discord.Embed(color=self.bot.embed_color)
-            embed.description = message.content
-            embed.set_author(name=author, icon_url=author.display_avatar.url)
-            embed.set_footer(text=f"ID: {author.id} - Direct Message")
-
-            if message.attachments:
-                attachment_url = message.attachments[0].url
-                embed.set_image(url=attachment_url)
-
-            await channel.send(embed=embed)
-
-        if self.bot.user.mentioned_in(message) and message.mention_everyone is False:
-            embed = discord.Embed(color=self.bot.embed_color)
-            embed.description = (
-                f"{message.content}\n\nOriginal: [Jump!]({message.jump_url})"
-            )
-            embed.set_author(name=author, icon_url=author.display_avatar.url)
-            embed.set_footer(text=f"ID: {author.id} - Mention")
-
-            if message.attachments:
-                attachment_url = message.attachments[0].url
-                embed.set_image(url=attachment_url)
-
-            await channel.send(embed=embed)

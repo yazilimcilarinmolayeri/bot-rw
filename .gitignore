@@ -7,6 +7,13 @@
 *.sqlite3-shm
 *.sqlite3-wal
 
+# Archive files
+cogs/archive/*
+
+# Service file
+*.service
+bot-rw.service
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

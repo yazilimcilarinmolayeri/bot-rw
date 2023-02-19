@@ -1,0 +1,13 @@
+[Unit]
+Wants = network.target
+After = multi-user.target
+Description = Discord bot service
+
+[Service]
+Type = simple
+Restart = always
+Restart = on-failure
+ExecStart = /usr/bin/python3 /home/user/bot-rw/run.py
+
+[Install]
+WantedBy = multi-user.target

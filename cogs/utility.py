@@ -8,9 +8,9 @@ from datetime import datetime
 import arrow
 import psutil
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 
-from utils import lists, functions, paginator
+from utils import lists
 
 
 async def setup(bot):
@@ -21,7 +21,8 @@ class HelpCommand(commands.HelpCommand):
     def __init__(self):
         super().__init__(
             command_attrs={
-                "help": "Shows help about the bot, a command, or a category."
+                "aliases": ["h"],
+                "help": "Shows help about the bot, a command, or a category.",
             }
         )
 
@@ -106,8 +107,7 @@ class HelpCommand(commands.HelpCommand):
         await self.context.send(embed=embed)
 
     async def send_group_help(self, group):
-        fields = []
-        embeds = []
+        group_commands = ""
 
         if len(group.commands) == 0:
             return await self.send_command_help(group)
@@ -118,23 +118,13 @@ class HelpCommand(commands.HelpCommand):
                 .replace(command.full_parent_name, "")
                 .strip()
             )
-            fields.append(
-                f"Usage: `{command_signature}`\n"
-                f"Help: {command.description or command.help}\n"
-            )
+            group_commands += f"{command_signature}\n"
 
-        for fields in functions.list_to_matrix(fields, col=3):
-            embed = discord.Embed(color=self.context.bot.embed_color)
-            embed.description = f"{self.common_command_formatting(group)}\n\n"
-            embed.add_field(name="Subcommand", value="\n".join(fields))
-            embeds.append(embed)
+        embed = discord.Embed(color=self.context.bot.embed_color)
+        embed.description = f"{self.common_command_formatting(group)}\n\n"
+        embed.add_field(name="Subcommand", value=f"```{group_commands}```")
 
-        menu = menus.MenuPages(
-            timeout=30,
-            clear_reactions_after=True,
-            source=paginator.EmbedSource(data=embeds),
-        )
-        await menu.start(self.context)
+        await self.context.send(embed=embed)
 
 
 class Utility(commands.Cog):
@@ -158,13 +148,13 @@ class Utility(commands.Cog):
         minutes, seconds = divmod(remainder, 60)
         days, hours = divmod(hours, 24)
 
-        await ctx.send(f"Uptime: `{days}d, {hours}h, {minutes}m, {seconds}s`")
+        await ctx.send(f"Uptime: `{days}`d `{hours}`h `{minutes}`m `{seconds}`s")
 
     @commands.command(aliases=["p"])
     async def ping(self, ctx, member: discord.Member = None):
         """Used to test bot's response time."""
 
-        if member != None:
+        if member is not None:
             return await ctx.send(
                 "\n".join(
                     [
@@ -178,23 +168,7 @@ class Utility(commands.Cog):
         message = await ctx.send("Pinging...")
         ping = (time.monotonic() - before) * 1000
 
-        await message.edit(content="Pong: `{} ms`".format(round(ping, 2)))
-
-    @commands.command()
-    async def tias(self, ctx, channel: discord.TextChannel = None):
-        """Send the "try it and see" message."""
-
-        if channel == None:
-            channel = ctx
-
-        await channel.send("https://tryitands.ee")
-
-    @commands.command(aliases=["ddg"])
-    @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.user)
-    async def lmddgtfy(self, ctx, *, keywords: str):
-        """Let me DuckDuckGo that for you."""
-
-        await ctx.send("https://lmddgtfy.net/?q={}".format(keywords.replace(" ", "+")))
+        await message.edit(content="Pong: `{}` ms".format(round(ping, 2)))
 
     async def say_permissions(self, ctx, member, channel):
         allowed, denied = [], []
@@ -286,7 +260,7 @@ class Utility(commands.Cog):
         """Chooses between multiple choices."""
 
         if len(choices) < 2:
-            return await ctx.send("En az iki seçenek girmelisin!")
+            return await ctx.send("Not enough choices to pick from.")
 
         await ctx.send(random.choice(choices))
 
@@ -309,7 +283,7 @@ class Utility(commands.Cog):
                     "sha": commit["sha"],
                     "html_url": commit["html_url"],
                     "message": commit["commit"]["message"],
-                    "date": ctx.format_relative(date),
+                    "date": discord.utils.format_dt(date, style="R"),
                 }
             )
 
@@ -343,7 +317,6 @@ class Utility(commands.Cog):
         commits = await self.get_last_commits(ctx)
 
         embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar.url)
         embed.description = (
             "{}\n\n"
             "Total guild(s): `{}`\nTotal channel(s): `{}`\n"
@@ -361,7 +334,7 @@ class Utility(commands.Cog):
                 total_unique,
                 round(cpu_usage, 1),
                 round(memory_usage, 1),
-                functions.dist()["PRETTY_NAME"],
+                "Operation System",
                 platform.python_version(),
                 discord.__version__,
                 "\n".join(
@@ -376,6 +349,7 @@ class Utility(commands.Cog):
                 ),
             )
         )
-        embed.set_footer(text="ID: {}".format(self.bot.user.id))
+        embed.set_author(name=self.bot.user.name)
+        embed.set_footer(text=f"ID: {self.bot.user.id}")
 
         await ctx.send(embed=embed)
