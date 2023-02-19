@@ -8,7 +8,7 @@
 *.sqlite3-wal
 
 # Archive files
-cogs/archive/*
+cogs/archive/
 
 # Service file
 *.service
