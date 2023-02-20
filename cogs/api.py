@@ -1,5 +1,4 @@
 import random
-from io import BytesIO
 
 import aiowiki
 import discord
@@ -87,9 +86,9 @@ class API(commands.Cog):
             embed.description = (
                 f"Latitude: `{d['Latitude'].split(';')[0]}`\n"
                 f"Longitude: `{d['Longitude'].split(';')[0]}`\n"
-                f"Magnitude-Depth: `{d['Magnitude']}-{d['Depth']} Km`\n"
-                f"Datetime: `{d['Time']}`\n"
-                f"Region: `{d['Region']}`"
+                f"Region: `{d['Region']}`\n"
+                f"Magnitude - Depth: `{d['Magnitude']} - {d['Depth']} Km`\n"
+                f"Datetime: `{d['Time']}`"
             ).replace("&deg", "°")
             embed.set_thumbnail(url=d["MapImage"])
             embeds.append(embed)
@@ -154,7 +153,7 @@ class API(commands.Cog):
         menu = menus.MenuPages(
             timeout=30,
             clear_reactions_after=True,
-            source=EmbedSource(data=embeds),
+            source=EmbedSource(embeds),
         )
         await menu.start(ctx)
 

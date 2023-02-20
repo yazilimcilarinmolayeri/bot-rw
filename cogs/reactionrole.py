@@ -3,7 +3,7 @@ from discord.ext import commands, menus
 from tortoise import exceptions as tortoise_exceptions
 
 from utils import models
-from utils.paginator import EmbedSource
+from utils.paginator import PageSource
 
 
 async def setup(bot):
@@ -127,7 +127,7 @@ class ReactionRole(commands.Cog):
             )
 
         menu = menus.MenuPages(
-            EmbedSource(entries, per_page=1), clear_reactions_after=True
+            PageSource(entries, per_page=1), clear_reactions_after=True
         )
         await menu.start(ctx)
 
