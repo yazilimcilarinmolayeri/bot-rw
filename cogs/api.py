@@ -17,11 +17,7 @@ class API(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["sscan"])
-    async def socialscan(self, ctx, account):
-        """Querying username and email usage on online platforms."""
-
-        platforms = [
+        self.socialscan_platforms = [
             p.TWITTER,
             p.INSTAGRAM,
             p.REDDIT,
@@ -30,8 +26,17 @@ class API(commands.Cog):
             p.SPOTIFY,
         ]
 
+        self.ss_api_base = "https://image.thum.io/get/width/2000/crop/1200/png"
+        self.kandilli_api_base = "https://api.berkealp.net/kandilli/index.php"
+        self.pypi_api_base = "https://pypi.org/pypi"
+        self.xkcd_api_base = "https://xkcd.com"
+
+    @commands.command(aliases=["sscan"])
+    async def socialscan(self, ctx, account):
+        """Querying username and email usage on online platforms."""
+
         async with ctx.typing():
-            results = await execute_queries([account], platforms)
+            results = await execute_queries([account], self.socialscan_platforms)
 
         embed = discord.Embed(color=self.bot.embed_color)
         embed.description = "\n\n".join(
@@ -41,7 +46,6 @@ class API(commands.Cog):
                 for r in results
             ]
         )
-
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["ss"])
@@ -56,10 +60,7 @@ class API(commands.Cog):
 
         embed = discord.Embed(color=self.bot.embed_color)
         embed.description = f"Source: `{website}`\nInvoker: {ctx.author.mention}"
-        embed.set_image(
-            url=f"https://image.thum.io/get/width/2000/crop/1200/png/{website}"
-        )
-
+        embed.set_image(url=f"{self.ss_api_base}/{website}")
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -68,29 +69,26 @@ class API(commands.Cog):
 
         embeds = []
         max_request = 50
-        headers = {"User-Agent": "bot-rw"}
-        api_base = "https://api.berkealp.net/kandilli/index.php"
-        params = {"last": max_request if last > max_request else last}
 
         async with ctx.typing():
             async with self.bot.web_client.get(
-                api_base,
+                self.kandilli_api_base,
                 ssl=True,
-                params=params,
-                headers=headers,
+                headers={"User-Agent": "bot-rw"},
+                params={"last": max_request if last > max_request else last},
             ) as resp:
-                data = await resp.json()
+                response = await resp.json()
 
-        for d in data:
+        for data in response:
             embed = discord.Embed(color=self.bot.embed_color)
             embed.description = (
-                f"Latitude: `{d['Latitude'].split(';')[0]}`\n"
-                f"Longitude: `{d['Longitude'].split(';')[0]}`\n"
-                f"Region: `{d['Region']}`\n"
-                f"Magnitude - Depth: `{d['Magnitude']} - {d['Depth']} Km`\n"
-                f"Datetime: `{d['Time']}`"
+                f"Latitude: `{data['Latitude'].split(';')[0]}`\n"
+                f"Longitude: `{data['Longitude'].split(';')[0]}`\n"
+                f"Region: `{data['Region']}`\n"
+                f"Magnitude - Depth: `{data['Magnitude']} - {data['Depth']} Km`\n"
+                f"Datetime: `{data['Time']}`"
             ).replace("&deg", "°")
-            embed.set_thumbnail(url=d["MapImage"])
+            embed.set_thumbnail(url=data["MapImage"])
             embeds.append(embed)
 
         menu = menus.MenuPages(
@@ -106,12 +104,12 @@ class API(commands.Cog):
 
         async with ctx.typing():
             async with self.bot.web_client.get(
-                f"https://pypi.org/pypi/{package}/json"
+                f"{self.pypi_api_base}/{package}/json"
             ) as resp:
                 if resp.status != 200:
                     return await ctx.send("Package not found.")
-                data = await resp.json()
-                data = data["info"]
+                response = await resp.json()
+                data = response["info"]
 
         try:
             project_urls = ", ".join(
@@ -131,7 +129,6 @@ class API(commands.Cog):
             f"Project links: {project_urls}"
         )
         embed.set_thumbnail(url="https://i.imgur.com/u6YG9jm.png")
-
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -158,20 +155,20 @@ class API(commands.Cog):
         await menu.start(ctx)
 
     @commands.command()
-    async def xkcd(self, ctx, num=None):
+    async def xkcd(self, ctx, number=None):
         """A webcomic of romance, sarcasm, math, and language."""
 
-        api_base = "https://xkcd.com"
-
         async with ctx.typing():
-            async with self.bot.web_client.get(f"{api_base}/info.0.json") as resp:
+            async with self.bot.web_client.get(f"{self.api_base}/info.0.json") as resp:
                 data = await resp.json()
 
-        if num == None:
-            num = random.randint(1, data["num"])
+        if number is None:
+            number = random.randint(1, data["num"])
 
         async with ctx.typing():
-            async with self.bot.web_client.get(f"{api_base}/{num}/info.0.json") as resp:
+            async with self.bot.web_client.get(
+                f"{self.api_base}/{number}/info.0.json"
+            ) as resp:
                 if resp.status != 200:
                     return await ctx.send("Invalid number.")
                 data = await resp.json()
@@ -185,94 +182,4 @@ class API(commands.Cog):
                 data["num"], data["day"], data["month"], data["year"]
             )
         )
-
-        await ctx.send(embed=embed)
-
-    async def send_activity(self, ctx, embed, data):
-        embed.description = (
-            "{}\n\n"
-            "Type: `{}`\n"
-            "Accessibility: `{}`\n"
-            "Participants: `{}`\n"
-            "Price: `{}`".format(
-                data["activity"],
-                data["type"].title(),
-                data["accessibility"],
-                data["participants"],
-                data["price"],
-            )
-        )
-        embed.set_footer(text="Key: {}".format(data["key"]))
-
-        await ctx.send(embed=embed)
-
-    @commands.group(invoke_without_command=True)
-    async def bored(self, ctx):
-        """Let's find you something to do."""
-
-        url = "http://www.boredapi.com/api"
-
-        async with ctx.typing():
-            async with self.bot.web_client.get("{}/activity".format(url)) as resp:
-                if resp.status != 200:
-                    return await ctx.send(
-                        "API connection error! Status code: `{}`".format(resp.status)
-                    )
-                data = await resp.json()
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        await self.send_activity(ctx, embed, data)
-
-    @bored.command(name="type")
-    async def bored_type(self, ctx, type=None):
-        """Find a random activity with a given type."""
-
-        url = "http://www.boredapi.com/api"
-        types = [
-            "education",
-            "recreational",
-            "social",
-            "diy",
-            "charity",
-            "cooking",
-            "relaxation",
-            "music",
-            "busywork",
-        ]
-        embed = discord.Embed(color=self.bot.embed_color)
-
-        if type == None:
-            embed.description = "Activity types: {}".format(
-                ", ".join(["`{}`".format(t) for t in types])
-            )
-            return await ctx.send(embed=embed)
-
-        async with self.bot.web_client.get(
-            "{}/activity".format(url), params={"type": type}
-        ) as resp:
-            if resp.status != 200:
-                return await ctx.send(
-                    "API connection error! Status code: `{}`".format(resp.status)
-                )
-            data = await resp.json()
-
-        await self.send_activity(ctx, embed, data)
-
-    @commands.command(aliases=["yn"])
-    async def yesno(self, ctx):
-        """Making a good decision might require some help."""
-
-        url = "https://yesno.wtf/api"
-
-        async with self.bot.web_client.get(url) as resp:
-            if resp.status != 200:
-                return await ctx.send(
-                    "API connection error! Status code: `{}`".format(resp.status)
-                )
-            data = await resp.json()
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.description = data["answer"].upper()
-        embed.set_image(url=data["image"])
-
         await ctx.send(embed=embed)

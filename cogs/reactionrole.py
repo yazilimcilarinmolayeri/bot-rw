@@ -239,7 +239,7 @@ class ReactionRole(commands.Cog):
     @template.group(name="send", invoke_without_command=True)
     async def template_send(self, ctx, id: str, channel: discord.TextChannel):
         """Send reaction role template message to channel."""
-        
+
         embed = discord.Embed()
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
         await self._generate_embed(ctx, embed, template)

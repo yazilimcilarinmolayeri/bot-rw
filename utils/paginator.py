@@ -26,4 +26,5 @@ class EmbedSource(menus.ListPageSource):
             entry.set_footer(
                 text=f"Sayfa {menu.current_page + 1}/{self.get_max_pages()}"
             )
+
         return entry
