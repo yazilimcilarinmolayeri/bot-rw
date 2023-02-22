@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from utils import models
+from utils import models, constant
 
 
 async def setup(bot):
@@ -47,14 +47,16 @@ class Level(commands.Cog):
         if message.author.bot:
             return
 
-        # if message.channel in message.guild.get_channel(self.CATEGORY_ID):
-        await self._update_xp(message, self.DEFAULT_AMOUNT)
+        if message.channel in message.guild.get_channel(self.CATEGORY_ID).channels:
+            await self._update_xp(message, self.DEFAULT_AMOUNT)
 
     @commands.Cog.listener()
     async def on_level_up(self, message, level):
-        await message.channel.send(
-            f"{message.author.mention}, has leveled up to level `{level}`!"
-        )
+        # await message.channel.send(
+        #     f"{message.author.mention}, has leveled up to level `{level}`!"
+        # )
+
+        pass
 
     @commands.command()
     @commands.guild_only()
@@ -111,3 +113,26 @@ class Level(commands.Cog):
         """Show the guild leaderboard."""
 
         pass
+
+    @commands.is_owner()
+    @commands.command(hidden=True)
+    async def loadxp(self, ctx: commands.Context, category_id: int):
+        """Load member xp's from category channels to database."""
+
+        category = ctx.guild.get_channel(category_id)
+
+        for channel in category.channels:
+            if channel is discord.ForumChannel or channel is discord.VoiceChannel:
+                continue
+
+            log_message = await ctx.send(
+                f"Loading {channel.mention} {constant.Emoji.loading}"
+            )
+
+            async for message in channel.history(oldest_first=True, limit=None):
+                if message.author.bot or message.author.discriminator == "0000":
+                    continue
+
+                await self._update_xp(message, amount=self.DEFAULT_AMOUNT)
+            await log_message.edit(content=f"Done {channel.mention}")
+        await ctx.send("All done!")

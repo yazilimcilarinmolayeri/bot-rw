@@ -1,3 +1,7 @@
+class Emoji:
+    loading = "<a:loading:1077969725230944337>"
+
+
 class Badge:
     administrator = "<:administrator_badge:868205132003823617>"
     moderator = "<:moderator_badge:868205132519723020>"

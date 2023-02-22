@@ -21,7 +21,7 @@ git clone https://github.com/yazilimcilarinmolayeri/bot-rw && cd bot-rw
 pip3 install --user -r requirements.txt --upgrade
 ```
 
-3. Edit a config.ini file.
+3. Edit a config.yaml file.
 ```shell
 cp config.yaml.sample config.yaml
 ```
