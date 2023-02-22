@@ -114,7 +114,7 @@ class Level(commands.Cog):
         stat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by("-level")
 
         for i, s in enumerate(stat):
-            member = ctx.guild.get_member(s.member_id)
+            member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
             mention = f"<@{s.member_id}>" if member is None else member.mention
             entries.append(
                 f"`{i + 1}` - {mention} "
@@ -122,7 +122,7 @@ class Level(commands.Cog):
             )
 
         menu = menus.MenuPages(
-            DescriptionSource(entries, title="Leadboard", per_page=15),
+            DescriptionSource(entries, title="Level Leadboard", per_page=15),
             clear_reactions_after=True,
         )
         await menu.start(ctx)

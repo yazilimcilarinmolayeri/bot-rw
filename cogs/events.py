@@ -30,6 +30,9 @@ class Events(commands.Cog):
 
         await models.database_init()
 
+        activity = discord.Activity(type=discord.ActivityType.watching, name="👀")
+        await self.bot.change_presence(activity=activity)
+
     @commands.Cog.listener()
     async def on_command_error(
         self, ctx: commands.Context, error: commands.CommandError
