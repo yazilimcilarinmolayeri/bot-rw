@@ -117,7 +117,7 @@ class Level(commands.Cog):
         for i, s in enumerate(stat):
             member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
             entries.append(
-                f"`{i + 1}` - {member.mention} "
+                f"`{i + 1}` - {member.mention if member is not None else '`?`'} "
                 f"Level: `{s.level}` XP: `{s.xp:,}`\n".replace(",", ".")
             )
 
