@@ -51,11 +51,9 @@ class Level(commands.Cog):
 
     @commands.Cog.listener()
     async def on_level_up(self, message, level):
-        # await message.channel.send(
-        #     f"{message.author.mention}, has leveled up to level `{level}`!"
-        # )
-
-        pass
+        await message.channel.send(
+            f"{message.author.mention}, has leveled up to level `{level}`!"
+        )
 
     @commands.command()
     @commands.guild_only()
