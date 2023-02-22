@@ -136,7 +136,7 @@ class Info(commands.Cog):
 
     @commands.guild_only()
     @commands.command(aliases=["bl"])
-    async def banlogs(self, ctx: commands.Context):
+    async def banlog(self, ctx: commands.Context):
         """Grabs the 50 most recent bans from the audit log."""
 
         entries = []
@@ -144,13 +144,13 @@ class Info(commands.Cog):
         async for entry in ctx.guild.audit_logs(action=discord.AuditLogAction.ban):
             created_at = format_dt(entry.created_at, style="R")
             entries.append(
-                f"Banned: {created_at} `{entry.target.user}`\n"
+                f"Banned: {created_at} `{entry.target}`\n"
                 f"Moderator: `{entry.user}`\n"
                 f"Reason: `{entry.reason.strip()}`\n\n"
             )
 
         menu = menus.MenuPages(
-            DescriptionSource(entries, title="Ban Log List", per_page=5),
+            DescriptionSource(entries, title="Ban Log", per_page=5),
             clear_reactions_after=True,
         )
         await menu.start(ctx)

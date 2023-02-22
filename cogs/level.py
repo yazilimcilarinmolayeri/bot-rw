@@ -118,11 +118,11 @@ class Level(commands.Cog):
             mention = f"<@{s.member_id}>" if member is None else member.mention
             entries.append(
                 f"`{i + 1}` - {mention} "
-                f"`{s.level} LVL | {s.xp:,} XP`\n".replace(",", ".")
+                f"LVL: `{s.level}` XP: `{s.xp:,}`\n".replace(",", ".")
             )
 
         menu = menus.MenuPages(
-            DescriptionSource(entries, title="Leadboard", per_page=30),
+            DescriptionSource(entries, title="Leadboard", per_page=15),
             clear_reactions_after=True,
         )
         await menu.start(ctx)
