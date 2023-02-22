@@ -8,7 +8,7 @@
 ![](https://img.shields.io/pypi/v/jishaku?label=jishaku)
 ![](https://img.shields.io/badge/code%20style-black-black)
 
-Customizable and multifunctional rewritten Discord bot for YMY. Invite: https://discord.gg/KazHgb2
+Customizable and multifunctional rewritten Discord bot for YMY. Made with <3
 
 ## Installation and Setup
 1. Clone the repository.
