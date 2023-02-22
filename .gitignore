@@ -1,5 +1,6 @@
 # Config file
-*.ini
+*.yml
+*.yaml
 
 # Database files
 *.db
