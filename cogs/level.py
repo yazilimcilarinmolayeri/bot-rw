@@ -19,7 +19,9 @@ class Level(commands.Cog):
         guild_id = message.guild.id
         member_id = message.author.id
 
-        stat = await models.LevelStat.get_or_none(guild_id=guild_id, member_id=member_id)
+        stat = await models.LevelStat.get_or_none(
+            guild_id=guild_id, member_id=member_id
+        )
 
         if stat is None:
             return await models.LevelStat.create(
