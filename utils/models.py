@@ -12,6 +12,20 @@ async def database_init():
     await Tortoise.generate_schemas()
 
 
+class LevelStat(Model):
+    uuid = fields.UUIDField(pk=True)
+    ignore = fields.BooleanField(default=False)
+
+    guild_id = fields.IntField()
+    member_id = fields.IntField()
+
+    level = fields.IntField(default=0)
+    xp = fields.IntField(default=0)
+
+    class Meta:
+        table = "LevelStat"
+
+
 class ReactionRoleTemplate(Model):
     uuid = fields.UUIDField(pk=True)
     status = fields.BooleanField(default=True)

@@ -1,13 +1,11 @@
-import random
 from typing import Union
-from datetime import datetime, timedelta
 
 import discord
 from discord.utils import format_dt
 from discord.ext import commands, menus
 
-from utils import functions, lists, models
-from utils.paginator import EmbedSource
+from utils import lists
+from utils.paginator import DescriptionSource
 
 
 async def setup(bot):
@@ -19,20 +17,23 @@ class Info(commands.Cog):
         self.bot = bot
 
     @commands.group(aliases=["a"])
-    async def avatar(self, ctx, *, user: Union[discord.Member, discord.User] = None):
+    async def avatar(
+        self, ctx: commands.Context, *, user: Union[discord.Member, discord.User] = None
+    ):
         """Shows a user's avatar."""
 
         user = user or ctx.author
-
         embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=user)
         embed.set_image(url=user.display_avatar.url)
         embed.set_footer(text=f"ID: {user.id}")
-
         await ctx.send(embed=embed)
 
+    @commands.guild_only()
     @commands.command(aliases=["ui"])
-    async def userinfo(self, ctx, *, user: Union[discord.Member, discord.User] = None):
+    async def userinfo(
+        self, ctx: commands.Context, *, user: Union[discord.Member, discord.User] = None
+    ):
         """Shows info about a user."""
 
         badges = []
@@ -45,7 +46,7 @@ class Info(commands.Cog):
             badges.append(lists.Badge.administrator)
         if user.guild_permissions.manage_messages:
             badges.append(lists.Badge.moderator)
-        if join_position <= round(ctx.guild.member_count / 3):  # TODO:
+        if join_position <= round(ctx.guild.member_count / 3):  # TODO: ?
             badges.append(lists.Badge.olduser)
 
         embed = discord.Embed(color=self.bot.embed_color)
@@ -59,12 +60,11 @@ class Info(commands.Cog):
         embed.set_author(name=user.name)
         embed.set_thumbnail(url=user.display_avatar.url)
         embed.set_footer(text=f"ID: {user.id}")
-
         await ctx.send(embed=embed)
 
     @commands.guild_only()
     @commands.command(aliases=["si"])
-    async def serverinfo(self, ctx, *, guild_id: int = None):
+    async def serverinfo(self, ctx: commands.Context, *, guild_id: int = None):
         """Shows info about the current server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
@@ -100,13 +100,16 @@ class Info(commands.Cog):
             f"{boosts_information or ''}"
         )
         embed.set_author(name=guild.name)
-        embed.set_thumbnail(url=guild.icon.url)
-        embed.set_footer(text=f"ID: {guild.id}")
 
+        if guild.icon is not None:
+            embed.set_thumbnail(url=guild.icon.url)
+
+        embed.set_footer(text=f"ID: {guild.id}")
         await ctx.send(embed=embed)
 
+    @commands.guild_only()
     @commands.command(aliases=["jl"])
-    async def joinlist(self, ctx, *, guild_id: int = None):
+    async def joinlist(self, ctx: commands.Context, *, guild_id: int = None):
         """Displays the server's join list."""
 
         entries = []
@@ -123,16 +126,17 @@ class Info(commands.Cog):
 
         for index, member in enumerate(join_list):
             joined_at = format_dt(member.joined_at, style="R")
-            entries.append(f"`{index + 1}` - {joined_at} `{member}`\n")
+            entries.append(f"`{index + 1}` - {joined_at} {member.mention}\n")
 
         menu = menus.MenuPages(
-            EmbedSource(entries, per_page=30),
+            DescriptionSource(entries, title="Server Join List", per_page=30),
             clear_reactions_after=True,
         )
         await menu.start(ctx)
 
+    @commands.guild_only()
     @commands.command(aliases=["bl"])
-    async def banlogs(self, ctx):
+    async def banlogs(self, ctx: commands.Context):
         """Grabs the 50 most recent bans from the audit log."""
 
         entries = []
@@ -146,13 +150,14 @@ class Info(commands.Cog):
             )
 
         menu = menus.MenuPages(
-            EmbedSource(entries, per_page=5),
+            DescriptionSource(entries, title="Ban Log List", per_page=5),
             clear_reactions_after=True,
         )
         await menu.start(ctx)
 
+    @commands.guild_only()
     @commands.command()
-    async def roles(self, ctx, *, guild_id: int = None):
+    async def roles(self, ctx: commands.Context, *, guild_id: int = None):
         """Lists roles in the server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
@@ -166,14 +171,13 @@ class Info(commands.Cog):
         role_name_list = [f"{role.mention}" for role in guild.roles]
         # role_name_list.pop(0)  # @everyone
         role_name_list.reverse()
-
         embed = discord.Embed(color=self.bot.embed_color)
         embed.description = ", ".join(role_name_list)
-
         await ctx.send(embed=embed)
 
+    @commands.guild_only()
     @commands.command(aliases=["e"])
-    async def emojis(self, ctx, *, guild_id: int = None):
+    async def emojis(self, ctx: commands.Context, *, guild_id: int = None):
         """Shows you about the emoji info int the server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
@@ -188,239 +192,8 @@ class Info(commands.Cog):
             return await ctx.send("Custom emoji not found.")
 
         entries = [f"{emoji} - `{emoji}`\n" for emoji in guild.emojis]
-
         menu = menus.MenuPages(
-            EmbedSource(entries, per_page=10),
+            DescriptionSource(entries, title="Emoji List", per_page=10),
             clear_reactions_after=True,
         )
         await menu.start(ctx)
-
-    # @commands.command()
-    async def fetch(
-        self,
-        ctx,
-        channel: discord.TextChannel = None,
-        author: discord.Member = None,
-    ):
-        """Brings a message from the past (1 year ago)."""
-
-        if channel is None:
-            channel = ctx
-        else:
-            perms = channel.permissions_for(ctx.author)
-
-            if not perms.view_channel:
-                return await ctx.send("You are not perm to view this channel!")
-
-        messages = [
-            message
-            async for message in channel.history(
-                before=datetime.today() - timedelta(days=365)
-            )
-        ]
-
-        if author is not None:
-            messages = [m for m in messages if author.id == m.author.id]
-
-        if not len(messages):
-            return await ctx.send("Message not found!")
-
-        message = random.choice(messages)
-        author = message.author
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=author, icon_url=author.display_avatar.url)
-        embed.description = (
-            f"{message.content}\n\nOriginal: [Jump!]({message.jump_url})\n"
-            f"Created: {ctx.format_date(message.created_at)}"
-        )
-
-        await ctx.send(embed=embed)
-
-    async def send_profile_message(self, author):
-        channel = self.bot.get_channel(
-            self.bot.config.getint("channels", "profile_channel_id")
-        )
-        command = self.bot.get_command("profile")
-        await command.__call__(channel, member=author)
-
-    @commands.group(invoke_without_command=True)
-    async def profile(self, ctx, member: discord.Member = None):
-        """Shows info a user profile."""
-
-        if member is None:
-            member = ctx.author
-
-        data = await models.Profile.values_list(pk=member.id)
-
-        if not len(data):
-            return await ctx.send("Profile not found!")
-
-        screenshot_url = data[-1]
-        data = data[1:-1]
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=member, icon_url=member.display_avatar.url)
-        embed.description = "\n".join(
-            [f"{lists.profile_titles[i]}: `{j}`" for i, j in enumerate(data)]
-        )
-        # embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_image(url=screenshot_url if screenshot_url != "?" else None)
-
-        await ctx.send(embed=embed)
-
-    @profile.command(name="setup")
-    async def profile_setup(self, ctx):
-        """Setup a user profile."""
-
-        answers = {}
-        fields = [
-            "user_id",
-            "operation_system",
-            "desktop_environment",
-            "desktop_themes",
-            "web_browser",
-            "code_editors",
-            "terminal_software",
-            "shell_software",
-            "screenshot_url",
-        ]
-        author = ctx.message.author
-        answers[fields[0]] = author.id
-
-        p = await models.Profile.values_list(pk=author.id)
-
-        if len(p):
-            return await ctx.send("You have a profile, please be edit.")
-
-        def check(m):
-            try:
-                return (m.channel.id == ctx.channel.id) and (m.author.id == author.id)
-            except:
-                return False
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_footer(text="'s' for skip question, 'c' for cancel setup")
-        question_embed = await ctx.send(embed=embed)
-
-        for i, question in enumerate(lists.profile_questions):
-            embed.description = f"{author.mention} {question}"
-            await question_embed.edit(embed=embed)
-            answer = await self.bot.wait_for("message", check=check)
-
-            if answer.content.lower() == "s":
-                answers[fields[i + 1]] = "?"
-            elif answer.content.lower() == "c":
-                return await question_embed.delete()
-            else:
-                if len(lists.profile_questions) - 1 == i:
-                    if not functions.is_url_image(answer.content):
-                        await ctx.send(
-                            "Invalid link, skiping question...",
-                            delete_after=3.0,
-                        )
-                        answers[fields[i + 1]] = "?"
-                        continue
-
-                answers[fields[i + 1]] = answer.content
-            await answer.delete()
-
-        await models.Profile.create(**answers)
-
-        embed.description = f"{author.mention} setup complete!"
-        embed.set_footer(text=None)
-        await question_embed.edit(embed=embed)
-
-        await self.send_profile_message(author)
-
-    @profile.group(name="remove")
-    @commands.has_permissions(manage_messages=True)
-    async def profile_remove(self, ctx, member: discord.Member):
-        """Remove a user profile."""
-
-        await models.Profile.get(pk=member.id).delete()
-        await ctx.send(f"`{member}`s profile has been removed.")
-
-    @profile.group(name="edit")
-    async def profile_edit(self, ctx):
-        """Edit a user profile."""
-
-        commands = ctx.command.commands
-        sub_commands = ", ".join([f"`{c.aliases[0]}`" for c in commands])
-
-        embed = discord.Embed(color=self.bot.embed_color)
-        embed.description = f"Sub commands for profile edit:\n{sub_commands}"
-
-        if not ctx.invoked_subcommand:
-            await ctx.send(embed=embed)
-
-    @profile_edit.command(aliases=["os"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def operation_system(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            operation_system=new_profile_item
-        )
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["de"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def desktop_environment(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            desktop_environment=new_profile_item
-        )
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["themes"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def desktop_themes(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            desktop_themes=new_profile_item
-        )
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["browser"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def web_browser(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(web_browser=new_profile_item)
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["editors"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def code_editors(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(code_editors=new_profile_item)
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["terminal"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def terminal_software(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            terminal_software=new_profile_item
-        )
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["shell"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def shell_software(self, ctx, *, new_profile_item):
-        await models.Profile.get(pk=ctx.author.id).update(
-            shell_software=new_profile_item
-        )
-        await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)
-
-    @profile_edit.command(aliases=["ss"])
-    @commands.cooldown(1, 120, commands.BucketType.user)
-    async def screenshot_url(self, ctx, new_profile_item):
-        if not functions.is_url_image(new_profile_item):
-            return await ctx.message.add_reaction("\N{DOUBLE EXCLAMATION MARK}")
-
-        await models.Profile.get(pk=ctx.author.id).update(
-            screenshot_url=new_profile_item
-        )
-        await ctx.message.add_reaction("N{WHITE HEAVY CHECK MARK}")
-        await self.send_profile_message(ctx.author)

@@ -3,10 +3,9 @@
 import os
 import asyncio
 import logging
-import configparser
 import logging.handlers
-from typing import List
 
+import yaml
 import discord
 from discord.ext import commands
 from aiohttp import ClientSession
@@ -18,18 +17,16 @@ class Bot(commands.Bot):
     def __init__(
         self,
         *args,
-        config: configparser.ConfigParser,
-        embed_color: int,
+        config,
         web_client: ClientSession,
-        initial_extensions: List[str],
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
         self.config = config
-        self.embed_color = embed_color
         self.web_client = web_client
-        self.initial_extensions = initial_extensions
+        self.embed_color = config["general"]["embed_color"]
+        self.initial_extensions = config["general"]["initial_extensions"]
 
     async def setup_hook(self):
         for extension in self.initial_extensions:
@@ -56,7 +53,6 @@ async def main():
 
     logger = logging.getLogger("discord")
     logger.setLevel(logging.INFO)
-
     handler = logging.handlers.RotatingFileHandler(
         backupCount=5,
         encoding="utf-8",
@@ -69,36 +65,19 @@ async def main():
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    async with ClientSession() as our_client:
-        embed_color = 0x2F3136
-        initial_extensions = [
-            "jishaku",
-            "cogs.api",
-            "cogs.events",
-            "cogs.info",
-            "cogs.owner",
-            "cogs.reactionrole",
-            "cogs.utility",
-        ]
-        intents = discord.Intents.all()
-
-        config = configparser.ConfigParser()
-        config.read("config.ini")
-
-        token = config.get("bot", "token")
-        command_prefix = config.get("bot", "command_prefix").split(",")
-        owner_ids = set([int(id) for id in config.get("bot", "owner_ids").split(",")])
+    async with ClientSession() as web_client:
+        with open("config.yml", "r", encoding="UTF-8") as file:
+            config = yaml.safe_load(file)
 
         async with Bot(
             config=config,
-            embed_color=embed_color,
-            web_client=our_client,
-            initial_extensions=initial_extensions,
-            intents=intents,
-            command_prefix=command_prefix,
-            owner_ids=owner_ids,
+            web_client=web_client,
+            intents=discord.Intents.all(),
+            command_prefix=config["general"]["prefixs"],
+            owner_ids=set([id for id in config["general"]["owner_ids"]]),
         ) as bot:
-            await bot.start(token=token)
+            await bot.start(token=config["general"]["token"])
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -50,8 +50,7 @@ class HelpCommand(commands.HelpCommand):
 
             fields.append(f"{extension.qualified_name}: {', '.join(commands)}")
 
-        embed = discord.Embed(color=ctx.bot.embed_color)
-        embed.set_author(name="Help Page")
+        embed = discord.Embed(color=ctx.bot.embed_color, title="Help Page")
         embed.description = (
             f"Use `{ctx.prefix}help [command=None]` for more info on a command.\n"
             "`<argument>`: This means the argument is required.\n"
@@ -140,18 +139,17 @@ class Utility(commands.Cog):
         self.bot.help_command = self._original_help_command
 
     @commands.command(aliases=["u"])
-    async def uptime(self, ctx):
+    async def uptime(self, ctx: commands.Context):
         """Tells you how long the bot has been up for."""
 
         delta_uptime = datetime.utcnow() - self.bot.launch_time
         hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
         minutes, seconds = divmod(remainder, 60)
         days, hours = divmod(hours, 24)
-
         await ctx.send(f"Uptime: `{days}`d `{hours}`h `{minutes}`m `{seconds}`s")
 
     @commands.command(aliases=["p"])
-    async def ping(self, ctx, member: discord.Member = None):
+    async def ping(self, ctx: commands.Context, member: discord.Member = None):
         """Used to test bot's response time."""
 
         if member is not None:
@@ -167,13 +165,16 @@ class Utility(commands.Cog):
         before = time.monotonic()
         message = await ctx.send("Pinging...")
         ping = (time.monotonic() - before) * 1000
-
         await message.edit(content="Pong: `{}` ms".format(round(ping, 2)))
 
-    async def say_permissions(self, ctx, member, channel):
+    async def say_permissions(
+        self,
+        ctx: commands.Context,
+        member: discord.Member,
+        channel: discord.TextChannel,
+    ):
         allowed, denied = [], []
         permissions = channel.permissions_for(member)
-
         embed = discord.Embed(colour=self.bot.embed_color)
         embed.set_author(name=member)
 
@@ -189,14 +190,13 @@ class Utility(commands.Cog):
             ", ".join(allowed), ", ".join(denied)
         )
         embed.set_footer(text="ID: {}".format(member.id))
-
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
     async def perms(
         self,
-        ctx,
+        ctx: commands.Context,
         member: discord.Member = None,
         channel: discord.TextChannel = None,
     ):
@@ -211,16 +211,17 @@ class Utility(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def botperms(self, ctx, *, channel: discord.TextChannel = None):
+    async def botperms(
+        self, ctx: commands.Context, *, channel: discord.TextChannel = None
+    ):
         """Shows the bot's permissions in a specific channel."""
 
         channel = channel or ctx.channel
         member = ctx.guild.me
-
         await self.say_permissions(ctx, member, channel)
 
     @commands.command()
-    async def source(self, ctx, *, command=None):
+    async def source(self, ctx: commands.Context, *, command: str = None):
         """Displays my full source code or for a specific command."""
 
         branch = "main"
@@ -252,11 +253,10 @@ class Utility(commands.Cog):
             firstlineno,
             firstlineno + len(lines) - 1,
         )
-
         await ctx.send(final_url)
 
     @commands.command()
-    async def choose(self, ctx, *choices: commands.clean_content):
+    async def choose(self, ctx: commands.Context, *choices: commands.clean_content):
         """Chooses between multiple choices."""
 
         if len(choices) < 2:
@@ -264,17 +264,15 @@ class Utility(commands.Cog):
 
         await ctx.send(random.choice(choices))
 
-    async def get_last_commits(self, ctx, per_page=3):
+    async def get_last_commits(self, ctx: commands.Context, per_page=3):
         commits = []
         repo = "yazilimcilarinmolayeri/ymybot-rw"
         url = "https://api.github.com/repos/{}/commits?per_page={}".format(
             repo, per_page
         )
 
-        async with self.bot.web_client.get(url) as resp:
-            if resp.status != 200:
-                return await ctx.send("Bağlantı hatası!")
-            data = await resp.json()
+        async with self.bot.web_client.get(url) as r:
+            data = await r.json()
 
         for commit in data:
             date = arrow.get(commit["commit"]["committer"]["date"])
@@ -287,10 +285,19 @@ class Utility(commands.Cog):
                 }
             )
 
-        return commits
+        return "\n".join(
+            [
+                "- [{}]({}) ({})".format(
+                    c["message"],
+                    c["html_url"],
+                    c["date"],
+                )
+                for c in commits
+            ]
+        )
 
     @commands.command(aliases=["info"])
-    async def about(self, ctx):
+    async def about(self, ctx: commands.Context):
         """Tells you information about the bot itself."""
 
         guilds = 0
@@ -316,14 +323,16 @@ class Utility(commands.Cog):
         memory_usage = self.process.memory_full_info().uss / 1024**2
         commits = await self.get_last_commits(ctx)
 
-        embed = discord.Embed(color=self.bot.embed_color)
+        embed = discord.Embed(color=self.bot.embed_color, title=self.bot.user.name)
         embed.description = (
             "{}\n\n"
             "Total guild(s): `{}`\nTotal channel(s): `{}`\n"
             "Text channel: `{}` Voice channel: `{}`\n"
             "Total member(s): `{}` Unique: `{}`\n\n"
-            "**Server States**\nCPU: `{} %` Memory: `{} MiB`\n"
-            "Platform: `{}`\nLang: `Python {}` Lib: `discord.py {}`\n\n"
+            "**Server States**\n"
+            "Language: `Python {}`\nLibrary: `discord.py {}`\n"
+            "CPU usage: `{}%` Memory usage: `{} MiB`\n"
+            "Platform: `{}`\n\n"
             "**Last Changes**\n{}".format(
                 self.bot.description,
                 guilds,
@@ -332,24 +341,13 @@ class Utility(commands.Cog):
                 voice,
                 total_members,
                 total_unique,
-                round(cpu_usage, 1),
-                round(memory_usage, 1),
-                "Operation System",
                 platform.python_version(),
                 discord.__version__,
-                "\n".join(
-                    [
-                        "- [{}]({}) ({})".format(
-                            c["message"],
-                            c["html_url"],
-                            c["date"],
-                        )
-                        for c in commits
-                    ]
-                ),
+                round(cpu_usage, 1),
+                round(memory_usage, 1),
+                platform.freedesktop_os_release()["PRETTY_NAME"],
+                commits,
             )
         )
-        embed.set_author(name=self.bot.user.name)
         embed.set_footer(text=f"ID: {self.bot.user.id}")
-
         await ctx.send(embed=embed)

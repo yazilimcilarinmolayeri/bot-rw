@@ -3,19 +3,21 @@ from discord.ext import commands, menus
 from tortoise import exceptions as tortoise_exceptions
 
 from utils import models
-from utils.paginator import PageSource
+from utils.paginator import DescriptionSource
 
 
 async def setup(bot):
-    await bot.add_cog(ReactionRole(bot))
+    await bot.add_cog(Moderation(bot))
 
 
-class ReactionRole(commands.Cog):
+class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.MAX_ROLE = bot.config.getint("reactionrole", "max_role")
+        self.MAX_ROLE = bot.config["reactionrole"]["max_role"]
 
-    async def _clear_reaction(self, payload, member: discord.Member):
+    async def _clear_reaction(
+        self, payload: discord.RawReactionActionEvent, member: discord.Member
+    ):
         channel = self.bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         await message.remove_reaction(member=member, emoji=payload.emoji)
@@ -29,7 +31,9 @@ class ReactionRole(commands.Cog):
             channel = self.bot.get_channel(channel_id)
             await channel.send(content, delete_after=3.0)
 
-    async def _add_or_remove_role(self, payload, bindings: list):
+    async def _add_or_remove_role(
+        self, payload: discord.RawReactionActionEvent, bindings: list
+    ):
         guild = self.bot.get_guild(payload.guild_id)
         member = await guild.fetch_member(payload.user_id)
         role = discord.utils.get(
@@ -66,7 +70,7 @@ class ReactionRole(commands.Cog):
             )
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         try:
             template = await models.ReactionRoleTemplate.get(
                 guild_id=payload.guild_id,
@@ -79,29 +83,30 @@ class ReactionRole(commands.Cog):
         if template.status:
             await self._add_or_remove_role(payload, template.bindings)
 
-    @commands.command()
+    @commands.guild_only()
+    @commands.command(aliases=["t"])
     @commands.has_permissions(manage_roles=True)
-    async def templates(self, ctx):
-        """Shows the list of templates on the server."""
+    async def templates(self, ctx: commands.Context):
+        """Shows the list of reaction role templates on the server."""
 
-        await self.bot.get_command("template list").__call__(ctx)
+        await self.bot.get_command("reactionrole list").__call__(ctx)
 
-    @commands.group(invoke_without_command=True, aliases=["t"])
+    @commands.group(invoke_without_command=True, aliases=["rr"])
     @commands.has_permissions(manage_roles=True)
-    async def template(self, ctx):
+    async def reactionrole(self, ctx: commands.Context):
         """Manage the reaction role templates on the server."""
 
         pass
 
-    @template.command(name="new", aliases=["n"])
-    async def template_new(self, ctx):
+    @reactionrole.command(name="new", aliases=["n"])
+    async def reactionrole_new(self, ctx: commands.Context):
         """Create a new reaction role template."""
 
         template = await models.ReactionRoleTemplate.create(guild_id=ctx.guild.id)
         await ctx.send(f"New template has created. ID: `{template.pk}`")
 
-    @template.command(name="list", aliases=["l"])
-    async def template_list(self, ctx):
+    @reactionrole.command(name="list", aliases=["l"])
+    async def reactionrole_list(self, ctx: commands.Context):
         """Shows the list of templates on the server."""
 
         entries = []
@@ -127,12 +132,13 @@ class ReactionRole(commands.Cog):
             )
 
         menu = menus.MenuPages(
-            PageSource(entries, per_page=1), clear_reactions_after=True
+            DescriptionSource(entries, title="ReactionRole Template", per_page=1),
+            clear_reactions_after=True,
         )
         await menu.start(ctx)
 
-    @template.command(name="status")
-    async def template_status(self, ctx, id: str):
+    @reactionrole.command(name="status")
+    async def reactionrole_status(self, ctx: commands.Context, id: str):
         """Change a template status. True is active or False is deactive."""
 
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
@@ -151,7 +157,9 @@ class ReactionRole(commands.Cog):
 
         embed.description = "\n".join(description)
 
-    async def _update_embed(self, ctx, template: str, title_or_color: bool = False):
+    async def _update_embed(
+        self, ctx: commands.Context, template, title_or_color: bool = False
+    ):
         embed = discord.Embed()
         channel = self.bot.get_channel(template.channel_id)
         template_message = await channel.fetch_message(template.message_id)
@@ -165,8 +173,8 @@ class ReactionRole(commands.Cog):
                 for emoji in template.bindings.keys():
                     await template_message.add_reaction(emoji)
 
-    @template.command(name="title")
-    async def template_title(self, ctx, id: str, *, title: str):
+    @reactionrole.command(name="title")
+    async def reactionrole_title(self, ctx: commands.Context, id: str, *, title: str):
         """Template title update."""
 
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
@@ -178,8 +186,8 @@ class ReactionRole(commands.Cog):
         await template.save()
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template.command(name="color")
-    async def template_color(self, ctx, id: str, color: str):
+    @reactionrole.command(name="color")
+    async def reactionrole_color(self, ctx: commands.Context, id: str, color: str):
         """Template color update. It accepts in ff00ff format."""
 
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
@@ -191,8 +199,10 @@ class ReactionRole(commands.Cog):
         await template.save()
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template.command(name="add", aliases=["a"])
-    async def template_add(self, ctx, id: str, emoji: str, role: discord.Role):
+    @reactionrole.command(name="add", aliases=["a"])
+    async def reactionrole_add(
+        self, ctx: commands.Context, id: str, emoji: str, role: discord.Role
+    ):
         """Add reaction role binding to template."""
 
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
@@ -208,9 +218,9 @@ class ReactionRole(commands.Cog):
 
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template.command(name="remove", aliases=["r"])
+    @reactionrole.command(name="remove", aliases=["r"])
     @commands.has_permissions(manage_messages=True)
-    async def template_remove(self, ctx, id: str, emoji: str):
+    async def reactionrole_remove(self, ctx: commands.Context, id: str, emoji: str):
         """Remove reaction role binding to template."""
 
         template = await models.ReactionRoleTemplate.get(pk=id, guild_id=ctx.guild.id)
@@ -227,8 +237,8 @@ class ReactionRole(commands.Cog):
 
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template.command(name="show")
-    async def template_show(self, ctx, id: str):
+    @reactionrole.command(name="show")
+    async def reactionrole_show(self, ctx: commands.Context, id: str):
         """Show reaction role template message for test."""
 
         embed = discord.Embed()
@@ -236,8 +246,10 @@ class ReactionRole(commands.Cog):
         await self._generate_embed(ctx, embed, template)
         await ctx.send(embed=embed)
 
-    @template.group(name="send", invoke_without_command=True)
-    async def template_send(self, ctx, id: str, channel: discord.TextChannel):
+    @reactionrole.group(name="send", invoke_without_command=True)
+    async def reactionrole_send(
+        self, ctx: commands.Context, id: str, channel: discord.TextChannel
+    ):
         """Send reaction role template message to channel."""
 
         embed = discord.Embed()
@@ -254,8 +266,10 @@ class ReactionRole(commands.Cog):
 
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template_send.command(name="all")
-    async def template_send_all(self, ctx, channel: discord.TextChannel):
+    @reactionrole_send.command(name="all")
+    async def reactionrole_send_all(
+        self, ctx: commands.Context, channel: discord.TextChannel
+    ):
         """Send all reaction role templates to channel."""
 
         embed = discord.Embed()
@@ -274,8 +288,8 @@ class ReactionRole(commands.Cog):
 
         await ctx.message.add_reaction("\N{WHITE HEAVY CHECK MARK}")
 
-    @template.command(name="kill")
-    async def template_kill(self, ctx, id: str):
+    @reactionrole.command(name="kill")
+    async def reactionrole_kill(self, ctx: commands.Context, id: str):
         """Kill template on the server and database."""
 
         await models.ReactionRoleTemplate.get(pk=id).delete()

@@ -32,13 +32,13 @@ class API(commands.Cog):
         self.xkcd_api_base = "https://xkcd.com"
 
     @commands.command(aliases=["sscan"])
-    async def socialscan(self, ctx, account):
+    async def socialscan(self, ctx: commands.Context, account: str):
         """Querying username and email usage on online platforms."""
 
         async with ctx.typing():
             results = await execute_queries([account], self.socialscan_platforms)
 
-        embed = discord.Embed(color=self.bot.embed_color)
+        embed = discord.Embed(color=self.bot.embed_color, title="SocialScan Result")
         embed.description = "\n\n".join(
             [
                 f"**{r.query}** on **{r.platform}**: {r.message}\n"
@@ -49,7 +49,7 @@ class API(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["ss"])
-    async def screenshot(self, ctx, website):
+    async def screenshot(self, ctx: commands.Context, website: str):
         """Take a website screenshot."""
 
         website = website.replace("<", "").replace(">", "")
@@ -58,13 +58,13 @@ class API(commands.Cog):
         if not website.startswith("http"):
             return await ctx.send("Not a valid website. Use http or https.")
 
-        embed = discord.Embed(color=self.bot.embed_color)
+        embed = discord.Embed(color=self.bot.embed_color, title="Website Screenshot")
         embed.description = f"Source: `{website}`\nInvoker: {ctx.author.mention}"
         embed.set_image(url=f"{self.ss_api_base}/{website}")
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def quake(self, ctx, last: int = 1):
+    async def quake(self, ctx: commands.Context, last: int = 1):
         """Show quake information from the Kandilli Observatory."""
 
         embeds = []
@@ -76,11 +76,13 @@ class API(commands.Cog):
                 ssl=True,
                 headers={"User-Agent": "bot-rw"},
                 params={"last": max_request if last > max_request else last},
-            ) as resp:
-                response = await resp.json()
+            ) as r:
+                response = await r.json()
 
         for data in response:
-            embed = discord.Embed(color=self.bot.embed_color)
+            embed = discord.Embed(
+                color=self.bot.embed_color, title="Kandilli Quake Info"
+            )
             embed.description = (
                 f"Latitude: `{data['Latitude'].split(';')[0]}`\n"
                 f"Longitude: `{data['Longitude'].split(';')[0]}`\n"
@@ -88,27 +90,27 @@ class API(commands.Cog):
                 f"Magnitude - Depth: `{data['Magnitude']} - {data['Depth']} Km`\n"
                 f"Datetime: `{data['Time']}`"
             ).replace("&deg", "°")
-            embed.set_thumbnail(url=data["MapImage"])
+            embed.set_image(url=data["MapImage"])
             embeds.append(embed)
 
         menu = menus.MenuPages(
             timeout=30,
             clear_reactions_after=True,
-            source=EmbedSource(data=embeds),
+            source=EmbedSource(embeds, per_page=1),
         )
         await menu.start(ctx)
 
     @commands.command()
-    async def pypi(self, ctx, package):
+    async def pypi(self, ctx: commands.Context, package: str):
         """Show PyPi package informations."""
 
         async with ctx.typing():
             async with self.bot.web_client.get(
                 f"{self.pypi_api_base}/{package}/json"
-            ) as resp:
-                if resp.status != 200:
+            ) as r:
+                if r.status != 200:
                     return await ctx.send("Package not found.")
-                response = await resp.json()
+                response = await r.json()
                 data = response["info"]
 
         try:
@@ -132,7 +134,7 @@ class API(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    async def wiki(self, ctx, *, search):
+    async def wiki(self, ctx: commands.Context, *, search: str):
         """Search the Turkish Wikipedia."""
 
         embeds = []
@@ -150,28 +152,30 @@ class API(commands.Cog):
         menu = menus.MenuPages(
             timeout=30,
             clear_reactions_after=True,
-            source=EmbedSource(embeds),
+            source=EmbedSource(embeds, per_page=1),
         )
         await menu.start(ctx)
 
     @commands.command()
-    async def xkcd(self, ctx, number=None):
+    async def xkcd(self, ctx: commands.Context, number: int = None):
         """A webcomic of romance, sarcasm, math, and language."""
 
         async with ctx.typing():
-            async with self.bot.web_client.get(f"{self.api_base}/info.0.json") as resp:
-                data = await resp.json()
+            async with self.bot.web_client.get(
+                f"{self.xkcd_api_base}/info.0.json"
+            ) as r:
+                data = await r.json()
 
         if number is None:
             number = random.randint(1, data["num"])
 
         async with ctx.typing():
             async with self.bot.web_client.get(
-                f"{self.api_base}/{number}/info.0.json"
-            ) as resp:
-                if resp.status != 200:
+                f"{self.xkcd_api_base}/{number}/info.0.json"
+            ) as r:
+                if r.status != 200:
                     return await ctx.send("Invalid number.")
-                data = await resp.json()
+                data = await r.json()
 
         embed = discord.Embed(color=self.bot.embed_color)
         embed.title = data["title"]

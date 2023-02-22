@@ -1,0 +1,18 @@
+general:
+  prefixs: ["!", "?"]
+  embed_color: 0x2F3136
+  owner_ids: []
+  initial_extensions: [
+    "jishaku", "cogs.api", "cogs.events", "cogs.info",
+    "cogs.level", "cogs.moderation", "cogs.owner", "cogs.utility",
+  ]
+  token: ""
+
+log:
+  error_channel_id: 
+  
+reactionrole:
+  max_role: 15
+
+level:
+  category_id: 
