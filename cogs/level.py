@@ -1,7 +1,8 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 
-from utils import models, constant
+from utils import constant, models
+from utils.paginator import DescriptionSource
 
 
 async def setup(bot):
@@ -18,9 +19,7 @@ class Level(commands.Cog):
         guild_id = message.guild.id
         member_id = message.author.id
 
-        stat = await models.LevelStat.get_or_none(
-            guild_id=guild_id, member_id=member_id
-        )
+        stat = await models.LevelStat.get_or_none(guild_id=guild_id, member_id=member_id)
 
         if stat is None:
             return await models.LevelStat.create(
@@ -112,7 +111,21 @@ class Level(commands.Cog):
     async def leaderboard(self, ctx: commands.Context):
         """Show the guild leaderboard."""
 
-        pass
+        entries = []
+        stat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by("-level")
+
+        for i, s in enumerate(stat):
+            member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
+            entries.append(
+                f"`{i + 1}` - {member.mention} "
+                f"Level: `{s.level}` XP: `{s.xp:,}`\n".replace(",", ".")
+            )
+
+        menu = menus.MenuPages(
+            DescriptionSource(entries, title="Leadboard", per_page=30),
+            clear_reactions_after=True,
+        )
+        await menu.start(ctx)
 
     @commands.is_owner()
     @commands.command(hidden=True)
