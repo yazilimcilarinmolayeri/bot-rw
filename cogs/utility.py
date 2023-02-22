@@ -10,7 +10,7 @@ import psutil
 import discord
 from discord.ext import commands
 
-from utils import lists
+from utils import constant
 
 
 async def setup(bot):
@@ -157,7 +157,7 @@ class Utility(commands.Cog):
                 "\n".join(
                     [
                         line.replace("you", member.mention)
-                        for line in lists.never_gonna_give_you_up_lyrics
+                        for line in constant.never_gonna_give_you_up_lyrics
                     ]
                 )
             )
@@ -232,16 +232,14 @@ class Utility(commands.Cog):
 
         if command == "help":
             src = type(self.bot.help_command)
-            module = src.__module__
             filename = inspect.getsourcefile(src)
         else:
             obj = self.bot.get_command(command.replace(".", " "))
 
             if obj is None:
-                return await ctx.send("Komut bulunamadı!")
+                return await ctx.send("Command not found!")
 
             src = obj.callback.__code__
-            module = obj.callback.__module__
             filename = src.co_filename
 
         lines, firstlineno = inspect.getsourcelines(src)

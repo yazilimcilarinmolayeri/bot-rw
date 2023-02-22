@@ -1,5 +1,12 @@
 # bot-rw
-![](https://img.shields.io/badge/python-3.8%2B-blue) ![](https://img.shields.io/pypi/v/discord.py?label=discord.py) ![](https://img.shields.io/pypi/v/jishaku?label=jishaku) ![](https://img.shields.io/badge/code%20style-black-black)
+
+<img src="https://github.com/yazilimcilarinmolayeri/artworks/blob/master/ymy_logo_256.png" width="110" align="right"/>
+
+![](https://img.shields.io/discord/418887354699350028?label=YMY)
+![](https://img.shields.io/badge/python-3.8%2B-blue)
+![](https://img.shields.io/pypi/v/discord.py?label=discord.py)
+![](https://img.shields.io/pypi/v/jishaku?label=jishaku)
+![](https://img.shields.io/badge/code%20style-black-black)
 
 Customizable and multifunctional rewritten Discord bot for YMY. Invite: https://discord.gg/KazHgb2
 
@@ -16,7 +23,7 @@ pip3 install --user -r requirements.txt --upgrade
 
 3. Edit a config.ini file.
 ```shell
-cp config.ini.sample config.ini
+cp config.yaml.sample config.yaml
 ```
 
 5. Run the bot.

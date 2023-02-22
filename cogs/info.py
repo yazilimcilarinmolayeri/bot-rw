@@ -4,7 +4,7 @@ import discord
 from discord.utils import format_dt
 from discord.ext import commands, menus
 
-from utils import lists
+from utils import constant
 from utils.paginator import DescriptionSource
 
 
@@ -43,11 +43,11 @@ class Info(commands.Cog):
         )
 
         if user.guild_permissions.administrator:
-            badges.append(lists.Badge.administrator)
+            badges.append(constant.Badge.administrator)
         if user.guild_permissions.manage_messages:
-            badges.append(lists.Badge.moderator)
+            badges.append(constant.Badge.moderator)
         if join_position <= round(ctx.guild.member_count / 3):  # TODO: ?
-            badges.append(lists.Badge.olduser)
+            badges.append(constant.Badge.olduser)
 
         embed = discord.Embed(color=self.bot.embed_color)
         embed.description = (
