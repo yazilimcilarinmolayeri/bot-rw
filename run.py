@@ -66,7 +66,7 @@ async def main():
     logger.addHandler(handler)
 
     async with ClientSession() as web_client:
-        with open("config.yml", "r", encoding="UTF-8") as file:
+        with open("config.yaml", "r", encoding="UTF-8") as file:
             config = yaml.safe_load(file)
 
         async with Bot(
