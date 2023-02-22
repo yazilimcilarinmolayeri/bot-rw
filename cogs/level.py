@@ -100,8 +100,7 @@ class Level(commands.Cog):
         embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member.name, icon_url=member.display_avatar.url)
         embed.description = (
-            f"Level: `{stat.level}` Position: `?` "
-            f"XP: `{stat.xp:,}`/`{next_level_xp:,}`\n"
+            f"LVL: `{stat.level}` XP: `{stat.xp:,}`/`{next_level_xp:,}`\n"
             f"```[{bar}] {percentage}%```".replace(",", ".")
         )
         await ctx.send(embed=embed)
@@ -115,10 +114,11 @@ class Level(commands.Cog):
         stat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by("-level")
 
         for i, s in enumerate(stat):
-            member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
+            member = ctx.guild.get_member(s.member_id)
+            mention = f"<@{s.member_id}>" if member is None else member.mention
             entries.append(
-                f"`{i + 1}` - {member.mention if member is not None else '`?`'} "
-                f"Level: `{s.level}` XP: `{s.xp:,}`\n".replace(",", ".")
+                f"`{i + 1}` - {mention} "
+                f"`{s.level} LVL | {s.xp:,} XP`\n".replace(",", ".")
             )
 
         menu = menus.MenuPages(
@@ -135,7 +135,7 @@ class Level(commands.Cog):
         category = ctx.guild.get_channel(category_id)
 
         for channel in category.channels:
-            if channel is discord.ForumChannel or channel is discord.VoiceChannel:
+            if not isinstance(channel, discord.TextChannel):
                 continue
 
             log_message = await ctx.send(
@@ -143,7 +143,9 @@ class Level(commands.Cog):
             )
 
             async for message in channel.history(oldest_first=True, limit=None):
-                if message.author.bot or message.author.discriminator == "0000":
+                if message.author.bot:
+                    continue
+                if message.author.discriminator == "0000":
                     continue
 
                 await self._update_xp(message, amount=self.DEFAULT_AMOUNT)
