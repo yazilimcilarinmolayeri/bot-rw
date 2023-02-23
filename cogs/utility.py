@@ -10,7 +10,7 @@ import psutil
 import discord
 from discord.ext import commands
 
-from utils import constant
+from utils import constant, functions
 
 
 async def setup(bot):
@@ -315,7 +315,7 @@ class Utility(commands.Cog):
             f"Library: `discord.py {discord.__version__}`\n"
             f"CPU usage: `{round(cpu_usage, 1)}%` "
             f"Memory usage: `{round(memory_usage, 1)} MiB`\n"
-            f"Platform: `{platform.freedesktop_os_release()['PRETTY_NAME']}`\n\n"
+            f"Platform: `{functions.os_release()}`\n\n"
             f"**Last Changes**\n{commits}"
         )
         embed.set_footer(text=f"ID: {self.bot.user.id}")
