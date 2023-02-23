@@ -28,6 +28,23 @@ class Owner(commands.Cog):
         command = self.bot.get_command("jsk shell")
         await command.__call__(ctx, argument=codeblock)
 
+    @commands.is_owner()
+    @commands.command()
+    async def restart(self, ctx: commands.Context):
+        """Restart bot deamon service."""
+
+        codeblock: codeblock_converter = "sudo systemctl restart bot-rw.service"
+        command = self.bot.get_command("jsk shell")
+        await command.__call__(ctx, argument=codeblock)
+
+    @commands.is_owner()
+    @commands.command()
+    async def pull(self, ctx: commands.Context):
+        """Run git pull command."""
+
+        command = self.bot.get_command("jsk git pull")
+        await command.__call__(ctx)
+
     @commands.command()
     @commands.is_owner()
     async def do(self, ctx: commands.Context, times: int, *, command: str):
