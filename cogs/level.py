@@ -50,7 +50,7 @@ class Level(commands.Cog):
     async def on_level_up(self, message, new_level):
         await message.channel.send(
             f"{message.author.mention}, has leveled up to level `{new_level}`! "
-            f"{constant.Emoji.aaa}"
+            f"{constant.Emoji.spongebob_dance}"  # https://youtube.com/watch?v=xILQRZ1F1OE
         )
 
     @commands.guild_only()
@@ -83,7 +83,7 @@ class Level(commands.Cog):
         bar = "▓" * filled_length + "░" * (25 - filled_length)
 
         embed = discord.Embed(color=self.bot.embed_color)
-        embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+        embed.set_author(name=member, icon_url=member.display_avatar.url)
         embed.description = (
             f"LVL: `{levelstat.level}` XP: `{levelstat.xp:,}`/`{next_level_xp:,}`\n"
             f"Leadboard position: `{position:,}`/`{len(levelstat_member_ids):,}`\n"

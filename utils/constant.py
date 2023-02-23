@@ -1,6 +1,6 @@
 class Emoji:
-    aaa = "<a:aaa:1078287776304353330>"
     loading = "<a:loading:1077969725230944337>"
+    spongebob_dance = "<a:spongebob_dance:1078333413741842512>"
 
 
 class Badge:
