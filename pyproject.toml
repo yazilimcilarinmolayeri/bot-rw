@@ -1,0 +1,5 @@
+[tool.black]
+preview = true
+line-length = 89
+include = '\.pyi?$'
+target-version = ['py37', 'py38']

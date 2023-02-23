@@ -3,7 +3,6 @@ from io import StringIO
 from datetime import datetime
 
 import discord
-from aiohttp import web
 from discord.ext import commands, menus
 
 from utils import models
@@ -59,9 +58,6 @@ class Events(commands.Cog):
 
         if isinstance(error, commands.errors.BadArgument):
             return await ctx.send(str(error).replace('"', "`"))
-
-        if isinstance(error, web.HTTPClientError):
-            await ctx.send("HTTP Error: {erorr}")
 
         if isinstance(error, commands.CheckFailure):
             return await ctx.message.add_reaction("\N{NO ENTRY SIGN}")

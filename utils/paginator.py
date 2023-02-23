@@ -5,9 +5,7 @@ from discord.ext import menus
 class EmbedSource(menus.ListPageSource):
     async def format_page(self, menu, entry: discord.Embed):
         if self.get_max_pages() > 1:
-            entry.set_footer(
-                text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-            )
+            entry.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
 
         return entry
 
@@ -26,8 +24,6 @@ class DescriptionSource(menus.ListPageSource):
         embed.description = "".join(e for e in entries)
 
         if self.get_max_pages() > 1:
-            embed.set_footer(
-                text=f"Page {menu.current_page + 1}/{self.get_max_pages()}"
-            )
+            embed.set_footer(text=f"Page {menu.current_page + 1}/{self.get_max_pages()}")
 
         return embed

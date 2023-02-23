@@ -161,9 +161,7 @@ class API(commands.Cog):
         """A webcomic of romance, sarcasm, math, and language."""
 
         async with ctx.typing():
-            async with self.bot.web_client.get(
-                f"{self.xkcd_api_base}/info.0.json"
-            ) as r:
+            async with self.bot.web_client.get(f"{self.xkcd_api_base}/info.0.json") as r:
                 data = await r.json()
 
         if number is None:

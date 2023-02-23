@@ -1,4 +1,5 @@
 class Emoji:
+    aaa = "<a:aaa:1078287776304353330>"
     loading = "<a:loading:1077969725230944337>"
 
 

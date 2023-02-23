@@ -14,7 +14,6 @@ async def database_init():
 
 class LevelStat(Model):
     uuid = fields.UUIDField(pk=True)
-    ignore = fields.BooleanField(default=False)
 
     guild_id = fields.IntField()
     member_id = fields.IntField()

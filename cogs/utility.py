@@ -318,7 +318,7 @@ class Utility(commands.Cog):
             f"Total guild(s): `{guilds}`\nTotal channel(s): `{text + voice}`\n"
             f"Text channel: `{text}` Voice channel: `{voice}`\n"
             f"Total member(s): `{total_members}` Unique: `{total_unique}`\n\n"
-            f"**Server States**\n"
+            "**Server States**\n"
             f"Language: `Python {platform.python_version()}`\n"
             f"Library: `discord.py {discord.__version__}`\n"
             f"CPU usage: `{round(cpu_usage, 1)}%` "

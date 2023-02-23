@@ -55,7 +55,7 @@ class Info(commands.Cog):
             f"Profile: {user.mention}\n"
             f"Created: {format_dt(user.created_at)}\n"
             f"Joined: {format_dt(user.joined_at)}\n"
-            f"Server join position: `{join_position}/{ctx.guild.member_count}`"
+            f"Server join position: `{join_position}`/`{ctx.guild.member_count}`"
         )
         embed.set_author(name=user.name)
         embed.set_thumbnail(url=user.display_avatar.url)
@@ -156,8 +156,8 @@ class Info(commands.Cog):
         await menu.start(ctx)
 
     @commands.guild_only()
-    @commands.command()
-    async def roles(self, ctx: commands.Context, *, guild_id: int = None):
+    @commands.command(aliases=["rl"])
+    async def rolelist(self, ctx: commands.Context, *, guild_id: int = None):
         """Lists roles in the server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):
@@ -176,8 +176,8 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.guild_only()
-    @commands.command(aliases=["e"])
-    async def emojis(self, ctx: commands.Context, *, guild_id: int = None):
+    @commands.command(aliases=["el"])
+    async def emojilist(self, ctx: commands.Context, *, guild_id: int = None):
         """Shows you about the emoji info int the server."""
 
         if guild_id is not None and await self.bot.is_owner(ctx.author):

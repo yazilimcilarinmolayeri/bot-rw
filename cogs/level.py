@@ -12,16 +12,12 @@ async def setup(bot):
 class Level(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.DEFAULT_AMOUNT = 10
+        self.AMOUNT = bot.config["level"]["amount"]
         self.CATEGORY_ID = bot.config["level"]["category_id"]
 
-    async def _update_xp(self, message: discord.Message, amount: int):
+    async def _update_xp(self, message: discord.Message, member_id: int, amount: int):
         guild_id = message.guild.id
-        member_id = message.author.id
-
-        stat = await models.LevelStat.get_or_none(
-            guild_id=guild_id, member_id=member_id
-        )
+        stat = await models.LevelStat.get_or_none(guild_id=guild_id, member_id=member_id)
 
         if stat is None:
             return await models.LevelStat.create(
@@ -29,9 +25,6 @@ class Level(commands.Cog):
                 member_id=member_id,
                 xp=amount,
             )
-
-        if stat.ignore:
-            return
 
         new_xp = stat.xp + amount
         new_level = int(new_xp ** (1 / 5))
@@ -49,31 +42,14 @@ class Level(commands.Cog):
             return
 
         if message.channel in message.guild.get_channel(self.CATEGORY_ID).channels:
-            await self._update_xp(message, self.DEFAULT_AMOUNT)
+            await self._update_xp(message, message.author.id, self.AMOUNT)
 
     @commands.Cog.listener()
     async def on_level_up(self, message, level):
         await message.channel.send(
-            f"{message.author.mention}, has leveled up to level `{level}`!"
+            f"{message.author.mention}, has leveled up to level `{level}`! "
+            f"{constant.Emoji.aaa}"
         )
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_permissions(moderate_members=True)
-    async def ignore(self, ctx: commands.Context, member: discord.Member = None):
-        """Ignore a member level system."""
-
-        pass
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_permissions(moderate_members=True)
-    async def delxp(
-        self, ctx: commands.Context, member: discord.Member = None, amount: int = -10
-    ):
-        """Remove a member xp."""
-
-        pass
 
     @commands.guild_only()
     @commands.command(aliases=["level"])
@@ -117,8 +93,9 @@ class Level(commands.Cog):
             member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
             mention = f"<@{s.member_id}>" if member is None else member.mention
             entries.append(
-                f"`{i + 1}` - {mention} "
-                f"LVL: `{s.level}` XP: `{s.xp:,}`\n".replace(",", ".")
+                f"`{i + 1}` - {mention} LVL: `{s.level}` XP: `{s.xp:,}`\n".replace(
+                    ",", "."
+                )
             )
 
         menu = menus.MenuPages(
@@ -148,6 +125,6 @@ class Level(commands.Cog):
                 if message.author.discriminator == "0000":
                     continue
 
-                await self._update_xp(message, amount=self.DEFAULT_AMOUNT)
+                await self._update_xp(message, message.author.id, amount=self.AMOUNT)
             await log_message.edit(content=f"Done {channel.mention}")
         await ctx.send("All done!")
