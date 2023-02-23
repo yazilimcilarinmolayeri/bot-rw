@@ -17,24 +17,26 @@ class Level(commands.Cog):
 
     async def _update_xp(self, message: discord.Message, member_id: int, amount: int):
         guild_id = message.guild.id
-        stat = await models.LevelStat.get_or_none(guild_id=guild_id, member_id=member_id)
+        levelstat = await models.LevelStat.get_or_none(
+            guild_id=guild_id, member_id=member_id
+        )
 
-        if stat is None:
+        if levelstat is None:
             return await models.LevelStat.create(
                 guild_id=guild_id,
                 member_id=member_id,
                 xp=amount,
             )
 
-        new_xp = stat.xp + amount
+        new_xp = levelstat.xp + amount
         new_level = int(new_xp ** (1 / 5))
 
-        if new_level > stat.level:
+        if new_level > levelstat.level:
             self.bot.dispatch("level_up", message, new_level)
 
-        stat.xp = new_xp
-        stat.level = new_level
-        await stat.save()
+        levelstat.xp = new_xp
+        levelstat.level = new_level
+        await levelstat.save()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -45,9 +47,9 @@ class Level(commands.Cog):
             await self._update_xp(message, message.author.id, self.AMOUNT)
 
     @commands.Cog.listener()
-    async def on_level_up(self, message, level):
+    async def on_level_up(self, message, new_level):
         await message.channel.send(
-            f"{message.author.mention}, has leveled up to level `{level}`! "
+            f"{message.author.mention}, has leveled up to level `{new_level}`! "
             f"{constant.Emoji.aaa}"
         )
 
@@ -57,24 +59,24 @@ class Level(commands.Cog):
         """Show a member rank stats."""
 
         member = member or ctx.author
-        stat = await models.LevelStat.get_or_none(
+        levelstat = await models.LevelStat.get_or_none(
             guild_id=ctx.guild.id, member_id=member.id
         )
 
-        if stat is None:
+        if levelstat is None:
             return await ctx.send("Rank not found!")
 
-        stat_member_ids = (
+        levelstat_member_ids = (
             await models.LevelStat.filter(guild_id=ctx.guild.id)
             .order_by("-level")
             .values("member_id")
         )
-        position = stat_member_ids.index({"member_id": member.id}) + 1
+        position = levelstat_member_ids.index({"member_id": member.id}) + 1
 
-        min_xp = stat.level**5
-        next_level_xp = (stat.level + 1) ** 5
+        min_xp = levelstat.level**5
+        next_level_xp = (levelstat.level + 1) ** 5
         xp_required = next_level_xp - min_xp
-        xp_have = stat.xp - min_xp
+        xp_have = levelstat.xp - min_xp
         percentage = round((xp_have * 100) / xp_required)
 
         filled_length = int(25 * percentage // 100)
@@ -83,8 +85,8 @@ class Level(commands.Cog):
         embed = discord.Embed(color=self.bot.embed_color)
         embed.set_author(name=member.name, icon_url=member.display_avatar.url)
         embed.description = (
-            f"LVL: `{stat.level}` XP: `{stat.xp:,}`/`{next_level_xp:,}`\n"
-            f"Leadboard position: `{position:,}`/`{len(stat_member_ids):,}`\n"
+            f"LVL: `{levelstat.level}` XP: `{levelstat.xp:,}`/`{next_level_xp:,}`\n"
+            f"Leadboard position: `{position:,}`/`{len(levelstat_member_ids):,}`\n"
             f"```[{bar}] {percentage}%```".replace(",", ".")
         )
         await ctx.send(embed=embed)
@@ -95,13 +97,15 @@ class Level(commands.Cog):
         """Show the guild leaderboard."""
 
         entries = []
-        stat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by("-level")
+        levelstat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by(
+            "-level"
+        )
 
-        for i, s in enumerate(stat):
-            member = ctx.guild.get_member(s.member_id)  # Fuck you fetch_user
-            mention = f"<@{s.member_id}>" if member is None else member.mention
+        for i, ls in enumerate(levelstat):
+            member = ctx.guild.get_member(ls.member_id)  # Fuck you fetch_user
+            mention = ctx.mention(ls.member_id) if member is None else member.mention
             entries.append(
-                f"`{i + 1}` - {mention} LVL: `{s.level}` XP: `{s.xp:,}`\n".replace(
+                f"`{i + 1}` - {mention} LVL: `{ls.level}` XP: `{ls.xp:,}`\n".replace(
                     ",", "."
                 )
             )
