@@ -2,4 +2,4 @@
 preview = true
 line-length = 89
 include = '\.pyi?$'
-target-version = ['py37', 'py38']
+target-version = ['py38', 'py39', 'py310']
