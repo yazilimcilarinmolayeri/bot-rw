@@ -64,6 +64,13 @@ class Level(commands.Cog):
         if stat is None:
             return await ctx.send("Rank not found!")
 
+        stat_member_ids = (
+            await models.LevelStat.filter(guild_id=ctx.guild.id)
+            .order_by("-level")
+            .values("member_id")
+        )
+        position = stat_member_ids.index({"member_id": member.id}) + 1
+
         min_xp = stat.level**5
         next_level_xp = (stat.level + 1) ** 5
         xp_required = next_level_xp - min_xp
@@ -77,6 +84,7 @@ class Level(commands.Cog):
         embed.set_author(name=member.name, icon_url=member.display_avatar.url)
         embed.description = (
             f"LVL: `{stat.level}` XP: `{stat.xp:,}`/`{next_level_xp:,}`\n"
+            f"Leadboard position: `{position:,}`/`{len(stat_member_ids):,}`\n"
             f"```[{bar}] {percentage}%```".replace(",", ".")
         )
         await ctx.send(embed=embed)
