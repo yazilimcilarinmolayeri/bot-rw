@@ -50,22 +50,14 @@ class HelpCommand(commands.HelpCommand):
 
             fields.append(f"{extension.qualified_name}: {', '.join(commands)}")
 
-        embed = discord.Embed(color=ctx.bot.embed_color, title="Help Page")
-        embed.description = (
-            f"Use `{ctx.prefix}help [command=None]` for more info on a command.\n"
-            "`<argument>`: This means the argument is required.\n"
-            "`[argument]`: This means the argument is optional.\n"
-            "`[A|B]`: This means that it can be either A or B.\n"
-            "`[argument...]`: This means you can have multiple arguments.\n\n"
-        )
-        embed.add_field(name="Commands", value="\n".join(fields))
+        embed = discord.Embed(color=ctx.bot.embed_color, title="Commands Page")
+        embed.description = "\n".join(fields)
         embed.set_footer(
             text=(
                 f"Total cog: {len(ctx.bot.cogs.values())} - "
                 f"Total command: {total_command}"
             )
         )
-
         await ctx.send(embed=embed)
 
     def get_command_signature(self, command):
