@@ -1,3 +1,5 @@
+import time
+
 import discord
 from discord.ext import commands, menus
 
@@ -12,8 +14,9 @@ async def setup(bot):
 class Level(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.is_send_level_up_message = True
         self.AMOUNT = bot.config["level"]["amount"]
-        self.CATEGORY_ID = bot.config["level"]["category_id"]
+        self.IGNORE_CHANNELS = bot.config["level"]["ignore_channels"]
 
     async def _update_xp(self, message: discord.Message, member_id: int, amount: int):
         guild_id = message.guild.id
@@ -32,7 +35,8 @@ class Level(commands.Cog):
         new_level = int(new_xp ** (1 / 5))
 
         if new_level > levelstat.level:
-            self.bot.dispatch("level_up", message, new_level)
+            if self.is_send_level_up_message:
+                self.bot.dispatch("level_up", message, new_level)
 
         levelstat.xp = new_xp
         levelstat.level = new_level
@@ -42,9 +46,11 @@ class Level(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
+        if (channel_ids := self.IGNORE_CHANNELS.get(message.guild.id, False)):
+            if message.channel.id in channel_ids:
+                return
 
-        if message.channel in message.guild.get_channel(self.CATEGORY_ID).channels:
-            await self._update_xp(message, message.author.id, self.AMOUNT)
+        await self._update_xp(message, message.author.id, self.AMOUNT)
 
     @commands.Cog.listener()
     async def on_level_up(self, message, new_level):
@@ -116,16 +122,18 @@ class Level(commands.Cog):
         )
         await menu.start(ctx)
 
-    @commands.is_owner()
-    @commands.command(hidden=True)
-    async def loadxp(self, ctx: commands.Context, category_id: int):
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def loadxp(self, ctx: commands.Context):
         """Load member xp's from category channels to database."""
 
-        category = ctx.guild.get_channel(category_id)
+        start_time = time.time()
+        self.is_send_level_up_message = False
 
-        for channel in category.channels:
-            if not isinstance(channel, discord.TextChannel):
-                continue
+        for channel in ctx.guild.text_channels:
+            if (channel_ids := self.IGNORE_CHANNELS.get(ctx.guild.id, False)):
+                if channel.id in channel_ids:
+                    continue
 
             log_message = await ctx.send(
                 f"Loading {channel.mention} {constant.Emoji.loading}"
@@ -139,4 +147,6 @@ class Level(commands.Cog):
 
                 await self._update_xp(message, message.author.id, amount=self.AMOUNT)
             await log_message.edit(content=f"Done {channel.mention}")
-        await ctx.send("All done!")
+
+        self.is_send_level_up_message = True
+        await ctx.send(f"All done! `{round(time.time() - start_time, 1)}` sn")
