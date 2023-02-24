@@ -5,6 +5,7 @@ general:
   embed_color: 0x2F3136
   owner_ids:
     - 123456789123456789
+    - 123456789123456789
   initial_extensions:
     - "jishaku"
     - "cogs.api"
@@ -17,11 +18,16 @@ general:
   token: ""
 
 log:
-  error_channel_id: 
+  error_channel_id: 123456789123456789
 
 reactionrole:
   max_role: 15
 
 level:
   amount: 10
-  category_id: 
+  ignore_channels:  # {}
+    123456789123456789:  # guild id
+      - 123456789123456789  # channel id
+    123456789123456789:
+      - 123456789123456789
+      - 123456789123456789
