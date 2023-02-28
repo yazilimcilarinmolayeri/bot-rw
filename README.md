@@ -1,7 +1,5 @@
 # bot-rw
 
-<img src="https://github.com/yazilimcilarinmolayeri/artworks/blob/master/ymy_logo_256.png" width="110" align="right"/>
-
 ![](https://img.shields.io/discord/418887354699350028?label=YMY)
 ![](https://img.shields.io/badge/python-3.8%2B-blue)
 ![](https://img.shields.io/pypi/v/discord.py?label=discord.py)
