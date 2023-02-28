@@ -1,3 +1,4 @@
+import logging
 import traceback
 from io import StringIO
 from datetime import datetime
@@ -6,6 +7,9 @@ import discord
 from discord.ext import commands, menus
 
 from utils import models
+
+
+logger = logging.getLogger("discord")
 
 
 async def setup(bot):
@@ -20,12 +24,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.bot.launch_time = datetime.utcnow()
-
-        print(
-            f"Library: v{discord.__version__}\n"
-            f"Bot: {self.bot.user}\n"
-            f"ID: {self.bot.user.id}"
-        )
+        logger.info(f"{self.bot.user} is running!")
 
         await models.database_init()
 

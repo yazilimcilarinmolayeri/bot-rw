@@ -27,7 +27,7 @@ class HelpCommand(commands.HelpCommand):
         )
 
         self.owner_cogs = ["Owner"]
-        self.ignore_cogs = ["Events", "Jishaku"]
+        self.ignore_cogs = ["Events", "Jishaku", "Pixels"]
 
     async def send_bot_help(self, mapping):
         fields = []

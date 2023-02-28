@@ -46,7 +46,7 @@ class Level(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if (channel_ids := self.IGNORE_CHANNELS.get(message.guild.id, False)):
+        if channel_ids := self.IGNORE_CHANNELS.get(message.guild.id, False):
             if message.channel.id in channel_ids:
                 return
 
@@ -131,7 +131,7 @@ class Level(commands.Cog):
         self.is_send_level_up_message = False
 
         for channel in ctx.guild.text_channels:
-            if (channel_ids := self.IGNORE_CHANNELS.get(ctx.guild.id, False)):
+            if channel_ids := self.IGNORE_CHANNELS.get(ctx.guild.id, False):
                 if channel.id in channel_ids:
                     continue
 

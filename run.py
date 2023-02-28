@@ -14,15 +14,8 @@ from utils import context
 
 
 class Bot(commands.Bot):
-    def __init__(
-        self,
-        *args,
-        config,
-        web_client: ClientSession,
-        **kwargs,
-    ):
+    def __init__(self, *args, config, web_client: ClientSession, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.config = config
         self.web_client = web_client
         self.embed_color = config["general"]["embed_color"]
@@ -51,18 +44,21 @@ async def main():
     os.environ["JISHAKU_UNDERSCORE"] = "True"
     os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 
+    discord.utils.setup_logging()
     logger = logging.getLogger("discord")
     logger.setLevel(logging.INFO)
+    logging.getLogger("discord.state")
+    logging.getLogger("discord.http").setLevel(logging.WARNING)
+
     handler = logging.handlers.RotatingFileHandler(
         backupCount=5,
         encoding="utf-8",
-        maxBytes=32 * 1024 * 1024,
-        filename="discord.log",
+        filename="bot.log",
+        maxBytes=1024 * 1024 * 32,
     )
-    formatter = logging.Formatter(
-        "[{asctime}] [{levelname}] {name}: {message}", style="{"
+    handler.setFormatter(
+        logging.Formatter("[{asctime}] [{levelname}] {name}: {message}", style="{")
     )
-    handler.setFormatter(formatter)
     logger.addHandler(handler)
 
     async with ClientSession() as web_client:
