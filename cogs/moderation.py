@@ -15,6 +15,15 @@ class Moderation(commands.Cog):
         self.bot = bot
         self.MAX_ROLE = bot.config["reactionrole"]["max_role"]
 
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_permissions(manage_messages=True)
+    async def clean(self, ctx: commands.Context, amount: int):
+        """Deletes the amount of messages from the channel."""
+
+        channel = ctx.message.channel
+        deleted = await channel.purge(limit=amount + 1)
+
     async def _clear_reaction(
         self, payload: discord.RawReactionActionEvent, member: discord.Member
     ):
