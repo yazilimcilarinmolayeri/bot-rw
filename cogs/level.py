@@ -74,7 +74,7 @@ class Level(commands.Cog):
 
         levelstat_member_ids = (
             await models.LevelStat.filter(guild_id=ctx.guild.id)
-            .order_by("-level")
+            .order_by("-xp")
             .values("member_id")
         )
         position = levelstat_member_ids.index({"member_id": member.id}) + 1
@@ -104,7 +104,7 @@ class Level(commands.Cog):
 
         entries = []
         levelstat = await models.LevelStat.filter(guild_id=ctx.guild.id).order_by(
-            "-level"
+            "-xp"
         )
 
         for i, ls in enumerate(levelstat):
