@@ -54,6 +54,9 @@ class Level(commands.Cog):
 
     @commands.Cog.listener()
     async def on_level_up(self, message, new_level):
+        if new_level < 3:
+            return
+
         await message.channel.send(
             f"{message.author.mention}, has leveled up to level `{new_level}`! "
             f"{constant.Emoji.spongebob_dance}"  # https://youtube.com/watch?v=xILQRZ1F1OE
